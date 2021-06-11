@@ -4,10 +4,10 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/wnx/compiler/src/ast/AstNode.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o"
-  "/home/wnx/compiler/src/entry.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/entry.cpp.o"
+  "/home/wnx/compiler/src/ast/AstNode.cpp" "/home/wnx/compiler/build/CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o"
+  "/home/wnx/compiler/src/entry.cpp" "/home/wnx/compiler/build/CMakeFiles/compiler.dir/src/entry.cpp.o"
   )
-set(CMAKE_CXX_COMPILER_ID "GNU")
+set(CMAKE_CXX_COMPILER_ID "Clang")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH

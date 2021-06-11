@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/entry.cpp.o -c /home/wnx/compiler/src/entry.cpp",
+  "file": "/home/wnx/compiler/src/entry.cpp"
+},
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o -c /home/wnx/compiler/src/ast/AstNode.cpp",
+  "file": "/home/wnx/compiler/src/ast/AstNode.cpp"
+}
+]

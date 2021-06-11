@@ -92,6 +92,9 @@
 		<Unit filename="/home/wnx/compiler/src/ast/AstNode.h">
 			<Option target="compiler"/>
 		</Unit>
+		<Unit filename="/home/wnx/compiler/src/entry.cpp">
+			<Option target="compiler"/>
+		</Unit>
 		<Unit filename="/home/wnx/compiler/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>

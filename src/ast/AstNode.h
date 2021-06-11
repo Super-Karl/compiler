@@ -10,26 +10,31 @@
 
 using namespace std;
 
-namespace parser::ast {
+namespace ast {
   class Node {
+  public:
+    virtual void print(int depth = 0, bool isEnd = false);
 
+    void printPrefix(int depth = 0,bool isEnd = false);
   };
 
   class Identifier : Node {
   public:
     Identifier(const string name, bool isArray = false);
 
+    void print(int depth = 0, bool isEnd = false) override;
+
     bool isArray;
     string name;
   };
 
   class Expression : public Node {
-
+  public:
   };
 
 
   class Stmt : public Expression {
-
+  public:
   };
 
   class Block : public Stmt {//语句块
@@ -37,55 +42,75 @@ namespace parser::ast {
     vector<Expression *> blockItem;
 
     Block() {};
+
+    void print(int depth = 0, bool isEnd = false);
   };
 
   /**
    * 变量声明语句
    */
   class Declare : public Node {
-  protected:
+  public:
     Identifier name;
-    bool isInit;//是否有初始值
-    Declare(Identifier name, bool isInit);
+
+    Declare(Identifier name);
+
   };
 
   class VarDeclare : public Declare {
   public:
-    Expression value;
 
-    VarDeclare(Identifier name, bool isInit = false);//无初始化构造
-    VarDeclare(Identifier name, bool isInit, Expression value);//带初始化值构造
+    VarDeclare(Identifier name);//无初始化构造
+
+    void print(int depth = 0, bool isEnd = false) override;
+
+  };
+
+  class VarDeclareWithInit : public Declare {
+  public:
+    Expression *value;
+
+    VarDeclareWithInit(Identifier name, Expression *value);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ConstDeclare : public Declare {
   public:
-    Expression value;
+    Expression *value;
 
-    ConstDeclare(Identifier name, Expression value, bool isInit = true);
+    ConstDeclare(Identifier name, Expression *value);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ArrayDeclare : public Declare {
   public:
-    Expression size;
+    Expression *size;
 
-    ArrayDeclare(Expression size, Identifier name, bool isInit = false);
+    ArrayDeclare(Expression *size, Identifier name);
 
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ConstArray : public Declare {
   public:
-    Expression size;
-    const vector<Expression> valueList;
+    Expression *size;
+    const vector<Expression *> valueList;
 
-    ConstArray(Expression size, Identifier name, const vector<Expression> value, bool isInit = true);
+    ConstArray(Expression *size, Identifier &name, const vector<Expression *> value);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ArrayDeclareWithInit : public Declare {
   public:
-    Expression size;
-    vector<Expression> valueList;
+    Expression *size;
+    vector<Expression *> valueList;
 
-    ArrayDeclareWithInit(Expression size, Identifier name, const vector<Expression> value, bool isInit = true);
+    ArrayDeclareWithInit(Expression *size, Identifier &name, const vector<Expression *> value);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   /**
@@ -93,26 +118,33 @@ namespace parser::ast {
    */
   class FunctionDefArg : public Expression {
   public:
-    Identifier name;
+    Identifier &name;
+    int type;
 
-    FunctionDefArg(Identifier name) : name(name) {};
+    FunctionDefArg(Identifier &name, int type) : name(name), type(type) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class FunctionDefArgList : public Expression {
   public:
-    vector<FunctionDefArg> args;
+    vector<FunctionDefArg *> args;
 
-    FunctionDefArgList(vector<FunctionDefArg> args) : args(args) {};
+    FunctionDefArgList(vector<FunctionDefArg *> args) : args(args) {};
+
+    void print(int depth = 0, bool isEnd =false) override;
   };
 
   class FunctionDefine : public Expression {
   public:
     int retType;
-    Identifier name;
-    FunctionDefArgList args;
-    Block body;
+    Identifier &name;
+    FunctionDefArgList *args;
+    Block *body;
 
-    FunctionDefine(int retType, Identifier name, FunctionDefArgList args, Block body);
+    FunctionDefine(int retType, Identifier name, FunctionDefArgList *args, Block *body);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
 
@@ -121,53 +153,74 @@ namespace parser::ast {
    */
   class FunctionCallArgList : public Expression {
   public:
-    vector<Expression> args;
+    vector<Expression *> args;
 
-    FunctionCallArgList(vector<Expression> args) : args(args) {};
+    FunctionCallArgList(vector<Expression *> args) : args(args) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class FunctionCall : public Expression {
   public:
-    Identifier name;
-    FunctionCallArgList args;
+    Identifier &name;
+    FunctionCallArgList &args;
 
-    FunctionCall(Identifier name, FunctionCallArgList) : name(name), args(args) {};
+    FunctionCall(Identifier name, FunctionCallArgList &args) : name(name), args(args) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   /**
    * 表达式
    */
+  class CommaExpression : public Expression {//逗号表达式
+  public:
+    vector<Expression *> expr;
+
+    CommaExpression() = default;
+
+    void print(int depth = 0, bool isEnd = false) override;
+  };
+
   class NumberExpression : public Expression {
   public:
     int value;
 
     NumberExpression(int value);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class LogicExpression : public Expression {//逻辑表达式
   public:
     int op;
-    Expression leftExpr;
-    Expression rightExpr;
+    Expression *leftExpr;
+    Expression *rightExpr;
 
-    LogicExpression(Expression left, int op, Expression right);
+    LogicExpression(Expression *left, int op, Expression *right);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class UnaryExpression : public Expression {
   public:
     int op;
-    Expression right;
+    Expression *right;
 
-    UnaryExpression(int op, Expression right) : op(op), right(right) {};
+    UnaryExpression(int op, Expression *right) : op(op), right(right) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
-  class CalcExpression : public Expression {//计算节点用此表达式
+  class CalcExpression : public Expression {//赋值表达式
   public:
     int op;
-    Identifier name;
-    Expression rightExpr;
+    Identifier &name;
+    Expression *rightExpr;
 
-    CalcExpression(int op, Identifier name, Expression right);
+    CalcExpression(int op, Identifier name, Expression *right);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   /**
@@ -175,36 +228,48 @@ namespace parser::ast {
    */
   class DeclareStatement : public Stmt {
   public:
-    vector<Declare> declareList;
+    vector<Declare*> declareList;
 
-    DeclareStatement(vector<Declare> declareList) : declareList(declareList) {};
+    DeclareStatement(vector<Declare*> declareList) : declareList(declareList) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class IfStatement : public Stmt {
   public:
-    LogicExpression cond;//
-    Block trueBlock;
-    Block elseBlock;
+    LogicExpression *cond;//
+    Block *trueBlock;
+    Block *elseBlock;
 
-    IfStatement(LogicExpression cond, Block trueBlock, Block elseBlock) : cond(cond), trueBlock(trueBlock),
+    IfStatement(LogicExpression *cond, Block *trueBlock, Block *elseBlock) : cond(cond), trueBlock(trueBlock),
                                                                           elseBlock(elseBlock) {};
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class WhileStatement : public Stmt {
   public:
-    LogicExpression cond;
-    Block loopBlock;
+    LogicExpression *cond;
+    Block *loopBlock;
 
-    WhileStatement(LogicExpression cond, Block loopBlock) : cond(cond), loopBlock(loopBlock) {};
+    WhileStatement(LogicExpression *cond, Block *loopBlock) : cond(cond), loopBlock(loopBlock) {};
 
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class BreakStatement : public Stmt {
-
+  public:
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ContinueStatement : public Stmt {
+  public:
+    void print(int depth = 0, bool isEnd = false) override;
+  };
 
+  class VoidStatement : public Stmt {//空语句
+  public:
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
   class ReturnStatement : public Stmt {
@@ -212,13 +277,18 @@ namespace parser::ast {
     Expression *returnExp;
 
     ReturnStatement(Expression *exp = NULL);
+
+    void print(int depth = 0, bool isEnd = false) override;
   };
 
 
   class AST {
-    vector<Node> sourceCode;
+  public:
+    vector<Node*> codeBlock;
 
-    AST() {};
+    AST() = default;
+
+    void print(int depth = 0 , bool isEnd = false);
   };
 }
 

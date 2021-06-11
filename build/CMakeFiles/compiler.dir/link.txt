@@ -1,0 +1,1 @@
+/bin/clang++-10  -g   CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o  -o compiler 

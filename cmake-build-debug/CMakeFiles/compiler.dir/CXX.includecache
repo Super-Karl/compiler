@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/wnx/compiler/src/ast/AstNode.cpp
+AstNode.h
+/home/wnx/compiler/src/ast/AstNode.h
+cstdint
+-
+iostream
+-
+iterator
+-
+
+/home/wnx/compiler/src/ast/AstNode.h
+iostream
+-
+vector
+-
+
+/home/wnx/compiler/src/entry.cpp
+ast/AstNode.h
+/home/wnx/compiler/src/ast/AstNode.h
+iostream
+-
+

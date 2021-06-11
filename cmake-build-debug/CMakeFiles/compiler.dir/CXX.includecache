@@ -22,9 +22,3 @@ iostream
 vector
 -
 
-/home/wnx/compiler/src/entry.cpp
-ast/AstNode.h
-/home/wnx/compiler/src/ast/AstNode.h
-iostream
--
-

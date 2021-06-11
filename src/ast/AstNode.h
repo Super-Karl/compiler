@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace ast {
+namespace parser::ast {
   class Node {
   public:
     virtual void print(int depth = 0, bool isEnd = false);

@@ -3,7 +3,7 @@
 //
 #include "ast/AstNode.h"
 #include <iostream>
-using namespace ast;
+using namespace parser::ast;
 using namespace std;
 
 

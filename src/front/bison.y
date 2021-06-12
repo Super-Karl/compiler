@@ -3,7 +3,7 @@
 #include "AstNode.h"
 #include <cstdio>
 #include <cstdlib>  
-%}
+
 
 using parser::ast;
 
@@ -15,6 +15,15 @@ void yyerror(const char *s){
     yylex_destroy();
     if (!yydebug)
         std::exit(1);
+%}
+
+%union {
+    int token;
+    parser::ast::Node::Identifier* identifier;
+    parser::ast::Node::Expression* expr;
+    parser::ast::Node::stmt* stmt;
+    
+
 }
 %%
 %token '+','-','*','/'

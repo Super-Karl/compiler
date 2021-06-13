@@ -86,13 +86,19 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/wnx/compiler/src/ast/AstNode.cpp">
+		<Unit filename="/home/wnx/compiler/src/controller/controller.cpp">
 			<Option target="compiler"/>
 		</Unit>
-		<Unit filename="/home/wnx/compiler/src/ast/AstNode.h">
+		<Unit filename="/home/wnx/compiler/src/controller/controller.h">
 			<Option target="compiler"/>
 		</Unit>
 		<Unit filename="/home/wnx/compiler/src/entry.cpp">
+			<Option target="compiler"/>
+		</Unit>
+		<Unit filename="/home/wnx/compiler/src/front/ast/AstNode.cpp">
+			<Option target="compiler"/>
+		</Unit>
+		<Unit filename="/home/wnx/compiler/src/front/ast/AstNode.h">
 			<Option target="compiler"/>
 		</Unit>
 		<Unit filename="/home/wnx/compiler/CMakeLists.txt">

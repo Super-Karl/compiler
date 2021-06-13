@@ -1,13 +1,14 @@
 //
 // Created by wnx on 2021/6/11.
 //
-#include "ast/AstNode.h"
 #include <iostream>
-using namespace parser::ast;
+#include "front/ast/AstNode.h"
+
+using namespace compiler::front::ast;
 using namespace std;
 
 
-int main(){
+int main(int argc,char** argv){
   AST *root = new AST();
   vector<Declare*> v;
   auto *a = new VarDeclareWithInit(Identifier("a"),new NumberExpression(5));

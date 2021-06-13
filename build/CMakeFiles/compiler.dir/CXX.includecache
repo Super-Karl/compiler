@@ -6,15 +6,9 @@
 
 #IncludeRegexTransform: 
 
-../src/ast/AstNode.h
-iostream
--
-vector
--
-
 /home/wnx/compiler/src/ast/AstNode.cpp
-ast/AstNode.h
-/home/wnx/compiler/src/ast/ast/AstNode.h
+AstNode.h
+/home/wnx/compiler/src/ast/AstNode.h
 cstdint
 -
 iostream

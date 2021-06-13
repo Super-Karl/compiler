@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iterator>
 
-using namespace parser::ast;
+using namespace compiler::front::ast;
 
 /**
 *打印ast
@@ -25,7 +25,9 @@ void Node::print(int depth, bool isEnd) {
 
 void Identifier::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "Identifier: " + this->name << endl;
+  cout << "Identifier: " + this->name << " isArray: " << isArray << endl;
+  if (isArray)
+    index->print(depth + 1, true);
 };
 
 void Block::print(int depth, bool isEnd) {
@@ -198,7 +200,8 @@ void AST::print(int depth, bool isEnd) {
     i->print(depth + 1, i == codeBlock.back());
 }
 
-Identifier::Identifier(const string name, bool isArray) : name(name), isArray(isArray) {};
+Identifier::Identifier(const string name, bool isArray, Expression *index) : name(name), isArray(isArray),
+                                                                             index(index) {};
 
 Declare::Declare(Identifier name) : name(name) {};
 

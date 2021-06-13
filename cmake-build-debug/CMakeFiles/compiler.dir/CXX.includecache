@@ -6,9 +6,9 @@
 
 #IncludeRegexTransform: 
 
-/home/wnx/compiler/src/ast/AstNode.cpp
+/home/wnx/compiler/src/front/ast/AstNode.cpp
 AstNode.h
-/home/wnx/compiler/src/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
 cstdint
 -
 iostream
@@ -16,7 +16,7 @@ iostream
 iterator
 -
 
-/home/wnx/compiler/src/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
 iostream
 -
 vector

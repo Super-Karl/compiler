@@ -4,8 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/wnx/compiler/src/ast/AstNode.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o"
+  "/home/wnx/compiler/src/controller/controller.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/controller/controller.cpp.o"
   "/home/wnx/compiler/src/entry.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/entry.cpp.o"
+  "/home/wnx/compiler/src/front/ast/AstNode.cpp" "/home/wnx/compiler/cmake-build-debug/CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o"
+  "CMakeFiles/compiler.dir/src/controller/controller.cpp.o"
   "CMakeFiles/compiler.dir/src/entry.cpp.o"
+  "CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o"
   "compiler"
   "compiler.pdb"
 )

@@ -29,13 +29,13 @@ void yyerror(const char *s){
 }
 %%
 %token <token> CONST
-%token <root> CompU
+%token <root> CompUnit
 %token <declare> Decl varDecl ConstDecl
-%start compU;
+%start compUnit ;
 %%
 
-compU: compU Decl {$$->codeBlock.push_back($<declare>2);}
-    |compU funcDef {$$->codeBlock.push_back($<>2;)}
+compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
+    |compUnit funcDef {$$->codeBlock.push_back($<>2;)}
     |Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
     |funcDef{};
 
@@ -43,18 +43,33 @@ Decl: ConstDecl
     | VarDecl
     ;
 
-ConstDecl: CONST BType ConstDef {}
-    | ConstDecl COMMA ConstDecl{}
+ConstDecl: CONST BType ConstDef SEMI{}
+    | ConstDef COMMA ConstDecl{} //Z:right recursion,less efficiently but more easy to write
     ;
 
 BType: INT;
 
-ConstDef: IDENT ASSIGN ConstInitialVal;
+ConstDef: ConstDefVal{}
+    | ConstDefArray{}
+    ;
+ConstDefVal:IDENT ASSIGN ConstInitialVal{}
+    ;
 
 VarDecl: BType VarDef {}
     |VarDecl COMMA VarDef{}
     ;
 
+VarDef:DefVal{}
+    |DefArray{}
+    ;
+
+DefArray:ArrayIdent ASSIGN ArrayInitList{}
+    |ArrayIdent{}
+    ;
+
+ArrayIdent: ArrayIdent '[' Exp ']'{} 
+    |Ident '[' Exp ']' {}
+    ;
 //VarDef:IDENT ;
 
 FuncDef : FuncType IDENT /*(*/FuncDef/*)*/

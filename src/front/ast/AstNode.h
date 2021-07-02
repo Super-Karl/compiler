@@ -202,13 +202,13 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class LogicExpression : public Expression {//逻辑表达式
+    class BinaryExpression : public Expression {//逻辑表达式
     public:
       int op;
       Expression *leftExpr;
       Expression *rightExpr;
 
-      LogicExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right) {};
+      BinaryExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -250,11 +250,11 @@ namespace compiler {
 
     class IfStatement : public Stmt {
     public:
-      LogicExpression *cond;//
+      BinaryExpression *cond;//
       Block *trueBlock;
       Block *elseBlock;
 
-      IfStatement(LogicExpression *cond, Block *trueBlock, Block *elseBlock) : cond(cond), trueBlock(trueBlock),
+      IfStatement(BinaryExpression *cond, Block *trueBlock, Block *elseBlock) : cond(cond), trueBlock(trueBlock),
                                                                                elseBlock(elseBlock) {};
 
       void print(int depth = 0, bool isEnd = false) override;
@@ -262,10 +262,10 @@ namespace compiler {
 
     class WhileStatement : public Stmt {
     public:
-      LogicExpression *cond;
+      BinaryExpression *cond;
       Block *loopBlock;
 
-      WhileStatement(LogicExpression *cond, Block *loopBlock) : cond(cond), loopBlock(loopBlock) {};
+      WhileStatement(BinaryExpression *cond, Block *loopBlock) : cond(cond), loopBlock(loopBlock) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

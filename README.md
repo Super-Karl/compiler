@@ -41,3 +41,22 @@
     * ArrayDeclare
     * ConstArray
     * ArrayDeclareWithInit
+
+
+## IR定义
+
+|符号|意义|
+|---|---|
+|%|局部变量|
+|@|全局变量|
+
+|操作|定义|形式|
+|---|---|---|
+|add|+|%arg1 = %op1 + %op2|
+|sub|-|%arg1 = %op1 - %op2|
+|mul|*||
+|div|/||
+|mod|%||
+|cmp| |%res1 = cmp %arg1 %arg2|
+|jmp| |jmp label|
+|jg||jg label|

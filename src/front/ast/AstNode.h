@@ -225,11 +225,10 @@ namespace compiler {
 
     class AssignExpression : public Expression {//赋值表达式
     public:
-      int op;
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(int op, string name, Expression *right) : op(op), name(new Identifier(name)), rightExpr(right) {};
+      AssignExpression(string name, Expression *right) :name(new Identifier(name)), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

@@ -72,7 +72,7 @@
 |xor| | |
 |sal| |%res1 = sal %op1 %op2|
 |sar| |%res1 = sar %op1 %op2|
-|store| |store %op1|
+|store| |store %op1 |
 
 
 

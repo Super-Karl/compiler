@@ -1,0 +1,27 @@
+because if i write some notes in flex file might cause some mistakes,
+so I decide take notes right here.
+version:1.2(to adapt the version in wnx's bison file)
+language:flex
+time:2021/7/2
+editor:duhao
+log:(2021/7/2)
+    convert some sign(+,-,*,/.....) to key_words
+    change functions:
+        cancel count() function
+    problem:
+        not add run time function 
+/*****************************************
+this version maybe cause many problems,
+and if i find some bug or solve them,
+I'll write here
+
+1. cancel empty matching(that may cause problem,
+but if i use it like
+"[ ] ;"
+it will cause bug named"bad character class"
+)
+I have not solve this problem yet
+but maybe it is grammar problem
+so I change it to
+"[\n]  ;"
+****************************************/

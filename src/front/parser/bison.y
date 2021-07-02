@@ -21,7 +21,7 @@ void yyerror(const char *s){
     int token;
     front::ast::Identifier* Ident;
     front::ast::Expression* expr;
-    front::ast::stmt* stmt;
+    front::ast::stmt* Stmt;
     front::ast::FuctionCall* functCall;
     front::ast::AST* root;
     front::ast::Declare* declare; 
@@ -94,28 +94,69 @@ ArrayInitList:
 FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6)}
     |BType Ident LBRACKET RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
     |VOID Ident LBRACKET FuncParamList RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,$4,$6); }
-    |VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
+    | VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
     ;
 
 FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
-    |FuncParam {$$ = new front::ast::FuncDefArgList();$$->args.push_back($1);}
+    | FuncParam {$$ = new front::ast::FuncDefArgList();$$->args.push_back($1);}
 
-FuncParam: 
+FuncParam:Function 
     ;
+
+Block: LBRACE RBRACE
+    |LBRACE BlockItem RBRACE
+    ;
+
+BlockItem: Decl
+    | Stmt
+    ;
+
+Stmt:Assignment SEMI
+
 
 Exp: addExp;
 
-addExp:addExp AddOp MulExp {}
-    |MulExp {}
+addExp: addExp AddOp MulExp {$$ = new front::ast::BinaryExpression($1,$2,$3);}
+    | MulExp
     ;
 
-MulExp:MulExp UnaryExp{}
-    |UnaryExp{}
+MulExp: MulExp MulOp UnaryExp{$$ = new front::ast::BinaryExpression($1,$2,$3);}
+    | UnaryExp
     ;
 
-UnaryExp:UnaryOp UnaryExp
+UnaryExp: UnaryOp UnaryExp {$$ = new front::ast::UnaryExpression($1,$2);}
     | FunctCall
     | PrimaryExp
     ;
 
-Ident : IDENT {$$ = new front::ast::Identifier($1);}
+FunctCall: Ident LBRACKET FuncCallArgsList RBRACKET {$$ = new front::ast::FunctCall($1,$3);}
+    | Ident LBRACKET RBRACKET {$$ = new front::ast::FunctionCall($1,NULL);}
+    ;
+
+FunctCallArgsList: FunctionCallArgsList COMMA FuncCallArg {$$->args.push_back($3);}
+    |FunctCallArg {$$ = new front::ast::FunctionCallArgsList(); $$->args.push_back($1);}
+    ;
+
+PrimaryExp: Number 
+    | Lval
+    | LBRACKET Exp RBRACKET {$$ = $2;}
+    ;
+
+Lval: Ident
+    | ArrayIdent
+    ;
+AddOp: ADD
+    | SUB
+    ;
+
+MulOp: MUL
+    | DIV
+    | MOD
+    ;
+
+UnaryOp: ADD
+    | SUB
+    | NOT_EQUAL
+    ;
+
+Ident: IDENT {$$ = new front::ast::Identifier($1);}

@@ -223,13 +223,13 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class CalcExpression : public Expression {//赋值表达式
+    class AssignExpression : public Expression {//赋值表达式
     public:
       int op;
       Identifier *name;
       Expression *rightExpr;
 
-      CalcExpression(int op, string name, Expression *right) : op(op), name(new Identifier(name)), rightExpr(right) {};
+      AssignExpression(int op, string name, Expression *right) : op(op), name(new Identifier(name)), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

@@ -151,7 +151,7 @@ void UnaryExpression::print(int depth, bool isEnd) {
   right->print(depth + 1, true);
 }
 
-void CalcExpression::print(int depth, bool isEnd) {
+void AssignExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "CalcExpression Operand: " << op << endl;
   name->print(depth + 1, false);

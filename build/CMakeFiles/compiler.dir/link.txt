@@ -1,5 +1,0 @@
-<<<<<<< HEAD
-/usr/bin/c++     CMakeFiles/compiler.dir/src/controller/controller.cpp.o CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o  -o compiler 
-=======
-/bin/clang++-10  -g   CMakeFiles/compiler.dir/src/controller/controller.cpp.o CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o  -o compiler 
->>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d

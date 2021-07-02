@@ -1,16 +1,11 @@
 %{
-#include <iostream>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <iostream>
-using namespace std;
-void count(void)
-void comment();
-int column=0;
+//#include<string>
+//#include "grammar.hpp"
+
+//using namespace std;
 %}
 
-%option yylineno
+%option noyywrap
 
 number      [0-9]
 Ident       [a-zA-Z_]{1}[a-zA-Z0-9_]
@@ -66,9 +61,7 @@ Ident       [a-zA-Z_]{1}[a-zA-Z0-9_]
 .               {/*unmatched codes*/}
 %%
 
-int yywrap()[
-    return 1;
-]
+
 void comment(){
     column=0;
     char c,prev=0;

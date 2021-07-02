@@ -59,6 +59,7 @@ include CMakeFiles/compiler.dir/flags.make
 
 CMakeFiles/compiler.dir/src/controller/controller.cpp.o: CMakeFiles/compiler.dir/flags.make
 CMakeFiles/compiler.dir/src/controller/controller.cpp.o: ../src/controller/controller.cpp
+<<<<<<< HEAD
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/f/FileSYSY/project/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/compiler.dir/src/controller/controller.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/controller/controller.cpp.o -c /mnt/f/FileSYSY/project/compiler/src/controller/controller.cpp
 
@@ -74,6 +75,23 @@ CMakeFiles/compiler.dir/src/entry.cpp.o: CMakeFiles/compiler.dir/flags.make
 CMakeFiles/compiler.dir/src/entry.cpp.o: ../src/entry.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/f/FileSYSY/project/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/compiler.dir/src/entry.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/entry.cpp.o -c /mnt/f/FileSYSY/project/compiler/src/entry.cpp
+=======
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wnx/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/compiler.dir/src/controller/controller.cpp.o"
+	/bin/clang++-10  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/controller/controller.cpp.o -c /home/wnx/compiler/src/controller/controller.cpp
+
+CMakeFiles/compiler.dir/src/controller/controller.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/compiler.dir/src/controller/controller.cpp.i"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wnx/compiler/src/controller/controller.cpp > CMakeFiles/compiler.dir/src/controller/controller.cpp.i
+
+CMakeFiles/compiler.dir/src/controller/controller.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/compiler.dir/src/controller/controller.cpp.s"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wnx/compiler/src/controller/controller.cpp -o CMakeFiles/compiler.dir/src/controller/controller.cpp.s
+
+CMakeFiles/compiler.dir/src/entry.cpp.o: CMakeFiles/compiler.dir/flags.make
+CMakeFiles/compiler.dir/src/entry.cpp.o: ../src/entry.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wnx/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/compiler.dir/src/entry.cpp.o"
+	/bin/clang++-10  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/entry.cpp.o -c /home/wnx/compiler/src/entry.cpp
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 
 CMakeFiles/compiler.dir/src/entry.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/compiler.dir/src/entry.cpp.i"
@@ -96,6 +114,7 @@ CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/f/FileSYSY/project/compiler/src/front/ast/AstNode.cpp -o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s
 
+<<<<<<< HEAD
 CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o: CMakeFiles/compiler.dir/flags.make
 CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o: ../src/mid/ir/ir.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/f/FileSYSY/project/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o"
@@ -108,6 +127,33 @@ CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.i: cmake_force
 CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/f/FileSYSY/project/compiler/src/mid/ir/ir.cpp -o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s
+=======
+CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o: CMakeFiles/compiler.dir/flags.make
+CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o: ../src/front/ast/AstNode.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wnx/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o"
+	/bin/clang++-10  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o -c /home/wnx/compiler/src/front/ast/AstNode.cpp
+
+CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.i"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wnx/compiler/src/front/ast/AstNode.cpp > CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.i
+
+CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wnx/compiler/src/front/ast/AstNode.cpp -o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s
+
+CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o: CMakeFiles/compiler.dir/flags.make
+CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o: ../src/mid/ir/ir.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wnx/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o"
+	/bin/clang++-10  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o -c /home/wnx/compiler/src/mid/ir/ir.cpp
+
+CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.i"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wnx/compiler/src/mid/ir/ir.cpp > CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.i
+
+CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s"
+	/bin/clang++-10 $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wnx/compiler/src/mid/ir/ir.cpp -o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 
 # Object files for target compiler
 compiler_OBJECTS = \
@@ -125,7 +171,11 @@ compiler: CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o
 compiler: CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o
 compiler: CMakeFiles/compiler.dir/build.make
 compiler: CMakeFiles/compiler.dir/link.txt
+<<<<<<< HEAD
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/f/FileSYSY/project/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable compiler"
+=======
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/wnx/compiler/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable compiler"
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/compiler.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -22,16 +22,24 @@ namespace compiler {
     class Expression : public Node {
     public:
     };
-   
+
     class Identifier : Node {
     public:
-      Identifier(const string name, bool isArray = false , Expression *index = NULL);
+      Identifier(string name) : name(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
 
-      bool isArray;
-      Expression *index;
       string name;
+    };
+
+    class ArrayIdentifier : public Identifier {
+    public:
+      string name;
+      vector<Expression *> index;
+
+      ArrayIdentifier(string name) : Identifier(name) {};
+
+      void print(int depth, bool isEnd) override;
     };
 
     class Stmt : public Expression {
@@ -52,16 +60,18 @@ namespace compiler {
      */
     class Declare : public Node {
     public:
-      Identifier name;
+      Identifier *name;
 
-      Declare(Identifier name);
+      Declare(string name, bool isArray = false) {
+        this->name = isArray ? (new ArrayIdentifier(name)) : new Identifier(name);
+      };
 
     };
 
     class VarDeclare : public Declare {
     public:
 
-      VarDeclare(Identifier name);//无初始化构造
+      VarDeclare(string name) : Declare(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
 
@@ -71,7 +81,7 @@ namespace compiler {
     public:
       Expression *value;
 
-      VarDeclareWithInit(Identifier name, Expression *value);
+      VarDeclareWithInit(string name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -80,36 +90,36 @@ namespace compiler {
     public:
       Expression *value;
 
-      ConstDeclare(Identifier name, Expression *value);
+      ConstDeclare(string name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclare : public Declare {
     public:
-      Expression *size;
+      vector<Expression *> shape;
 
-      ArrayDeclare(Expression *size, Identifier name);
+      ArrayDeclare(string name) : Declare(name, true) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ConstArray : public Declare {
     public:
-      Expression *size;
-      const vector<Expression *> valueList;
+      vector<Expression *> shape;
+      vector<Expression *> valueList;
 
-      ConstArray(Expression *size, Identifier &name, const vector<Expression *> value);
+      ConstArray(string name) : Declare(name, true) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclareWithInit : public Declare {
     public:
-      Expression *size;
+      vector<Expression *> shape;
       vector<Expression *> valueList;
 
-      ArrayDeclareWithInit(Expression *size, Identifier &name, const vector<Expression *> value);
+      ArrayDeclareWithInit(string name) : Declare(name, true) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -119,10 +129,10 @@ namespace compiler {
      */
     class FunctionDefArg : public Expression {
     public:
-      Identifier &name;
+      Identifier *name;
       int type;
 
-      FunctionDefArg(Identifier &name, int type) : name(name), type(type) {};
+      FunctionDefArg(string name, int type) : name(new Identifier(name)), type(type) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -131,7 +141,7 @@ namespace compiler {
     public:
       vector<FunctionDefArg *> args;
 
-      FunctionDefArgList(vector<FunctionDefArg *> args) : args(args) {};
+      FunctionDefArgList() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -139,11 +149,11 @@ namespace compiler {
     class FunctionDefine : public Expression {
     public:
       int retType;
-      Identifier &name;
+      Identifier *name;
       FunctionDefArgList *args;
       Block *body;
 
-      FunctionDefine(int retType, Identifier name, FunctionDefArgList *args, Block *body);
+      FunctionDefine(int retType, string name) : retType(retType), name(new Identifier(name)) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -156,17 +166,17 @@ namespace compiler {
     public:
       vector<Expression *> args;
 
-      FunctionCallArgList(vector<Expression *> args) : args(args) {};
+      FunctionCallArgList() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class FunctionCall : public Expression {
     public:
-      Identifier &name;
-      FunctionCallArgList &args;
+      Identifier *name;
+      FunctionCallArgList *args;
 
-      FunctionCall(Identifier name, FunctionCallArgList &args) : name(name), args(args) {};
+      FunctionCall(string name) : name(new Identifier(name)) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -178,7 +188,7 @@ namespace compiler {
     public:
       vector<Expression *> expr;
 
-      CommaExpression() = default;
+      CommaExpression() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -198,7 +208,7 @@ namespace compiler {
       Expression *leftExpr;
       Expression *rightExpr;
 
-      LogicExpression(Expression *left, int op, Expression *right);
+      LogicExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -216,10 +226,10 @@ namespace compiler {
     class CalcExpression : public Expression {//赋值表达式
     public:
       int op;
-      Identifier &name;
+      Identifier *name;
       Expression *rightExpr;
 
-      CalcExpression(int op, Identifier name, Expression *right);
+      CalcExpression(int op, string name, Expression *right) : op(op), name(new Identifier(name)), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -230,6 +240,8 @@ namespace compiler {
     class DeclareStatement : public Stmt {
     public:
       vector<Declare *> declareList;
+
+      DeclareStatement() {};
 
       DeclareStatement(vector<Declare *> declareList) : declareList(declareList) {};
 
@@ -277,7 +289,7 @@ namespace compiler {
     public:
       Expression *returnExp;
 
-      ReturnStatement(Expression *exp = NULL);
+      ReturnStatement(Expression *exp = NULL) : returnExp(exp) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -287,7 +299,7 @@ namespace compiler {
     public:
       vector<Node *> codeBlock;
 
-      AST() = default;
+      AST() {};
 
       void print(int depth = 0, bool isEnd = false);
     };

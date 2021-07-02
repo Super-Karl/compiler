@@ -14,16 +14,25 @@ vector
 
 ../src/mid/ir/ir.h
 
+<<<<<<< HEAD
 /mnt/f/FileSYSY/project/compiler/src/controller/controller.cpp
 controller.h
 /mnt/f/FileSYSY/project/compiler/src/controller/controller.h
 
 /mnt/f/FileSYSY/project/compiler/src/controller/controller.h
+=======
+/home/wnx/compiler/src/controller/controller.cpp
+controller.h
+/home/wnx/compiler/src/controller/controller.h
+
+/home/wnx/compiler/src/controller/controller.h
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 front/ast/AstNode.h
 -
 mid/ir/ir.h
 -
 
+<<<<<<< HEAD
 /mnt/f/FileSYSY/project/compiler/src/entry.cpp
 iostream
 -
@@ -33,6 +42,17 @@ front/ast/AstNode.h
 /mnt/f/FileSYSY/project/compiler/src/front/ast/AstNode.cpp
 AstNode.h
 /mnt/f/FileSYSY/project/compiler/src/front/ast/AstNode.h
+=======
+/home/wnx/compiler/src/entry.cpp
+iostream
+-
+front/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
+
+/home/wnx/compiler/src/front/ast/AstNode.cpp
+AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 cstdint
 -
 iostream
@@ -40,15 +60,22 @@ iostream
 iterator
 -
 
+<<<<<<< HEAD
 /mnt/f/FileSYSY/project/compiler/src/front/ast/AstNode.h
+=======
+/home/wnx/compiler/src/front/ast/AstNode.h
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d
 iostream
 -
 vector
 -
 
+<<<<<<< HEAD
 /mnt/f/FileSYSY/project/compiler/src/mid/ir/ir.cpp
 ir.h
 /mnt/f/FileSYSY/project/compiler/src/mid/ir/ir.h
 
 /mnt/f/FileSYSY/project/compiler/src/mid/ir/ir.h
 
+=======
+>>>>>>> b46d4407efb18f377e03ce0e49fe4f762122e52d

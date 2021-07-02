@@ -25,9 +25,7 @@ void Node::print(int depth, bool isEnd) {
 
 void Identifier::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "Identifier: " + this->name << " isArray: " << isArray << endl;
-  if (isArray)
-    index->print(depth + 1, true);
+  cout << "Identifier: " + this->name << endl;
 };
 
 void Block::print(int depth, bool isEnd) {
@@ -40,35 +38,38 @@ void Block::print(int depth, bool isEnd) {
 void VarDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "VarDeclare" << endl;
-  this->name.print(depth + 1, true);
+  this->name->print(depth + 1, true);
 }
 
 void VarDeclareWithInit::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "VarDeclareWithInit" << endl;
-  this->name.print(depth + 1, false);
+  this->name->print(depth + 1, false);
   this->value->print(depth + 1, true);
 }
 
 void ConstDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ConstDeclare" << endl;
-  this->name.print(depth + 1, false);
+  this->name->print(depth + 1, false);
   this->value->print(depth + 1, true);
 }
 
 void ArrayDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclare: " << endl;
-  this->name.print(depth + 1, false);
-  size->print(depth + 1, true);
+  this->name->print(depth + 1, false);
+  for(auto i : shape)
+    i->print(depth + 1 , i == shape.back());
 }
 
 void ConstArray::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ConstArray" << endl;
-  this->name.print(depth + 1, false);
-  size->print(depth + 1, false);
+  this->name->print(depth + 1, false);
+  cout<<"shape"<<endl;
+  for(auto i: shape)
+    i->print(depth + 1, false);
 
   for (auto i : valueList)
     i->print(depth + 1, i == valueList.back());
@@ -77,7 +78,7 @@ void ConstArray::print(int depth, bool isEnd) {
 void ArrayDeclareWithInit::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclareWithInit" << endl;
-  this->name.print(depth + 1, false);
+  this->name->print(depth + 1, false);
 
   for (auto i : valueList)
     i->print(depth + 1, i == valueList.back());
@@ -86,7 +87,7 @@ void ArrayDeclareWithInit::print(int depth, bool isEnd) {
 void FunctionDefArg::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "FunctionDefArg Type: " << type << endl;
-  this->name.print(depth + 1, true);
+  this->name->print(depth + 1, true);
 
 }
 
@@ -102,7 +103,7 @@ void FunctionDefine::print(int depth, bool isEnd) {
   this->print(depth, isEnd);
   cout << "FunctionDefine" << endl;
   cout << "returnType: " << retType << endl;
-  name.print(depth + 1, false);
+  name->print(depth + 1, false);
   args->printPrefix(depth + 1, isEnd);
   body->print(depth + 1, true);
 }
@@ -117,8 +118,8 @@ void FunctionCallArgList::print(int depth, bool isEnd) {
 void FunctionCall::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "FunctionCall" << endl;
-  name.print(depth + 1, false);
-  args.print(depth + 1, true);
+  name->print(depth + 1, false);
+  args->print(depth + 1, true);
 }
 
 void CommaExpression::print(int depth, bool isEnd) {
@@ -140,14 +141,14 @@ void LogicExpression::print(int depth, bool isEnd) {
 
 void UnaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "UnaryExpression Oprand: " << op << endl;
+  cout << "UnaryExpression Operand: " << op << endl;
   right->print(depth + 1, true);
 }
 
 void CalcExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "CalcExpression Oprand: " << op << endl;
-  name.print(depth + 1, false);
+  cout << "CalcExpression Operand: " << op << endl;
+  name->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }
 
@@ -199,38 +200,3 @@ void AST::print(int depth, bool isEnd) {
   for (auto i : codeBlock)
     i->print(depth + 1, i == codeBlock.back());
 }
-
-Identifier::Identifier(const string name, bool isArray, Expression *index) : name(name), isArray(isArray),
-                                                                             index(index) {};
-
-Declare::Declare(Identifier name) : name(name) {};
-
-VarDeclare::VarDeclare(Identifier name) : Declare(name) {};
-
-VarDeclareWithInit::VarDeclareWithInit(Identifier name, Expression *value) : Declare(name), value(value) {};
-
-ConstDeclare::ConstDeclare(Identifier name, Expression *value) : Declare(name), value(value) {}
-
-ArrayDeclare::ArrayDeclare(Expression *size, Identifier name) : Declare(name), size(size) {};
-
-ConstArray::ConstArray(Expression *size, Identifier &name, const vector<Expression *> value) : Declare(name),
-                                                                                               size(size),
-                                                                                               valueList(value) {};
-
-ArrayDeclareWithInit::ArrayDeclareWithInit(Expression *size, Identifier &name, const vector<Expression *> value)
-    : Declare(
-    name), size(size), valueList(value) {};
-
-FunctionDefine::FunctionDefine(int retType, Identifier name, FunctionDefArgList *args, Block *body) : retType(retType),
-                                                                                                      name(name),
-                                                                                                      args(args),
-                                                                                                      body(body) {};
-
-NumberExpression::NumberExpression(int value) : value(value) {};
-
-LogicExpression::LogicExpression(Expression *left, int op, Expression *right) : leftExpr(left), rightExpr(right),
-                                                                                op(op) {};
-
-CalcExpression::CalcExpression(int op, Identifier name, Expression *right) : name(name), rightExpr(right), op(op) {};
-
-ReturnStatement::ReturnStatement(Expression *exp) : returnExp(exp) {};

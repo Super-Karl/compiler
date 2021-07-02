@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/controller/controller.cpp.o -c /home/wnx/compiler/src/controller/controller.cpp",
+  "file": "/home/wnx/compiler/src/controller/controller.cpp"
+},
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/entry.cpp.o -c /home/wnx/compiler/src/entry.cpp",
+  "file": "/home/wnx/compiler/src/entry.cpp"
+},
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o -c /home/wnx/compiler/src/front/ast/AstNode.cpp",
+  "file": "/home/wnx/compiler/src/front/ast/AstNode.cpp"
+},
+{
+  "directory": "/home/wnx/compiler/build",
+  "command": "/bin/clang++-10   -I/home/wnx/compiler/build/front -I/home/wnx/compiler/src  -g   -std=gnu++17 -o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o -c /home/wnx/compiler/src/mid/ir/ir.cpp",
+  "file": "/home/wnx/compiler/src/mid/ir/ir.cpp"
+}
+]

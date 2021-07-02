@@ -21,7 +21,7 @@ void yyerror(const char *s){
     int token;
     front::ast::Identifier* Ident;
     front::ast::Expression* expr;
-    front::ast::stmt* Stmt;
+    front::ast::Stmt* stmt;
     front::ast::FuctionCall* functCall;
     front::ast::AST* root;
     front::ast::Declare* declare; 
@@ -37,6 +37,7 @@ void yyerror(const char *s){
 %token <declare> Decl varDecl ConstDecl
 %token <string> INDENTIFIER
 %token <funcDef> FuncDef
+%token <stmt> Stmt 
 %start compUnit ;
 %%
 
@@ -111,12 +112,34 @@ BlockItem: Decl
     | Stmt
     ;
 
-Stmt:Assignment SEMI
+Stmt: Assignment SEMI {$$ = $1;}
+    | Block
+    | IfStmt
+    | WhileStmt
+    | BreakStmt SEMI
+    | ContinueStmt SEMI
+    | ReturnStmt SEMI
+    ;
 
+Assignment: LVal ASSIGN Exp {new front::ast::AssignExperssion($1,$3);} 
+    ;
 
-Exp: addExp;
+IfStmt:IF LBRACKET Cond RBRACKET Stmt ElSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
+    | IF LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::IfStatement($3,$5,NULL);}
+    ;
 
-addExp: addExp AddOp MulExp {$$ = new front::ast::BinaryExpression($1,$2,$3);}
+WhileStmt: WHILE LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::WhileStatement($3,$5);}
+    ;
+
+BreakStmt:BREAK SEMI {$$ =  new front::ast::BreakStatemet();}
+    ;
+
+ContinueStmt:CONTINUE SEMI {$$ = new front::ast::ContinueStatement();}
+    ;
+
+Exp: AddExp;
+
+AddExp: AddExp AddOp MulExp {$$ = new front::ast::BinaryExpression($1,$2,$3);}
     | MulExp
     ;
 
@@ -159,4 +182,7 @@ UnaryOp: ADD
     | NOT_EQUAL
     ;
 
+Number: NUM {$$ = new front::ast::Number($1);}
+
 Ident: IDENT {$$ = new front::ast::Identifier($1);}
+    ;

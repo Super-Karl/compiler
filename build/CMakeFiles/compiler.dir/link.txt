@@ -1,1 +1,1 @@
-/bin/clang++-10  -g   CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o  -o compiler 
+/usr/bin/c++     CMakeFiles/compiler.dir/src/controller/controller.cpp.o CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o  -o compiler 

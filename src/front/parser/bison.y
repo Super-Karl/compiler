@@ -19,58 +19,103 @@ void yyerror(const char *s){
 
 %union {
     int token;
-    front::ast::Node::Identifier* identifier;
-    front::ast::Node::Expression* expr;
-    front::ast::Node::stmt* stmt;
-    front::ast::Node::FuctionCall* functCall;
+    front::ast::Identifier* Ident;
+    front::ast::Expression* expr;
+    front::ast::stmt* stmt;
+    front::ast::FuctionCall* functCall;
     front::ast::AST* root;
-    front::ast::Node::Declare* declare; 
-    front::ast::Node::ConstDeclare conDecl;
+    front::ast::Declare* declare; 
+    front::ast::ConstDeclare *conDecl;
+    front::ast::FunctionDefine* funcDecl;
+    std::string *string;
 }
 %%
 %token <token> CONST
-%token <root> CompUnit
+%token <token> INT
+%token <token> COMMA
+%token <root> compUnit
 %token <declare> Decl varDecl ConstDecl
+%token <string> INDENTIFIER
+%token <funcDef> FuncDef
 %start compUnit ;
 %%
 
-compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
-    |compUnit funcDef {$$->codeBlock.push_back($<>2;)}
+CompUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
+    |compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2;)}
     |Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
-    |funcDef{};
+    |FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);};
 
-Decl: ConstDecl
-    | VarDecl
+Decl: ConstDecl SEMI {$$ = $1;}
+    | VarDecl SEMI {$$ = $1;}
     ;
 
-ConstDecl: CONST BType ConstDef SEMI{}
-    | ConstDef COMMA ConstDecl{} //Z:right recursion,less efficiently but more easy to write
+ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($1);}
+    | ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
     ;
 
 BType: INT;
 
-ConstDef: ConstDefVal{}
-    | ConstDefArray{}
-    ;
-ConstDefVal:IDENT ASSIGN ConstInitialVal{}
+ConstDef: ConstDefVal
+    | ConstDefArray
     ;
 
-VarDecl: BType VarDef {}
-    |VarDecl COMMA VarDef{}
+ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$3);}
     ;
 
-VarDef:DefVal{}
-    |DefArray{}
+constDefArray:
     ;
 
-DefArray:ArrayIdent ASSIGN ArrayInitList{}
+VarDecl: BType VarDef {$$ = new front::ast::DeclareStatement();$$->declareList.push_back($2);}
+    |VarDecl COMMA VarDef{$$->declareList.push_back($3);} 
+    ;
+
+VarDef: DefVal //done
+    |DefArray //
+    ;
+
+DefVal: ValIdent ASSIGN InitVal { $$ = new front::ast::VarDeclareWithInit($1,$3);}
+    |ValIdent {$$ = new front::ast::VarDeclare(*($1));}
+
+InitVal: Exp
+    ;
+
+DefArray: ArrayIdent ASSIGN ArrayInitList{}
     |ArrayIdent{}
     ;
 
-ArrayIdent: ArrayIdent '[' Exp ']'{} 
-    |Ident '[' Exp ']' {}
+ArrayIdent: ArrayIdent LSQARE Exp RSQARE{} 
+    |Ident LSQARE Exp RSQARE {}
+    ;
+
+ArrayInitList:
     ;
 //VarDef:IDENT ;
 
-FuncDef : FuncType IDENT /*(*/FuncDef/*)*/
+FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6)}
+    |BType Ident LBRACKET RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
+    |VOID Ident LBRACKET FuncParamList RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,$4,$6); }
+    |VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
     ;
+
+FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
+    |FuncParam {$$ = new front::ast::FuncDefArgList();$$->args.push_back($1);}
+
+FuncParam: 
+    ;
+
+Exp: addExp;
+
+addExp:addExp AddOp MulExp {}
+    |MulExp {}
+    ;
+
+MulExp:MulExp UnaryExp{}
+    |UnaryExp{}
+    ;
+
+UnaryExp:UnaryOp UnaryExp
+    | FunctCall
+    | PrimaryExp
+    ;
+
+Ident : IDENT {$$ = new front::ast::Identifier($1);}

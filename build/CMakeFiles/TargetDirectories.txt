@@ -1,3 +1,3 @@
-/home/wnx/compiler/build/CMakeFiles/rebuild_cache.dir
-/home/wnx/compiler/build/CMakeFiles/edit_cache.dir
-/home/wnx/compiler/build/CMakeFiles/compiler.dir
+/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/rebuild_cache.dir
+/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/edit_cache.dir
+/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/compiler.dir

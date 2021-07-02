@@ -4,10 +4,12 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/wnx/compiler/src/ast/AstNode.cpp" "/home/wnx/compiler/build/CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o"
-  "/home/wnx/compiler/src/entry.cpp" "/home/wnx/compiler/build/CMakeFiles/compiler.dir/src/entry.cpp.o"
+  "/mnt/f/FileSYSY/project/compiler/src/controller/controller.cpp" "/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/compiler.dir/src/controller/controller.cpp.o"
+  "/mnt/f/FileSYSY/project/compiler/src/entry.cpp" "/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/compiler.dir/src/entry.cpp.o"
+  "/mnt/f/FileSYSY/project/compiler/src/front/ast/AstNode.cpp" "/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o"
+  "/mnt/f/FileSYSY/project/compiler/src/mid/ir/ir.cpp" "/mnt/f/FileSYSY/project/compiler/build/CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o"
   )
-set(CMAKE_CXX_COMPILER_ID "Clang")
+set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH

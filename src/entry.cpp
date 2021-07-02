@@ -9,6 +9,7 @@ using namespace std;
 
 
 int main(int argc, char **argv) {
+<<<<<<< HEAD
   /*AST *root = new AST();
   vector<Declare *> v;
   auto *a = new VarDeclareWithInit(Identifier("a"), new NumberExpression(5));
@@ -30,4 +31,8 @@ int main(int argc, char **argv) {
 //  root->codeBlock.push_back(d);
   root->print();
   return 0;*/
+=======
+
+  return 0;
+>>>>>>> 6737047edd49c8ad9f149901397588f919c71888
 }

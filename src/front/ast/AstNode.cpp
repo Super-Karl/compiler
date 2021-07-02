@@ -3,7 +3,6 @@
 //
 
 #include "AstNode.h"
-#include <cstdint>
 #include <iostream>
 #include <iterator>
 
@@ -27,6 +26,13 @@ void Identifier::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "Identifier: " + this->name << endl;
 };
+
+void ArrayIdentifier::print(int depth, bool isEnd) {
+  this->print(depth, isEnd);
+  cout << "ArrayIdentifier: " + this->name << endl;
+  for (auto i : index)
+    i->print(depth + 1, i == index.back());
+}
 
 void Block::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
@@ -59,16 +65,16 @@ void ArrayDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclare: " << endl;
   this->name->print(depth + 1, false);
-  for(auto i : shape)
-    i->print(depth + 1 , i == shape.back());
+  for (auto i : shape)
+    i->print(depth + 1, i == shape.back());
 }
 
 void ConstArray::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ConstArray" << endl;
   this->name->print(depth + 1, false);
-  cout<<"shape"<<endl;
-  for(auto i: shape)
+  cout << "shape" << endl;
+  for (auto i: shape)
     i->print(depth + 1, false);
 
   for (auto i : valueList)
@@ -132,7 +138,7 @@ void NumberExpression::print(int depth, bool isEnd) {
   cout << "Number: " << value << endl;
 }
 
-void LogicExpression::print(int depth, bool isEnd) {
+void BinaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "LogicExpression" << endl;
   leftExpr->print(depth + 1, false);

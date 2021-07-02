@@ -123,32 +123,32 @@ compiler/fast:
 	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/build
 .PHONY : compiler/fast
 
-src/ast/AstNode.o: src/ast/AstNode.cpp.o
+src/controller/controller.o: src/controller/controller.cpp.o
 
-.PHONY : src/ast/AstNode.o
+.PHONY : src/controller/controller.o
 
 # target to build an object file
-src/ast/AstNode.cpp.o:
-	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/ast/AstNode.cpp.o
-.PHONY : src/ast/AstNode.cpp.o
+src/controller/controller.cpp.o:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/controller/controller.cpp.o
+.PHONY : src/controller/controller.cpp.o
 
-src/ast/AstNode.i: src/ast/AstNode.cpp.i
+src/controller/controller.i: src/controller/controller.cpp.i
 
-.PHONY : src/ast/AstNode.i
+.PHONY : src/controller/controller.i
 
 # target to preprocess a source file
-src/ast/AstNode.cpp.i:
-	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/ast/AstNode.cpp.i
-.PHONY : src/ast/AstNode.cpp.i
+src/controller/controller.cpp.i:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/controller/controller.cpp.i
+.PHONY : src/controller/controller.cpp.i
 
-src/ast/AstNode.s: src/ast/AstNode.cpp.s
+src/controller/controller.s: src/controller/controller.cpp.s
 
-.PHONY : src/ast/AstNode.s
+.PHONY : src/controller/controller.s
 
 # target to generate assembly for a file
-src/ast/AstNode.cpp.s:
-	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/ast/AstNode.cpp.s
-.PHONY : src/ast/AstNode.cpp.s
+src/controller/controller.cpp.s:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/controller/controller.cpp.s
+.PHONY : src/controller/controller.cpp.s
 
 src/entry.o: src/entry.cpp.o
 
@@ -177,6 +177,60 @@ src/entry.cpp.s:
 	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/entry.cpp.s
 .PHONY : src/entry.cpp.s
 
+src/front/ast/AstNode.o: src/front/ast/AstNode.cpp.o
+
+.PHONY : src/front/ast/AstNode.o
+
+# target to build an object file
+src/front/ast/AstNode.cpp.o:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o
+.PHONY : src/front/ast/AstNode.cpp.o
+
+src/front/ast/AstNode.i: src/front/ast/AstNode.cpp.i
+
+.PHONY : src/front/ast/AstNode.i
+
+# target to preprocess a source file
+src/front/ast/AstNode.cpp.i:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.i
+.PHONY : src/front/ast/AstNode.cpp.i
+
+src/front/ast/AstNode.s: src/front/ast/AstNode.cpp.s
+
+.PHONY : src/front/ast/AstNode.s
+
+# target to generate assembly for a file
+src/front/ast/AstNode.cpp.s:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.s
+.PHONY : src/front/ast/AstNode.cpp.s
+
+src/mid/ir/ir.o: src/mid/ir/ir.cpp.o
+
+.PHONY : src/mid/ir/ir.o
+
+# target to build an object file
+src/mid/ir/ir.cpp.o:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o
+.PHONY : src/mid/ir/ir.cpp.o
+
+src/mid/ir/ir.i: src/mid/ir/ir.cpp.i
+
+.PHONY : src/mid/ir/ir.i
+
+# target to preprocess a source file
+src/mid/ir/ir.cpp.i:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.i
+.PHONY : src/mid/ir/ir.cpp.i
+
+src/mid/ir/ir.s: src/mid/ir/ir.cpp.s
+
+.PHONY : src/mid/ir/ir.s
+
+# target to generate assembly for a file
+src/mid/ir/ir.cpp.s:
+	$(MAKE) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.s
+.PHONY : src/mid/ir/ir.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -186,12 +240,18 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... compiler"
-	@echo "... src/ast/AstNode.o"
-	@echo "... src/ast/AstNode.i"
-	@echo "... src/ast/AstNode.s"
+	@echo "... src/controller/controller.o"
+	@echo "... src/controller/controller.i"
+	@echo "... src/controller/controller.s"
 	@echo "... src/entry.o"
 	@echo "... src/entry.i"
 	@echo "... src/entry.s"
+	@echo "... src/front/ast/AstNode.o"
+	@echo "... src/front/ast/AstNode.i"
+	@echo "... src/front/ast/AstNode.s"
+	@echo "... src/mid/ir/ir.o"
+	@echo "... src/mid/ir/ir.i"
+	@echo "... src/mid/ir/ir.s"
 .PHONY : help
 
 

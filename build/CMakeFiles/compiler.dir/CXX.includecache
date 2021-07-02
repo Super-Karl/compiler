@@ -6,9 +6,33 @@
 
 #IncludeRegexTransform: 
 
-/home/wnx/compiler/src/ast/AstNode.cpp
+../src/front/ast/AstNode.h
+iostream
+-
+vector
+-
+
+../src/mid/ir/ir.h
+
+/home/wnx/compiler/src/controller/controller.cpp
+controller.h
+/home/wnx/compiler/src/controller/controller.h
+
+/home/wnx/compiler/src/controller/controller.h
+front/ast/AstNode.h
+-
+mid/ir/ir.h
+-
+
+/home/wnx/compiler/src/entry.cpp
+iostream
+-
+front/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
+
+/home/wnx/compiler/src/front/ast/AstNode.cpp
 AstNode.h
-/home/wnx/compiler/src/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
 cstdint
 -
 iostream
@@ -16,15 +40,9 @@ iostream
 iterator
 -
 
-/home/wnx/compiler/src/ast/AstNode.h
+/home/wnx/compiler/src/front/ast/AstNode.h
 iostream
 -
 vector
--
-
-/home/wnx/compiler/src/entry.cpp
-ast/AstNode.h
-/home/wnx/compiler/src/ast/AstNode.h
-iostream
 -
 

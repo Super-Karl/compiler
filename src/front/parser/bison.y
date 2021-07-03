@@ -1,6 +1,6 @@
 %{
-#include "y.tab.h"  
-#include "AstNode.h"
+
+#include "front/ast/AstNode.h"
 #include <cstdio>
 #include <cstdlib>  
 
@@ -8,10 +8,11 @@
 //using parser::ast;
 using namespace compiler;
 extern int yylex();
+extern int yydebug
 extern int yyget_lineno();
 extern int yylex_destroy();
 void yyerror(const char *s){
-    printf("line %d : error: %s\n", yylex_lineno(),s);
+    printf("line %d : error: %s\n", yyget_lineno(),s);
     yylex_destroy();
     if (!yydebug)
         std::exit(1);
@@ -22,7 +23,7 @@ void yyerror(const char *s){
     front::ast::Identifier* ident;
     front::ast::Expression* expr;
     front::ast::Stmt* stmt;
-    front::ast::FuctionCall* functCall;
+    front::ast::FunctionCall* functCall;
     front::ast::AST* root;
     front::ast::Declare* declare;
     front::ast::DeclareStatement* declStmt; 
@@ -31,7 +32,6 @@ void yyerror(const char *s){
     front::ast::Block* block;
     front::ast::Expression* expression;
     front::ast::FunctionCallArgList* funcCallArgList;
-    front::ast::FunctionCallArg* funcCallArg;
     std::string *string;
 }
 
@@ -50,14 +50,13 @@ void yyerror(const char *s){
 %type <funcDef> FuncDef
 %type <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt Assignment BlockItem ReturnStmt
 
-%type <funcCallArgList> FunctionCallArgList
-%type <funcCallArg> FuncCallArg
+%type <funcCallArgList> FunctionCallArgList 
 %type <funcdefParamList> FuncParamList
 %type <funcdefParam> FuncParam
 %type <block> Block BlockItems
 %type <declStmt> VarDecl ConstDecl
 %type <ident> Ident LVal
-%type <expr> Number Exp InitVal LOrExp LAndExp EqExp AddExp MulExp PrimaryExp RelExp UnaryExp FunctCall ConstInitialVal Cond
+%type <expr> Number Exp InitVal LOrExp LAndExp EqExp AddExp MulExp PrimaryExp RelExp UnaryExp FunctCall ConstInitialVal Cond FuncCallArg
 %start compUnit 
 %%
 
@@ -212,7 +211,7 @@ FunctionCallArgList: FunctionCallArgList COMMA FuncCallArg {$$->args.push_back($
     | FuncCallArg {$$ = new front::ast::FunctionCallArgList(); $$->args.push_back($1);}
     ;
 
-FuncCallArg:Exp // ^&^
+FuncCallArg:AddExp // ^&^
     ;
 
 PrimaryExp: Number 

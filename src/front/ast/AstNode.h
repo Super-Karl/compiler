@@ -35,8 +35,8 @@ namespace compiler {
     class ArrayIdentifier : public Identifier {
     public:
       string name;
-      //vector<Expression *> index;
-      vector<Expression *> shape;
+      vector<Expression *> index;
+
       ArrayIdentifier(string name) : Identifier(name) {};
 
       void print(int depth, bool isEnd) override;
@@ -97,7 +97,7 @@ namespace compiler {
 
     class ArrayDeclare : public Declare {
     public:
-      
+      vector<Expression *> shape;
 
       ArrayDeclare(string name) : Declare(name, true) {};
 

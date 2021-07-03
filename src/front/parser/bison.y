@@ -15,6 +15,9 @@ void yyerror(const char *s){
     yylex_destroy();
     if (!yydebug)
         std::exit(1);
+}
+
+front::ast::AST* root;
 %}
 
 %union {
@@ -27,10 +30,12 @@ void yyerror(const char *s){
     front::ast::Declare* declare;
     front::ast::DeclareStatement* declStmt; 
     front::ast::ConstDeclare *conDecl;
-    front::ast::FunctionDefine* funcDecl;
+    front::ast::FunctionDefine* funcDef;
     front::ast::Block* block;
     front::ast::Expression* expression;
     front::ast::FunctionCallArgList* funcCallArgList;
+    front::ast::FunctionDefArgList* funcdefParamList;
+    front::ast::FunctionDefArg* funcdefParam;
     std::string *string;
 }
 
@@ -43,7 +48,7 @@ void yyerror(const char *s){
 
 %type <root> compUnit
 %type <arrayident> ArrayIdent
-%type <declare> Decl VarDef DefVal DefArray ConstDef ConstDefVal //ConstDefArray 
+%type <declare>VarDef DefVal DefArray ConstDef ConstDefVal //ConstDefArray 
 
 %type <token> RelOP UnaryOp MulOp AddOp BType
 %type <funcDef> FuncDef
@@ -53,14 +58,14 @@ void yyerror(const char *s){
 %type <funcdefParamList> FuncParamList
 %type <funcdefParam> FuncParam
 %type <block> Block BlockItems
-%type <declStmt> VarDecl ConstDecl
+%type <declStmt>Decl VarDecl ConstDecl
 %type <ident> Ident LVal
 %type <expr> Number Exp InitVal LOrExp LAndExp EqExp AddExp MulExp PrimaryExp RelExp UnaryExp FunctCall ConstInitialVal Cond FuncCallArg
 %start compUnit 
 %%
 
 compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
-    | compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2;)}
+    | compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2);}
     | Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
     | FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);}
     ;
@@ -69,7 +74,7 @@ Decl: ConstDecl SEMI {$$ = $1;}
     | VarDecl SEMI {$$ = $1;}
     ;
 
-ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($1);}
+ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);}
     | ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
     ;
 
@@ -97,12 +102,12 @@ VarDef: DefVal //done
     ;
 
 DefVal: Ident ASSIGN InitVal { $$ = new front::ast::VarDeclareWithInit($1,$3);}
-    | Ident {$$ = new front::ast::VarDeclare(*($1));}
+    | Ident {$$ = new front::ast::VarDeclare($1);}
 
 InitVal: Exp
     ;
 
-DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithInit()}
+DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithInit();}
     | ArrayIdent
     ;
 /*
@@ -121,7 +126,7 @@ FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast:
     ;
 
 FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
-    | FuncParam {$$ = new front::ast::FuncDefArgList();$$->args.push_back($1);}
+    | FuncParam {$$ = new front::ast::FunctionDefArgList();$$->args.push_back($1);}
 
 FuncParam: FuncDefVal 
     | FunDefArr
@@ -148,7 +153,7 @@ Stmt: Assignment SEMI {$$ = $1;}
     | VoidStmt SEMI
     ;
 
-Assignment:LVal ASSIGN Exp {new front::ast::AssignExperssion($1,$3);} 
+Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExperssion($1,$3);} 
     ;
 
 IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
@@ -158,7 +163,7 @@ IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatemen
 WhileStmt: WHILE LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::WhileStatement($3,$5);}
     ;
 
-BreakStmt: BREAK SEMI {$$ =  new front::ast::BreakStatemet();}
+BreakStmt: BREAK SEMI {$$ =  new front::ast::BreakStatement();}
     ;
 
 ContinueStmt: CONTINUE SEMI {$$ = new front::ast::ContinueStatement();}
@@ -203,7 +208,7 @@ UnaryExp: UnaryOp UnaryExp {$$ = new front::ast::UnaryExpression($1,$2);}
     | PrimaryExp
     ;
 
-FunctCall: Ident LBRACKET FunctionCallArgList RBRACKET {$$ = new front::ast::FunctCall($1,$3);}
+FunctCall: Ident LBRACKET FunctionCallArgList RBRACKET {$$ = new front::ast::FunctionCall($1,$3);}
     | Ident LBRACKET RBRACKET {$$ = new front::ast::FunctionCall($1,NULL);}
     ;
 
@@ -247,7 +252,7 @@ RelOP:LT
     |GE
     ;
 
-Number: NUM {$$ = new front::ast::Number($1);}
+Number: NUM {$$ = new front::ast::NumberExpression(atoi($1));}
     ;
 
 Ident: IDENTIFIER {$$ = new front::ast::Identifier($1);}

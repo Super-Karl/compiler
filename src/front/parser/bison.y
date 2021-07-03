@@ -19,40 +19,53 @@ void yyerror(const char *s){
 
 %union {
     int token;
-    front::ast::Identifier* Ident;
+    front::ast::Identifier* ident;
     front::ast::Expression* expr;
     front::ast::Stmt* stmt;
     front::ast::FuctionCall* functCall;
     front::ast::AST* root;
     front::ast::Declare* declare;
-    front::ast::DeclareStatement* DeclStmt; 
+    front::ast::DeclareStatement* declStmt; 
     front::ast::ConstDeclare *conDecl;
     front::ast::FunctionDefine* funcDecl;
     front::ast::Block* block;
+    front::ast::Expression* expression;
+    front::ast::FunctionCallArgList* funcCallArgList;
+    front::ast::FunctionCallArg* funcCallArg;
     std::string *string;
 }
-%%
-%token <token> CONST IF ELSE BREAK CONTINUE RETURN WHILE
+
+%token <token> IF ELSE BREAK CONTINUE RETURN WHILE 
 %token <token> INT VOID CONST
-%token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP 
+%token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP EQ NE
 %token <token> LBRACKET RBRACKET LBRACE RBRACE LSQARE RSQARE ASSIGN COLON COMMA SEMI DOT
-%token <root> compUnit
-%token <declare> Decl ValDef DefVal DefArray ConstDef ConstDefVal ConstDefArray 
-%token <string> INDENTIFIER NUM
-%token <token> RelOP UnaryOp MulOp AddOp
-%token <funcDef> FuncDef
-%token <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt
-%token <funcParam> FuncParamList
-%token <block> Block BlockItem
-%token <DeclStmt> ValDecl ConstDecl
-%start compUnit ;
+%token <string> IDENTIFIER NUM
+%token <token> ConstDefArray ArrayInitList FuncDefVal FunDefArr FunctCallVal FunctCallArr//temp
+
+%type <root> compUnit
+%type <arrayident> ArrayIdent
+%type <declare> Decl VarDef DefVal DefArray ConstDef ConstDefVal //ConstDefArray 
+
+%type <token> RelOP UnaryOp MulOp AddOp BType
+%type <funcDef> FuncDef
+%type <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt Assignment BlockItem ReturnStmt
+
+%type <funcCallArgList> FunctionCallArgList
+%type <funcCallArg> FuncCallArg
+%type <funcdefParamList> FuncParamList
+%type <funcdefParam> FuncParam
+%type <block> Block BlockItems
+%type <declStmt> VarDecl ConstDecl
+%type <ident> Ident LVal
+%type <expr> Number Exp InitVal LOrExp LAndExp EqExp AddExp MulExp PrimaryExp RelExp UnaryExp FunctCall ConstInitialVal Cond
+%start compUnit 
 %%
 
-CompUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
+compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
     | compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2;)}
     | Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
     | FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);};
-
+    ;
 Decl: ConstDecl SEMI {$$ = $1;}
     | VarDecl SEMI {$$ = $1;}
     ;
@@ -84,22 +97,22 @@ VarDef: DefVal //done
     | DefArray //
     ;
 
-DefVal: ValIdent ASSIGN InitVal { $$ = new front::ast::VarDeclareWithInit($1,$3);}
-    | ValIdent {$$ = new front::ast::VarDeclare(*($1));}
+DefVal: Ident ASSIGN InitVal { $$ = new front::ast::VarDeclareWithInit($1,$3);}
+    | Ident {$$ = new front::ast::VarDeclare(*($1));}
 
 InitVal: Exp
     ;
 
 DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithInit()}
-    | ArrayIdent{}
+    | ArrayIdent
     ;
-
+/*
 ArrayIdent: ArrayIdent LSQARE Exp RSQARE{$$} 
     | Ident LSQARE Exp RSQARE {}
     ;
 
 ArrayInitList:
-    ;
+    ;*/
 //VarDef:IDENT ;
 
 FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6)}
@@ -116,8 +129,11 @@ FuncParam: FuncDefVal
     ;
 
 Block: LBRACE RBRACE
-    |   LBRACE BlockItem RBRACE
+    |   LBRACE BlockItems RBRACE
     ;
+
+BlockItems:BlockItems BlockItem {$$->blockItem.push_back($1);}
+    |BlockItem {$$ = new front::ast::Block();$$->blockItem.push_back($1);}
 
 BlockItem: Decl
     | Stmt
@@ -133,10 +149,10 @@ Stmt: Assignment SEMI {$$ = $1;}
     | VoidStmt SEMI
     ;
 
-Assignment: LVal ASSIGN Exp {new front::ast::AssignExperssion($1,$3);} 
+Assignment:LVal ASSIGN Exp {new front::ast::AssignExperssion($1,$3);} 
     ;
 
-IfStmt: IF LBRACKET Cond RBRACKET Stmt ElSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
+IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
     | IF LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::IfStatement($3,$5,NULL);}
     ;
 
@@ -152,6 +168,7 @@ ContinueStmt: CONTINUE SEMI {$$ = new front::ast::ContinueStatement();}
 VoidStmt: SEMI {$$ = new front::ast::VoidStatement();}
     ;
 
+ReturnStmt: {$$ = new front::ast::ReturnStatement();}
 Exp: AddExp
     ;
 
@@ -187,20 +204,23 @@ UnaryExp: UnaryOp UnaryExp {$$ = new front::ast::UnaryExpression($1,$2);}
     | PrimaryExp
     ;
 
-FunctCall: Ident LBRACKET FuncCallArgsList RBRACKET {$$ = new front::ast::FunctCall($1,$3);}
+FunctCall: Ident LBRACKET FunctionCallArgList RBRACKET {$$ = new front::ast::FunctCall($1,$3);}
     | Ident LBRACKET RBRACKET {$$ = new front::ast::FunctionCall($1,NULL);}
     ;
 
-FunctCallArgsList: FunctionCallArgsList COMMA FuncCallArg {$$->args.push_back($3);}
-    | FunctCallArg {$$ = new front::ast::FunctionCallArgsList(); $$->args.push_back($1);}
+FunctionCallArgList: FunctionCallArgList COMMA FuncCallArg {$$->args.push_back($3);}
+    | FuncCallArg {$$ = new front::ast::FunctionCallArgList(); $$->args.push_back($1);}
+    ;
+
+FuncCallArg:Exp // ^&^
     ;
 
 PrimaryExp: Number 
-    | Lval
+    | LVal
     | LBRACKET Exp RBRACKET {$$ = $2;}
     ;
 
-Lval: Ident
+LVal: Ident
     | ArrayIdent
     ;
 

@@ -2,13 +2,12 @@
 
 #include "front/ast/AstNode.h"
 #include <cstdio>
-#include <cstdlib>  
-
+#include <cstdlib>
 
 //using parser::ast;
 using namespace compiler;
 extern int yylex();
-extern int yydebug
+extern int yydebug;
 extern int yyget_lineno();
 extern int yylex_destroy();
 void yyerror(const char *s){
@@ -63,8 +62,9 @@ void yyerror(const char *s){
 compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
     | compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2;)}
     | Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
-    | FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);};
+    | FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);}
     ;
+
 Decl: ConstDecl SEMI {$$ = $1;}
     | VarDecl SEMI {$$ = $1;}
     ;

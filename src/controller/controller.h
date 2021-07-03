@@ -7,21 +7,33 @@
 
 #include <front/ast/AstNode.h>
 #include <mid/ir/ir.h>
+#include <iostream>
+#include <fstream>
 
 using namespace compiler::front;
 
-namespace compiler::controller{
-  class ArgParser{
-
-  };
-
-  class FrontGenerator{
+namespace compiler::controller {
+  class ArgParser {
   public:
-    ast::AST* generateAst();
-    ir::IR* generateIR(ast::AST *root);
+    bool isOptimize = false;
+    bool printAST = false;
+    bool printIR = false;
+    FILE *input;
+    std::ostream *output = nullptr;
+
+    ArgParser(int argc, char **argv);
   };
 
-  class Controller{
+  class FrontGenerator {
+  public:
+    ast::AST *root;
+
+    ast::AST *generateAst(FILE *input);
+
+    ir::IR *generateIR(ast::AST *root);
+  };
+
+  class Controller {
   public:
 
   };

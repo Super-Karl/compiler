@@ -37,6 +37,7 @@ namespace compiler {
       string name;
       vector<Expression *> index;
 
+//      vector<Expression *> shape;
       ArrayIdentifier(string name) : Identifier(name) {};
 
       void print(int depth, bool isEnd) override;
@@ -228,7 +229,7 @@ namespace compiler {
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(string name, Expression *right) :name(new Identifier(name)), rightExpr(right) {};
+      AssignExpression(string name, Expression *right) : name(new Identifier(name)), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -254,7 +255,7 @@ namespace compiler {
       Block *elseBlock;
 
       IfStatement(BinaryExpression *cond, Block *trueBlock, Block *elseBlock) : cond(cond), trueBlock(trueBlock),
-                                                                               elseBlock(elseBlock) {};
+                                                                                elseBlock(elseBlock) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

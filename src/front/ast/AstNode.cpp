@@ -153,7 +153,7 @@ void UnaryExpression::print(int depth, bool isEnd) {
 
 void AssignExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "CalcExpression Operand: " << ' ' << endl;
+  cout << "CalcExpression Operand: " <<  endl;
   name->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }

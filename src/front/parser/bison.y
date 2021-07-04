@@ -1,11 +1,13 @@
 %{
-
 #include "front/ast/AstNode.h"
 #include <cstdio>
 #include <cstdlib>
-
+#include "controller/controller.h"
 //using parser::ast;
+
+using compiler::controller::generator::root;
 using namespace compiler;
+
 extern int yylex();
 extern int yydebug;
 extern int yyget_lineno();
@@ -17,25 +19,24 @@ void yyerror(const char *s){
         std::exit(1);
 }
 
-front::ast::AST* root;
 %}
 
 %union {
     int token;
-    front::ast::Identifier* ident;
-    front::ast::Expression* expr;
-    front::ast::Stmt* stmt;
-    front::ast::FunctionCall* functCall;
-    front::ast::AST* root;
-    front::ast::Declare* declare;
-    front::ast::DeclareStatement* declStmt; 
-    front::ast::ConstDeclare *conDecl;
-    front::ast::FunctionDefine* funcDef;
-    front::ast::Block* block;
-    front::ast::Expression* expression;
-    front::ast::FunctionCallArgList* funcCallArgList;
-    front::ast::FunctionDefArgList* funcdefParamList;
-    front::ast::FunctionDefArg* funcdefParam;
+    compiler::front::ast::Identifier* ident;
+    compiler::front::ast::Expression* expr;
+    compiler::front::ast::Stmt* stmt;
+    compiler::front::ast::FunctionCall* functCall;
+    compiler::front::ast::AST* root;
+    compiler::front::ast::Declare* declare;
+    compiler::front::ast::DeclareStatement* declStmt;
+    compiler::front::ast::ConstDeclare *conDecl;
+    compiler::front::ast::FunctionDefine* funcDef;
+    compiler::front::ast::Block* block;
+    compiler::front::ast::Expression* expression;
+    compiler::front::ast::FunctionCallArgList* funcCallArgList;
+    compiler::front::ast::FunctionDefArgList* funcdefParamList;
+    compiler::front::ast::FunctionDefArg* funcdefParam;
     std::string *string;
 }
 
@@ -48,7 +49,7 @@ front::ast::AST* root;
 
 %type <root> compUnit
 %type <arrayident> ArrayIdent
-%type <declare>VarDef DefVal DefArray ConstDef ConstDefVal //ConstDefArray 
+%type <declare>VarDef DefVal DefArray ConstDef ConstDefVal //ConstDefArray
 
 %type <token> RelOP UnaryOp MulOp AddOp BType
 %type <funcDef> FuncDef
@@ -153,7 +154,7 @@ Stmt: Assignment SEMI {$$ = $1;}
     | VoidStmt SEMI
     ;
 
-Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExpression($1,$3);} 
+Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExpression($1,$3);}
     ;
 
 IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}

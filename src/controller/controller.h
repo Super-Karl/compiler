@@ -10,8 +10,6 @@
 #include <iostream>
 #include <fstream>
 
-using namespace compiler::front;
-
 namespace compiler::controller {
   class ArgParser {
   public:
@@ -23,20 +21,12 @@ namespace compiler::controller {
 
     ArgParser(int argc, char **argv);
   };
+  namespace generator {
+    extern compiler::front::ast::AST *root;
 
-  class FrontGenerator {
-  public:
-    ast::AST *root;
-
-    ast::AST *generateAst(FILE *input);
-
-    ir::IR *generateIR(ast::AST *root);
-  };
-
-  class Controller {
-  public:
-
-  };
+    compiler::front::ast::AST *generate(FILE *input = stdin);
+  }
 }
+
 
 #endif //COMPILER_CONTROLLER_H

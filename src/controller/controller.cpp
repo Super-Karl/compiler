@@ -3,12 +3,15 @@
 //
 
 #include "controller.h"
+#include <iostream>
+
+extern int yydebug;
 
 namespace compiler::controller {
-  extern int yydebug;
   ArgParser::ArgParser(int argc, char **argv) {
-    compiler::controller::yydebug = 0;
+    yydebug = 0;
     bool writeToFile = false;
+    std::cout<<argc<<std::endl;
     for (int i = 1; i < argc; ++i) {
       if (argv[i][0] == '-') {
         if (std::string(argv[i]) == "-o") {
@@ -18,6 +21,7 @@ namespace compiler::controller {
           this->isOptimize = true;
         }
         if (std::string(argv[i]) == "-printAST") {
+          std::cout<<"print AST:"<<std::endl;
           this->printAST = true;
         }
         if (std::string(argv[i]) == "-printIR") {

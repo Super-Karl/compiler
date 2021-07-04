@@ -203,7 +203,7 @@ namespace compiler {
     public:
       int value;
 
-      NumberExpression(int value);
+      NumberExpression(int value):value(value){};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

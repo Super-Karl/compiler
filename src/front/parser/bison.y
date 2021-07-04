@@ -7,11 +7,14 @@
 
 using compiler::controller::generator::root;
 using namespace compiler;
+extern int yydebug;
 
 extern int yylex();
-extern int yydebug;
 extern int yyget_lineno();
 extern int yylex_destroy();
+#define YYDEBUG 1
+#define YYERROR_VERBOSE true
+
 void yyerror(const char *s){
     printf("line %d : error: %s\n", yyget_lineno(),s);
     yylex_destroy();

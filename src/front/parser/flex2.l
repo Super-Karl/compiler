@@ -13,6 +13,7 @@ void comment();
 %}
 
 %option noyywrap
+
 %%
 
 [0-9]+                      SAVE_TOKEN;return NUM;
@@ -32,7 +33,6 @@ void comment();
 "while"                     return TOKEN(WHILE);
 
 "int"                       return TOKEN(INT);
-"void"                      return TOKEN(VOID);
 
 "const"                     return TOKEN(CONST);
 

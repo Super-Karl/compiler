@@ -2,6 +2,7 @@
 #include "front/ast/AstNode.h"
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include "controller/controller.h"
 //using parser::ast;
 
@@ -43,11 +44,12 @@ void yyerror(const char *s){
     std::string *string;
 }
 
-%token <token> IF ELSE BREAK CONTINUE RETURN WHILE 
-%token <token> INT VOID CONST
-%token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP EQ NE
-%token <token> LBRACKET RBRACKET LBRACE RBRACE LSQARE RSQARE ASSIGN COLON COMMA SEMI DOT
 %token <string> IDENTIFIER NUM
+%token <token> IF ELSE BREAK CONTINUE RETURN WHILE 
+%token <token> CONST INT VOID
+%token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP EQ NE
+%token <token> AND OR
+%token <token> LBRACKET RBRACKET LBRACE RBRACE LSQARE RSQARE ASSIGN COLON COMMA SEMI
 %token <token> ConstDefArray ArrayInitList FuncDefVal FunDefArr FunctCallVal FunctCallArr//temp
 
 %type <root> compUnit
@@ -68,7 +70,7 @@ void yyerror(const char *s){
 %start compUnit 
 %%
 
-compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2);}
+compUnit: compUnit Decl {$$->codeBlock.push_back($<declare>2); }
     | compUnit FuncDef {$$->codeBlock.push_back($<funcDef>2);}
     | Decl{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<declare>1);}
     | FuncDef{root = new front::ast::AST();$$=root;$$->codeBlock.push_back($<funcDef>1);}
@@ -131,17 +133,21 @@ FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast:
 
 FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
     | FuncParam {$$ = new front::ast::FunctionDefArgList();$$->args.push_back($1);}
+    ;
 
 FuncParam: FuncDefVal 
     | FunDefArr
     ;
 
-Block: LBRACE RBRACE
-    |   LBRACE BlockItems RBRACE
+FuncParam: BType Ident {$$ = new front::ast::FunctionDefArg($1,$2);};
+
+Block: LBRACE RBRACE{ $$ = new front::ast::Block();}
+    |   LBRACE BlockItems RBRACE{$$ = $2;}
     ;
 
-BlockItems:BlockItems BlockItem {$$->blockItem.push_back($1);}
+BlockItems:BlockItems BlockItem {$$ = $1;$$->blockItem.push_back($2);}
     |BlockItem {$$ = new front::ast::Block();$$->blockItem.push_back($1);}
+    ;
 
 BlockItem: Decl
     | Stmt
@@ -154,7 +160,7 @@ Stmt: Assignment SEMI {$$ = $1;}
     | BreakStmt SEMI
     | ContinueStmt SEMI
     | ReturnStmt SEMI
-    | VoidStmt SEMI
+    | VoidStmt SEMI { $$ = new front::ast::VoidStatement();}
     ;
 
 Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExpression($1,$3);}

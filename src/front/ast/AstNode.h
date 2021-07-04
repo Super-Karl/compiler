@@ -23,7 +23,7 @@ namespace compiler {
     public:
     };
 
-    class Identifier : Node {
+    class Identifier : public Node {
     public:
       Identifier(string name) : name(name) {};
 
@@ -139,7 +139,7 @@ namespace compiler {
 
       FunctionDefArg() {};
 
-      FunctionDefArg(string name, int type) : name(new Identifier(name)), type(type) {};
+      FunctionDefArg(int type, Identifier *name) : type(type), name(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -162,9 +162,10 @@ namespace compiler {
 
       FunctionDefine() {};
 
-      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *blck) : retType(retType),
-                                                                                              name(name),
-                                                                                              args(args), body(blck) {};
+      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *block) : retType(retType),
+                                                                                               name(name),
+                                                                                               args(args),
+                                                                                               body(block) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

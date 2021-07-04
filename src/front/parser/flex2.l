@@ -16,7 +16,7 @@ void comment();
 
 %%
 
-\/\/.*\n?                    FIX_LINE
+\/\/.*\n?                   FIX_LINE;
 "/*"                        comment();
 [ ]                         ;
 \n                          yylineno++;

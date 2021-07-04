@@ -28,7 +28,7 @@ void Identifier::print(int depth, bool isEnd) {
 };
 
 void ArrayIdentifier::print(int depth, bool isEnd) {
-  this->print(depth, isEnd);
+  this->printPrefix(depth, isEnd);
   cout << "ArrayIdentifier: " + this->name << endl;
   for (auto i : index)
     i->print(depth + 1, i == index.back());
@@ -102,16 +102,17 @@ void FunctionDefArgList::print(int depth, bool isEnd) {
   cout << "FunctionDefArgList" << endl;
 
   for (auto i : args)
-    i->printPrefix(depth + 1, i == args.back());
+    i->print(depth + 1, i == args.back());
 }
 
 void FunctionDefine::print(int depth, bool isEnd) {
-  this->print(depth, isEnd);
-  cout << "FunctionDefine" << endl;
-  cout << "returnType: " << retType << endl;
+  this->printPrefix(depth, isEnd);
+  cout << "FunctionDefine";
+  cout << " returnType: " << retType << endl;
   name->print(depth + 1, false);
-  args->printPrefix(depth + 1, isEnd);
-  body->print(depth + 1, true);
+  args->print(depth + 1, isEnd);
+  if (body != NULL)
+    body->print(depth + 1, true);
 }
 
 void FunctionCallArgList::print(int depth, bool isEnd) {
@@ -153,7 +154,7 @@ void UnaryExpression::print(int depth, bool isEnd) {
 
 void AssignExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "CalcExpression Operand: " <<  endl;
+  cout << "Assign: " << endl;
   name->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }
@@ -198,7 +199,8 @@ void VoidStatement::print(int depth, bool isEnd) {
 void ReturnStatement::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ReturnStatement" << endl;
-  returnExp->print(depth + 1, true);
+  if (this->returnExp != NULL)
+    returnExp->print(depth + 1, true);
 }
 
 void AST::print(int depth, bool isEnd) {

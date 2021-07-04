@@ -124,9 +124,9 @@ ArrayInitList:
 //VarDef:IDENT ;
 
 FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6);}
-    | BType Ident LBRACKET RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
+    | BType Ident LBRACKET RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,(new front::ast::FunctionDefArgList()),$5);}
     | VOID Ident LBRACKET FuncParamList RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,$4,$6); }
-    | VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
+    | VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(new front::ast::FunctionDefArgList()),$5);}
     ;
 
 FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
@@ -161,7 +161,7 @@ Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExpression($1,$3);}
     ;
 
 IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
-    | IF LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::IfStatement($3,$5,NULL);}
+    | IF LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::IfStatement($3,$5,(new front::ast::VoidStatement()));}
     ;
 
 WhileStmt: WHILE LBRACKET Cond RBRACKET Stmt {$$ = new front::ast::WhileStatement($3,$5);}
@@ -176,7 +176,9 @@ ContinueStmt: CONTINUE SEMI {$$ = new front::ast::ContinueStatement();}
 VoidStmt: SEMI {$$ = new front::ast::VoidStatement();}
     ;
 
-ReturnStmt: {$$ = new front::ast::ReturnStatement();}
+ReturnStmt:RETURN Exp {$$ = new front::ast::ReturnStatement($2);}
+    |RETURN {$$ = new front::ast::ReturnStatement();}
+    ;
 Exp: AddExp
     ;
 
@@ -213,7 +215,7 @@ UnaryExp: UnaryOp UnaryExp {$$ = new front::ast::UnaryExpression($1,$2);}
     ;
 
 FunctCall: Ident LBRACKET FunctionCallArgList RBRACKET {$$ = new front::ast::FunctionCall($1,$3);}
-    | Ident LBRACKET RBRACKET {$$ = new front::ast::FunctionCall($1,NULL);}
+    | Ident LBRACKET RBRACKET {$$ = new front::ast::FunctionCall($1,(new front::ast::FunctionCallArgList()));}
     ;
 
 FunctionCallArgList: FunctionCallArgList COMMA FuncCallArg {$$->args.push_back($3);}

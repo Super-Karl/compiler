@@ -158,8 +158,8 @@ namespace compiler {
       FunctionDefArgList *args;
       Block *body;
 
-      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args) : retType(retType), name(name),
-                                                                                 args(args) {};
+      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *blck) : retType(retType), name(name),
+                                                                                 args(args), body(blck){};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -229,12 +229,12 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class AssignExpression : public Expression {//赋值表达式
+    class AssignExpression : public Stmt {//赋值表达式
     public:
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(string name, Expression *right) : name(new Identifier(name)), rightExpr(right) {};
+      AssignExpression(Identifier* inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

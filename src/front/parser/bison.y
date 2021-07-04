@@ -119,7 +119,7 @@ ArrayInitList:
     ;*/
 //VarDef:IDENT ;
 
-FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6)}
+FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6);}
     | BType Ident LBRACKET RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
     | VOID Ident LBRACKET FuncParamList RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,$4,$6); }
     | VOID Ident LBRACKET RBRACKET Block{ $$ = new front::ast::FunctionDefine($1,$2,(NULL),$5);}
@@ -153,7 +153,7 @@ Stmt: Assignment SEMI {$$ = $1;}
     | VoidStmt SEMI
     ;
 
-Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExperssion($1,$3);} 
+Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignExpression($1,$3);} 
     ;
 
 IfStmt: IF LBRACKET Cond RBRACKET Stmt ELSE Stmt {$$= new front::ast::IfStatement($3,$5,$7);}
@@ -179,7 +179,7 @@ Exp: AddExp
 Cond: LOrExp
     ;
 
-LOrExp:LOrExp OR_OP LAndExp {$$ = new front::ast::BinaryExpression)($1,$2,$3);}
+LOrExp:LOrExp OR_OP LAndExp {$$ = new front::ast::BinaryExpression($1,$2,$3);}
     |LAndExp
     ;
 
@@ -252,8 +252,8 @@ RelOP:LT
     |GE
     ;
 
-Number: NUM {$$ = new front::ast::NumberExpression(atoi($1));}
+Number: NUM {$$ = new front::ast::NumberExpression(atoi($1->c_str()));}
     ;
 
-Ident: IDENTIFIER {$$ = new front::ast::Identifier($1);}
+Ident: IDENTIFIER {$$ = new front::ast::Identifier(*$1);}
     ;

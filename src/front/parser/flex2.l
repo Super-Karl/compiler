@@ -16,25 +16,47 @@ void comment();
 
 %%
 
-[0-9]+                      SAVE_TOKEN;return NUM;
-[a-zA-Z_][a-zA-Z0-9_]*      SAVE_TOKEN;return IDENTIFIER;
-\/\/.*\n                    FIX_LINE
+\/\/.*\n?                    FIX_LINE
 "/*"                        comment();
-"//"[^/n]*                  ;
-\n                          yylineno++;
 [ ]                         ;
+\n                          yylineno++;
+[\t\r]                      ;
 
+"if"                        return TOKEN(IF);
+"else"                      return TOKEN(ELSE);
+"while"                     return TOKEN(WHILE);
 "break"                     return TOKEN(BREAK);
 "continue"                  return TOKEN(CONTINUE);
-"else"                      return TOKEN(ELSE);
-"if"                        return TOKEN(IF);
 "return"                    return TOKEN(RETURN);
-"void"                      return TOKEN(VOID);
-"while"                     return TOKEN(WHILE);
-
-"int"                       return TOKEN(INT);
 
 "const"                     return TOKEN(CONST);
+"int"                       return TOKEN(INT);
+"void"                      return TOKEN(VOID);
+
+[a-zA-Z_][a-zA-Z0-9_]*      SAVE_TOKEN;return IDENTIFIER;
+[0-9]+                      SAVE_TOKEN;return NUM;
+"0x"[0-9a-fA-F]+            SAVE_TOKEN;return NUM;
+
+"="                         return TOKEN(ASSIGN);
+"=="                        return TOKEN(EQ);
+"!="                        return TOKEN(NE);
+"<"                         return TOKEN(LT);
+"<="                        return TOKEN(LE);
+">"                         return TOKEN(GT);
+">="                        return TOKEN(GE);
+"&&"                        return TOKEN(AND_OP);
+"||"                        return TOKEN(OR_OP);
+
+"("                         return TOKEN(LBRACKET);
+")"                         return TOKEN(RBRACKET);
+"["                         return TOKEN(LSQARE);
+"]"                         return TOKEN(RSQARE);
+"{"                         return TOKEN(LBRACE);
+"}"                         return TOKEN(RBRACE);
+
+":"                         return TOKEN(COLON);
+","                         return TOKEN(COMMA);
+";"                         return TOKEN(SEMI);
 
 "+"                         return TOKEN(ADD);
 "-"                         return TOKEN(SUB);
@@ -42,28 +64,6 @@ void comment();
 "/"                         return TOKEN(DIV);
 "%"                         return TOKEN(MOD);
 "!"                         return TOKEN(NOT_EQUAL);
-
-"<"                         return TOKEN(LT);
-">"                         return TOKEN(GT);
-"=="                        return TOKEN(EQ);
-"!="                        return TOKEN(NE);
-"<="                        return TOKEN(LE);
-">="                        return TOKEN(GE);
-"&&"                        return TOKEN(AND_OP);
-"||"                        return TOKEN(OR_OP);
-
-"{"                         return TOKEN(LBRACE);
-"}"                         return TOKEN(RBRACE);
-"("                         return TOKEN(LBRACKET);
-")"                         return TOKEN(RBRACKET);
-";"                         return TOKEN(SEMI);
-","                         return TOKEN(COMMA);
-":"                         return TOKEN(COLON);
-"="                         return TOKEN(ASSIGN);
-"["                         return TOKEN(LSQARE);
-"]"                         return TOKEN(RSQARE);
-
-[\t\v\n\f]                  ;
 
 .                           /*unmatched codes*/
 

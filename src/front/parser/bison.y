@@ -78,11 +78,11 @@ Decl: ConstDecl SEMI {$$ = $1;}
     | VarDecl SEMI {$$ = $1;}
     ;
 
+BType: INT;
+
 ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);}
     | ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
     ;
-
-BType: INT;
 
 ConstDef: ConstDefVal
     | ConstDefArray

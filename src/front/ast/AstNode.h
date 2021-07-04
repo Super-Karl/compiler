@@ -137,6 +137,8 @@ namespace compiler {
       Identifier *name;
       int type;
 
+      FunctionDefArg() {};
+
       FunctionDefArg(string name, int type) : name(new Identifier(name)), type(type) {};
 
       void print(int depth = 0, bool isEnd = false) override;
@@ -158,8 +160,11 @@ namespace compiler {
       FunctionDefArgList *args;
       Block *body;
 
-      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *blck) : retType(retType), name(name),
-                                                                                 args(args), body(blck){};
+      FunctionDefine() {};
+
+      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *blck) : retType(retType),
+                                                                                              name(name),
+                                                                                              args(args), body(blck) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -182,7 +187,9 @@ namespace compiler {
       Identifier *name;
       FunctionCallArgList *args;
 
-      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name),args(args) {};
+      FunctionCall() {};
+
+      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -203,7 +210,7 @@ namespace compiler {
     public:
       int value;
 
-      NumberExpression(int value):value(value){};
+      NumberExpression(int value) : value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -234,7 +241,7 @@ namespace compiler {
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(Identifier* inName, Expression *right) : name(inName), rightExpr(right) {};
+      AssignExpression(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

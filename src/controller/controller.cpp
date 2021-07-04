@@ -32,11 +32,15 @@ namespace compiler::controller {
         }
       } else {
         if (writeToFile) {
-          output = new std::ofstream(argv[i], std::ofstream::out);
-          input = fopen(argv[i], "r");
+          if(std::string(argv[i]) == "-"){
+            output = &std::cout;
+          }else
+            output = new std::ofstream(argv[i],std::ofstream::out);
         } else {
-          output = &std::cout;
-          input = fopen(argv[i], "r");
+          if(std::string(argv[i]) == "-")
+            input = stdin;
+          else
+            input = fopen(argv[i],"r");
         }
         writeToFile = true;
       }

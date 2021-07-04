@@ -140,7 +140,7 @@ void NumberExpression::print(int depth, bool isEnd) {
 
 void BinaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "LogicExpression" << endl;
+  cout << "BinaryExpression" << endl;
   leftExpr->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }

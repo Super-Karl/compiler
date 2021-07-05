@@ -11,8 +11,6 @@ using namespace compiler::front::ast;
 /**
 *打印ast
 **/
-void Node::genIR() {}
-
 void Node::printPrefix(int depth, bool isEnd) {
   for (int i = 0; i < depth; i++)
     cout << (i == depth - 1 ? (isEnd ? "└" : "├") : "│   ");
@@ -41,7 +39,7 @@ void Block::print(int depth, bool isEnd) {
   cout << "Block" << endl;
   for (auto i : blockItem)
     i->print(depth + 1, i == blockItem.back());
-};
+}
 
 void VarDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
@@ -210,3 +208,8 @@ void AST::print(int depth, bool isEnd) {
   for (auto i : codeBlock)
     i->print(depth + 1, i == codeBlock.back());
 }
+
+
+/*
+ * 为ast生成ir
+ */

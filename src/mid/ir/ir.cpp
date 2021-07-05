@@ -3,3 +3,18 @@
 //
 
 #include "ir.h"
+#include <assert.h>
+
+using namespace compiler::mid::ir;
+
+bool OperatorName::operator==(OperatorName &other) {
+  switch (other.getType()) {
+    case Type::Var:
+      return this->name == other.name;
+    case Type::Imm:
+      return this->value == other.value;
+    case Type::Void:
+      assert(this->getType() == Type::Void);
+      return true;
+  };
+}

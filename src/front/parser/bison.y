@@ -96,7 +96,7 @@ ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$
 ConstInitialVal:AddExp
     ;
 
-constDefArray CONST ArrayIdent ASSIGN {$$ = new front::ast::}
+constDefArray:
     ;
 
 VarDecl: BType VarDef {$$ = new front::ast::DeclareStatement();$$->declareList.push_back($2);}
@@ -113,16 +113,16 @@ DefVal: Ident ASSIGN InitVal { $$ = new front::ast::VarDeclareWithInit($1,$3);}
 InitVal: Exp
     ;
 
-DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithInit($1,$3);}
-    | ArrayIdent {$$ = new front::ast::ArrayDeclare($1);}
+DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithInit();}
+    | ArrayIdent
     ;
-
-ArrayIdent: ArrayIdent LSQARE Exp RSQARE{ $$->shape.push_back($3);} 
-    | Ident LSQARE Exp RSQARE {$$ = new ArrayDeclare($1);$$->shape.push_back($3);}
+/*
+ArrayIdent: ArrayIdent LSQARE Exp RSQARE{$$}
+    | Ident LSQARE Exp RSQARE {}
     ;
 
 ArrayInitList:
-    ;
+    ;*/
 //VarDef:IDENT ;
 
 FuncDef: BType Ident LBRACKET FuncParamList RBRACKET Block {$$ = new front::ast::FunctionDefine($1,$2,$4,$6);}

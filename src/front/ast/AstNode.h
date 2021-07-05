@@ -26,7 +26,7 @@ namespace compiler {
     public:
     };
 
-    class Identifier : public Node {
+    class Identifier : public Expression {
     public:
       Identifier(string name) : name(name) {};
 

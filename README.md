@@ -70,9 +70,11 @@
 |or| | |
 |not| | |
 |xor| | |
-|sal| |%res1 = sal %op1 %op2|
-|sar| |%res1 = sar %op1 %op2|
-|store| |store %op1 |
-
+|sal|%res1 = %op1 << %op2 |%res1 = sal %op1 %op2|
+|sar|%res1 = %op1 >> %op2 |%res1 = sar %op1 %op2|
+|store|%op1 =  %op2装载到内存|store %op1 %op2|
+|load|%op1 = %op2内存转载到寄存器|load %op1 %op2 |
+|label| |label labelName |
+|nop| | |
 
 

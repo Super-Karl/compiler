@@ -115,7 +115,7 @@ void FunctionDefine::print(int depth, bool isEnd) {
 }
 
 void FunctionCallArgList::print(int depth, bool isEnd) {
-  this->printPrefix(depth + 1, isEnd);
+  this->printPrefix(depth , isEnd);
   cout << "FunctionCallArgList" << endl;
   for (auto i : args)
     i->print(depth + 1, i == args.back());

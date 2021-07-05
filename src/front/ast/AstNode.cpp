@@ -84,7 +84,7 @@ void ArrayDeclareWithInit::print(int depth, bool isEnd) {
 
 void ArrayInitVal::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout<<"ArrayInitVal: "<<endl;
+  cout << "ArrayInitVal: " << endl;
   for (auto i : initValList)
     i->print(depth + 1, i == initValList.back());
 }
@@ -115,7 +115,7 @@ void FunctionDefine::print(int depth, bool isEnd) {
 }
 
 void FunctionCallArgList::print(int depth, bool isEnd) {
-  this->printPrefix(depth , isEnd);
+  this->printPrefix(depth, isEnd);
   cout << "FunctionCallArgList" << endl;
   for (auto i : args)
     i->print(depth + 1, i == args.back());
@@ -140,7 +140,7 @@ void NumberExpression::print(int depth, bool isEnd) {
 
 void BinaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "BinaryExpression" << endl;
+  cout << "BinaryExpression " << "opcode: " << this->op << endl;
   leftExpr->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }

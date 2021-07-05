@@ -65,8 +65,6 @@ void ArrayDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclare: " << endl;
   this->name->print(depth + 1, false);
-  for (auto i : shape)
-    i->print(depth + 1, i == shape.back());
 }
 
 void ConstArray::print(int depth, bool isEnd) {
@@ -74,20 +72,21 @@ void ConstArray::print(int depth, bool isEnd) {
   cout << "ConstArray" << endl;
   this->name->print(depth + 1, false);
   cout << "shape" << endl;
-  for (auto i: shape)
-    i->print(depth + 1, false);
-
-  for (auto i : valueList)
-    i->print(depth + 1, i == valueList.back());
+  initVal->print(depth + 1, true);
 }
 
 void ArrayDeclareWithInit::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclareWithInit" << endl;
   this->name->print(depth + 1, false);
+  initVal->print(depth + 1, true);
+}
 
-  for (auto i : valueList)
-    i->print(depth + 1, i == valueList.back());
+void ArrayInitVal::print(int depth, bool isEnd) {
+  this->printPrefix(depth, isEnd);
+  cout<<"ArrayInitVal: "<<endl;
+  for (auto i : initValList)
+    i->print(depth + 1, i == initValList.back());
 }
 
 void FunctionDefArg::print(int depth, bool isEnd) {

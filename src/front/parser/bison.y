@@ -52,19 +52,17 @@ void yyerror(const char *s){
 %token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP EQ NE
 %token <token> AND OR
 %token <token> LBRACKET RBRACKET LBRACE RBRACE LSQARE RSQARE ASSIGN COLON COMMA SEMI
-%token <token> FuncDefVal FunDefArr//temp
 
 %type <root> compUnit
 %type <arrayident> ArrayIdent
 %type <declare>VarDef DefVal DefArray ConstDef ConstDefVal ConstDefArray
-
 %type <token> RelOP UnaryOp MulOp AddOp BType
 %type <funcDef> FuncDef
 %type <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt Assignment BlockItem ReturnStmt
 %type <arrayInitList> ArrayInitList ListExp
 %type <funcCallArgList> FunctionCallArgList 
 %type <funcdefParamList> FuncParamList
-%type <funcdefParam> FuncParam
+%type <funcdefParam> FuncParam FuncDefVal FuncDefArr
 %type <block> Block BlockItems
 %type <declStmt>Decl VarDecl ConstDecl
 %type <ident> Ident LVal
@@ -144,10 +142,14 @@ FuncParamList: FuncParamList COMMA FuncParam {$$->args.push_back($3);}
     ;
 
 FuncParam: FuncDefVal 
-    | FunDefArr
+    | FuncDefArr
     ;
 
-FuncParam: BType Ident {$$ = new front::ast::FunctionDefArg($1,$2);};
+FuncDefVal: BType Ident {$$ = new front::ast::FunctionDefArg($1,$2);}
+    ;
+
+FuncDefArr: BType ArrayIdent {$$ = new front::ast::FunctionDefArg($1,$2);}
+    ;
 
 Block: LBRACE RBRACE{ $$ = new front::ast::Block();}
     |   LBRACE BlockItems RBRACE{$$ = $2;}

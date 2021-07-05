@@ -11,7 +11,6 @@ namespace compiler::controller {
   ArgParser::ArgParser(int argc, char **argv) {
     yydebug = 0;
     bool writeToFile = false;
-    std::cout<<argc<<std::endl;
     for (int i = 1; i < argc; ++i) {
       if (argv[i][0] == '-') {
         if (std::string(argv[i]) == "-o") {
@@ -21,7 +20,6 @@ namespace compiler::controller {
           this->isOptimize = true;
         }
         if (std::string(argv[i]) == "-printAST") {
-          std::cout<<"print AST:"<<std::endl;
           this->printAST = true;
         }
         if (std::string(argv[i]) == "-printIR") {

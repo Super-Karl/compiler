@@ -16,6 +16,8 @@ namespace compiler {
     public:
       virtual void print(int depth = 0, bool isEnd = false);
 
+      virtual void genIR();
+
       void printPrefix(int depth = 0, bool isEnd = false);
     };
 
@@ -52,6 +54,8 @@ namespace compiler {
       vector<Expression *> blockItem;
 
       Block() {};
+
+      void genIR() override;
 
       void print(int depth = 0, bool isEnd = false);
     };
@@ -244,6 +248,8 @@ namespace compiler {
 
       AssignExpression(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
@@ -258,6 +264,8 @@ namespace compiler {
 
       DeclareStatement(vector<Declare *> declareList) : declareList(declareList) {};
 
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
@@ -270,6 +278,8 @@ namespace compiler {
       IfStatement(Expression *cond, Stmt *trueBlock, Stmt *elseBlock) : cond(cond), trueBlock(trueBlock),
                                                                         elseBlock(elseBlock) {};
 
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
@@ -280,16 +290,22 @@ namespace compiler {
 
       WhileStatement(Expression *cond, Stmt *loopBlock) : cond(cond), loopBlock(loopBlock) {};
 
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class BreakStatement : public Stmt {
     public:
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ContinueStatement : public Stmt {
     public:
+      void genIR() override;
+
       void print(int depth = 0, bool isEnd = false) override;
     };
 
@@ -303,6 +319,8 @@ namespace compiler {
       Expression *returnExp;
 
       ReturnStatement(Expression *exp = NULL) : returnExp(exp) {};
+
+      void genIR() override;
 
       void print(int depth = 0, bool isEnd = false) override;
     };

@@ -11,6 +11,8 @@ using namespace compiler::front::ast;
 /**
 *打印ast
 **/
+void Node::genIR() {}
+
 void Node::printPrefix(int depth, bool isEnd) {
   for (int i = 0; i < depth; i++)
     cout << (i == depth - 1 ? (isEnd ? "└" : "├") : "│   ");
@@ -141,7 +143,7 @@ void NumberExpression::print(int depth, bool isEnd) {
 
 void BinaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "BinaryExpression" << endl;
+  cout << "BinaryExpression" <<"op: "<<this->op<< endl;
   leftExpr->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }

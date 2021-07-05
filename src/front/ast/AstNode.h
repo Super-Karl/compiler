@@ -23,6 +23,15 @@ namespace compiler {
     public:
     };
 
+    class ArrayInitVal : public Expression {
+    public:
+      vector<Expression *> initValList;
+
+      ArrayInitVal() {};
+
+      void print(int depth , bool isEnd = false) override;
+    };
+
     class Identifier : public Node {
     public:
       Identifier(string name) : name(name) {};
@@ -100,7 +109,6 @@ namespace compiler {
 
     class ArrayDeclare : public Declare {
     public:
-      vector<Expression *> shape;
 
       ArrayDeclare(Identifier *name) : Declare(name) {};
 
@@ -109,22 +117,20 @@ namespace compiler {
 
     class ConstArray : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
-      ConstArray(Identifier *name) : Declare(name) {};
+      ConstArray(Identifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclareWithInit : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
       ArrayDeclareWithInit() {};
 
-      ArrayDeclareWithInit(Identifier *name) : Declare(name) {};
+      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -237,12 +243,12 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class AssignExpression : public Stmt {//赋值表达式
+    class AssignStmt : public Stmt {//赋值表达式
     public:
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
+      AssignStmt(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

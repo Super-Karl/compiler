@@ -237,12 +237,12 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class AssignExpression : public Stmt {//赋值表达式
+    class AssignStmt : public Stmt {//赋值表达式
     public:
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
+      AssignStmt(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

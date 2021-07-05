@@ -152,7 +152,7 @@ void UnaryExpression::print(int depth, bool isEnd) {
   right->print(depth + 1, true);
 }
 
-void AssignExpression::print(int depth, bool isEnd) {
+void AssignStmt::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "Assign: " << endl;
   name->print(depth + 1, false);

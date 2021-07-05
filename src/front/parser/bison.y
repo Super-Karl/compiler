@@ -58,7 +58,7 @@ void yyerror(const char *s){
 %type <declare>VarDef DefVal DefArray ConstDef ConstDefVal ConstDefArray
 %type <token> RelOP UnaryOp MulOp AddOp BType
 %type <funcDef> FuncDef
-%type <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt Assignment BlockItem ReturnStmt
+%type <stmt> Stmt IfStmt WhileStmt BreakStmt ContinueStmt VoidStmt Assignment BlockItem ReturnStmt functStmt
 %type <arrayInitList> ArrayInitList ListExp
 %type <funcCallArgList> FunctionCallArgList 
 %type <funcdefParamList> FuncParamList
@@ -167,10 +167,14 @@ Stmt: Assignment SEMI {$$ = $1;}
     | Block
     | IfStmt
     | WhileStmt
-    | BreakStmt SEMI
-    | ContinueStmt SEMI
-    | ReturnStmt SEMI
-    | VoidStmt { $$ = $1;}
+    | BreakStmt SEMI { $$ = $1;}
+    | ContinueStmt SEMI { $$ = $1;}
+    | ReturnStmt SEMI {$$ = $1;}
+    | functStmt SEMI {$$ = $1;}
+    | VoidStmt 
+    ;
+
+functStmt:FunctCall 
     ;
 
 Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignStmt($1,$3);}

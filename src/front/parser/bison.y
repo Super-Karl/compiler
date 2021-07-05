@@ -120,7 +120,7 @@ DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithI
     ;
 
 ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
-    | Ident LSQARE Exp RSQARE {$$ = new front::ast::ArrayIdent($1);$$->index.push_back($3);}
+    | Ident LSQARE Exp RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back($3);}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}
@@ -168,7 +168,7 @@ Stmt: Assignment SEMI {$$ = $1;}
     | BreakStmt SEMI
     | ContinueStmt SEMI
     | ReturnStmt SEMI
-    | VoidStmt SEMI { $$ = $1;}
+    | VoidStmt { $$ = $1;}
     ;
 
 Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignStmt($1,$3);}
@@ -187,8 +187,8 @@ BreakStmt: BREAK SEMI {$$ =  new front::ast::BreakStatement();}
 ContinueStmt: CONTINUE SEMI {$$ = new front::ast::ContinueStatement();}
     ;
 
-VoidStmt: SEMI {$$ = new front::ast::VoidStatement();}
-    |Exp SEMI {$$ = new front::ast::VoidStatement();}
+VoidStmt:Exp SEMI {$$ = new front::ast::VoidStatement();}
+    |SEMI {$$ = new front::ast::VoidStatement();}
     ;
 
 ReturnStmt:RETURN Exp {$$ = new front::ast::ReturnStatement($2);}

@@ -217,7 +217,7 @@ namespace compiler {
     public:
       int value;
 
-      NumberExpression(int value) : value(value) {};
+      NumberExpression(int value = 0) : value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

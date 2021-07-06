@@ -118,7 +118,9 @@ DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithI
     ;
 
 ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
+    | ArrayIdent LSQARE RSQARE{$$->index.push_back(new front::ast::NumberExpression());}
     | Ident LSQARE Exp RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back($3);}
+    | Ident LSQARE RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back(new front::ast::NumberExpression());}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}
@@ -275,7 +277,7 @@ RelOP:LT
     |GE
     ;
 
-Number: NUM {$$ = new front::ast::NumberExpression(std::stoi(*$1,0,0));}
+Number: NUM {$$ = new front::ast::NumberExpression(std::stoi($1));}
     ;
 
 Ident: IDENTIFIER {$$ = new front::ast::Identifier(*$1);}

@@ -5,21 +5,30 @@
 #include "front/ast/AstNode.h"
 #include "mid/ir/ir.h"
 
-using namespace compiler;
+namespace compiler::front::ast {
 
-void front::ast::Node::genIR(mid::ir::IRList &ir) {
-  std::cout << "this node can't genIR" << std::endl;
+  void Node::genIR(mid::ir::IRList &ir) {
+    std::cout << "this node can't genIR" << std::endl;
 
-}
+  }
 
-void front::ast::AssignExpression::genIR(mid::ir::IRList &ir) {
+  void VarDeclare::genIR(mid::ir::IRList &ir) {
 
-  auto operatorName = mid::ir::OperatorName();
-}
+  }
 
-void front::ast::FunctionCall::genIR(mid::ir::IRList &ir) {
-  auto funCallIR = new mid::ir::FunCallIR(this->name->name);
-  for(auto i : args->args){
+  void AssignExpression::genIR(mid::ir::IRList &ir) {
+
+    auto operatorName = mid::ir::OperatorName();
+  }
+
+  void FunctionCall::genIR(mid::ir::IRList &ir) {
+    auto funCallIR = new mid::ir::FunCallIR(this->name->name);
+    for (auto i : args->args) {
+
+    }
+  }
+
+  void FunctionDefine::genIR(mid::ir::IRList &ir) {
 
   }
 }

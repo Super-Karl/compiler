@@ -7,3 +7,5 @@
 /.idea
 /cmake-build-debug
 /.cache/
+/test.cpp
+/test.s

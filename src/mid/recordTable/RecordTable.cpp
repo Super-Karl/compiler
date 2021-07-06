@@ -4,16 +4,19 @@
 
 #include "RecordTable.h"
 #include <iostream>
+#include <vector>
 
 namespace compiler::mid::ir {
   void RecordTable::insertVar(std::string name, VarInfo value) {
-    varTable.insert(name, value);
+    std::vector<compiler::mid::ir::VarInfo> table;
+    table.back().insert(VarInfo);
+    varTable.insert(name, table);
   }
 
-  VarInfo &RecordTable::searchVar(std::string name) {
+  std::vector<VarInfo &> RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())
-      return tmp->second;
+      return tmp->second;//
     throw std::out_of_range("no var name " + name);
   }
-}
+}// namespace compiler::mid::ir

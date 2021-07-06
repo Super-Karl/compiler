@@ -1,34 +1,49 @@
 //
 // Created by wnx on 2021/7/5.
 //
-#include<iostream>
 #include "front/ast/AstNode.h"
 #include "mid/ir/ir.h"
+#include <iostream>
 
 namespace compiler::front::ast {
-
-  void Node::genIR(mid::ir::IRList &ir) {
+  using namespace compiler::mid::ir;
+  void Node::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
     std::cout << "this node can't genIR" << std::endl;
-
   }
 
-  void VarDeclare::genIR(mid::ir::IRList &ir) {
+  void VarDeclare::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
+    if (global) {
 
-  }
-
-  void AssignExpression::genIR(mid::ir::IRList &ir) {
-
-    auto operatorName = mid::ir::OperatorName();
-  }
-
-  void FunctionCall::genIR(mid::ir::IRList &ir) {
-    auto funCallIR = new mid::ir::FunCallIR(this->name->name);
-    for (auto i : args->args) {
-
+    } else {
+      auto varInfo = VarInfo("%" + std::to_string(record.getID()), INT32_MIN);
+      record.insertVar(name->name, varInfo);
     }
   }
 
-  void FunctionDefine::genIR(mid::ir::IRList &ir) {
+  void VarDeclareWithInit::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
+    if (global) {
 
+    } else {
+      auto varInfo = VarInfo("%" + std::to_string(record.getID()), INT32_MIN);
+      record.insertVar(name->name, varInfo);
+      auto assign = AssignExpression(this->name, this->value);
+      assign.genIR(ir, record);
+    }
   }
-}
+
+  void AssignExpression::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
+
+    auto operatorName = mid::ir::OperatorName();
+    operatorName.value = this->name->name;
+    this->rightExpr
+  }
+
+  void FunctionCall::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
+    auto funCallIR = new mid::ir::FunCallIR(this->name->name);
+    for (auto i : args->args) {
+    }
+  }
+
+  void FunctionDefine::genIR(mid::ir::IRList &ir, mid::ir::RecordTable &record) {
+  }
+}// namespace compiler::front::ast

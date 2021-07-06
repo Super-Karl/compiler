@@ -13,6 +13,7 @@ namespace compiler::mid::ir {
   public:
     bool isGlobal;
     bool isConst;
+    bool isArray;
     int value;
     std::string name;//with identifier @,% 为ssa中rename后的名字
 
@@ -21,27 +22,19 @@ namespace compiler::mid::ir {
                                                                                         isConst(isConst) {}
   };
 
-  /* TODO 暂时没想好怎么在符号表中保存数组*/
-  class ArrayInfo {
-  public:
-    bool isGlobal;
-    bool isConst;
-    int lastUserTime;
-  };
-
   //全局的记录表,用来记录sy程序中变量的use,
   /* TODO 没实现φ函数,多分支情况下的ssa变量选取*/
   class RecordTable {
   private:
-    std::unordered_map<std::string, VarInfo> varTable;
+    std::unordered_map<std::string, std::vector<VarInfo>> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
+    unsigned int id = 0;
 
   public:
     RecordTable();
 
-    VarInfo &searchVar(std::string name);//输入参数为变量名,返回在hash表中的引用
+    std::vector<VarInfo &> searchVar(std::string name);//输入参数为变量名,返回在hash表中的引用
     void insertVar(std::string name, VarInfo value);
-
-    unsigned long id = 0;
+    unsigned int getID() { return this->id++; }
   };
 }// namespace compiler::mid::ir
 

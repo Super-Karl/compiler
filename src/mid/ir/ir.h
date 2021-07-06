@@ -26,9 +26,7 @@ namespace compiler::mid::ir {
     std::string name;
     int value;
 
-    OperatorName() {};
-
-    OperatorName(Type type) : type(type) {};
+    OperatorName(Type type = Type::Var) : type(type){};
 
     Type getType() const { return this->type; };
 
@@ -65,7 +63,7 @@ namespace compiler::mid::ir {
 
   class IR {
   public:
-    IR() {};
+    IR(){};
   };
 
   class FunCallIR : public IR {
@@ -73,7 +71,7 @@ namespace compiler::mid::ir {
     std::string funcName;
     std::vector<OperatorName> argList;
 
-    FunCallIR(std::string name) : IR(), funcName(name) {};
+    FunCallIR(std::string name) : IR(), funcName(name){};
   };
 
   class FunDefIR : public IR {
@@ -83,19 +81,22 @@ namespace compiler::mid::ir {
     std::vector<OperatorName> argList;
     std::vector<AssignIR> funcBody;
 
-    FunDefIR(Type retTye, std::string name) : IR(), retType(retTye), name(name) {};
+    FunDefIR(Type retTye, std::string name) : IR(), retType(retTye), name(name){};
   };
 
   class ExprIR : public IR {
   public:
     OperatorCode operatorCode;
-    OperatorName destVar;
-    OperatorName sourceVar1, sourceVar2;
+    OperatorName dest;
+    OperatorName source1, source2;
 
-    ExprIR() {}
+    ExprIR() : IR(){};
 
-    ExprIR(OperatorCode operatorCode, OperatorName dest, OperatorName op1, OperatorName op2) : operatorCode(
-        operatorCode), sourceVar1(op1), sourceVar2(op2) {};
+    ExprIR(OperatorCode operatorCode, OperatorName dest, OperatorName op1, OperatorName op2) : IR(), operatorCode(
+                                                                                                         operatorCode),
+                                                                                               dest(dest),
+                                                                                               source1(op1),
+                                                                                               source2(op2){};
   };
 
   class AssignIR : public IR {
@@ -105,14 +106,17 @@ namespace compiler::mid::ir {
 
     AssignIR() = default;
 
-    AssignIR(OperatorName operatorName, IR *expr) : operatorName(operatorName), expr(expr) {};
+    AssignIR(OperatorName operatorName, IR *expr) : operatorName(operatorName), expr(expr){};
   };
 
   class JmpIR : public IR {
   public:
     std::string label;
-    std::vector<AssignIR> body;
   };
-}
 
-#endif //COMPILER_IR_H
+  class DeclIR : public IR {
+  public:
+  };
+}// namespace compiler::mid::ir
+
+#endif//COMPILER_IR_H

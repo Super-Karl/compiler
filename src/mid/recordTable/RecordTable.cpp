@@ -7,21 +7,26 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-  RecordTable& RecordTable::insertVar(std::string name,std::initializer_list<VarInfo> ivl) {
-    std::vector<VarInfo> table;
-    for (auto &var:ivl){
-      table.push_back(var);
-    }
-    varTable[name] =  table;
+  VarInfo::VarInfo(std::string name,std::vector<int>& inShape,std::vector<int>& inValue,bool isConst = false){
+    this->name = name;
+    this->shape = inShape;
+    this->value = inValue;
+    this->isConst = isConst;
+    this->isArray = true;
   }
-  RecordTable& RecordTable::insertVar(std::string name,std::vector<VarInfo> v){
+  VarInfo::VarInfo(std::string name, int value, bool isConst = false) 
+    : name(name),isConst(isConst),isArray(false) {
+      this->value={value};
+  }
+  VarInfo::VarInfo(std::string name,std::vector<int>& inValue,std::vector<int>& inShape,bool isConst = false){
+
+
+  }
+
+  RecordTable &RecordTable::insertVar(std::string name, VarInfo v) {
     varTable[name] = v;
   }
-  RecordTable& RecordTable::insertVar(std::string name,VarInfo v){
-    std::vector<VarInfo>table{v};
-    varTable[name]=table;
-  }
-  std::vector<VarInfo>& RecordTable::searchVar(std::string name) {
+  VarInfo &RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())
       return varTable[name];//

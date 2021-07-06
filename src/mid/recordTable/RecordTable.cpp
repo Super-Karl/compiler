@@ -7,16 +7,24 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-  void RecordTable::insertVar(std::string name, VarInfo value) {
-    std::vector<compiler::mid::ir::VarInfo> table;
-    table.back().insert(VarInfo);
-    varTable.insert(name, table);
+  RecordTable& RecordTable::insertVar(std::string name,std::initializer_list<VarInfo> ivl) {
+    std::vector<VarInfo> table;
+    for (auto &var:ivl){
+      table.push_back(var);
+    }
+    varTable[name] =  table;
   }
-
-  std::vector<VarInfo &> RecordTable::searchVar(std::string name) {
+  RecordTable& RecordTable::insertVar(std::string name,std::vector<VarInfo> v){
+    varTable[name] = v;
+  }
+  RecordTable& RecordTable::insertVar(std::string name,VarInfo v){
+    std::vector<VarInfo>table{v};
+    varTable[name]=table;
+  }
+  std::vector<VarInfo>& RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())
-      return tmp->second;//
+      return varTable[name];//
     throw std::out_of_range("no var name " + name);
   }
 }// namespace compiler::mid::ir

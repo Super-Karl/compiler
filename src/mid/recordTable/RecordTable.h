@@ -31,9 +31,10 @@ namespace compiler::mid::ir {
 
   public:
     RecordTable();
-
-    std::vector<VarInfo &> searchVar(std::string name);//输入参数为变量名,返回在hash表中的引用
-    void insertVar(std::string name, VarInfo value);
+    std::vector<VarInfo>& searchVar(std::string name);//输入参数为变量名,返回在hash表中的引用
+    RecordTable& insertVar(std::string name,VarInfo);//插入单个varInfo元素
+    RecordTable& insertVar(std::string name,std::initializer_list<VarInfo>);//插入多个varInfo元素,需要用大括号括起来
+    RecordTable& insertVar(std::string name,std::vector<VarInfo>);//将varInfo存储至一个vector在整体推送
     unsigned int getID() { return this->id++; }
   };
 }// namespace compiler::mid::ir

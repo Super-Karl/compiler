@@ -13,6 +13,8 @@
 
 * Node
   * Expression
+    * ArrayInitVal
+    * BinaryExpression
     * FunctionDefArg
     * FunctionDefArgList
     * FunctionDefine
@@ -23,7 +25,8 @@
     * LogicExpression
     * UnaryExpression
     * CalcExpression
-    * Statement
+    * Stmt
+      * AssignStmt
       * Block
       * DeclareStatement
       * IfStatement
@@ -32,8 +35,8 @@
       * ContinueStatement
       * VoidStatement
       * ReturnStatement
-  * FunctionDefArg
   * Identifier
+    * ArrayIdentifier
   * Declare
     * VarDeclare
     * VarDeclareWithInit

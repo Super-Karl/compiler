@@ -1,0 +1,4 @@
+/usr/bin/cmake -G "CodeBlocks - Unix Makefiles" /mnt/c/Users/karl/CLionProjects/compiler
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mnt/c/Users/karl/CLionProjects/compiler/cmake-build-default

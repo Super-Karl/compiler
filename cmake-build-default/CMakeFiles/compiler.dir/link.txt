@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/compiler.dir/src/controller/controller.cpp.o CMakeFiles/compiler.dir/src/entry.cpp.o CMakeFiles/compiler.dir/src/front/ast/AstNode.cpp.o CMakeFiles/compiler.dir/src/mid/ir/ir.cpp.o  -o compiler 

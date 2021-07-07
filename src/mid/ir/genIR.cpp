@@ -56,45 +56,58 @@ namespace compiler::front::ast {
       i->genIR(ir, record);
   }
 
-  void AssignExpression::genIR(mid::ir::IRList &ir, RecordTable *record) {
+  void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    auto assign = new AssignIR();
+    assign->dest = name->eval(record);
 
-    auto operatorName = mid::ir::OperatorName();
-    operatorName.value = this->name->name;
-    this->rightExpr
   }
 
-  void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto funCallIR = new mid::ir::FunCallIR(this->name->name);
-    for (auto i : args->args) {
-    }
-  }
-
+  //完成
   void FunctionDefine::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto funcdef = new FunDefIR(retType, name->name);
     auto newTable = new RecordTable(record);
-    args->genIR(ir, newTable);
-    body->genIR(ir, newTable);
+    args->genIR(body, newTable);
+    body->genIR(funcdef, newTable);
   }
-
+  //完成
   void FunctionDefArgList::genIR(mid::ir::IRList &ir, RecordTable *record) {
     for (auto i : args)
       i->genIR(ir, record);
   }
-
+  //fine
   void FunctionDefArg::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto varInfo = new VarInfo(name->name, INT32_MIN);
+    record->insertVar(name->name, varInfo);
   }
-
+  //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    auto newTable = new RecordTable(record);
     for (auto item : blockItem)
-      item->genIR(ir, record);
+      item->genIR(ir, newTable);
+    delete newTable;
   }
-
+  //完成
   void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto funCall = new FunCallIR(name->name);
-    for (auto i : args) {
-      auto opname = OperatorName()
+    for (auto i : args->args) {
+      auto opName = i->eval(record);
+      funCall->argList.push_back(opName);
     }
+    ir.push_back(funCall);
+  }
+
+
+  void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+  }
+
+  void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    if (returnExp != nullptr) {
+      returnExp->eval(record);
+    }
+    auto ret = new RetIR();
+  }
+
+  void BreakStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
   }
 }// namespace compiler::front::ast
 
@@ -103,11 +116,25 @@ namespace compiler::front::ast {
  * */
 
 namespace compiler::front::ast {
-  OperatorName NumberExpression::eval() {
+  OperatorName NumberExpression::eval(RecordTable *record) {
     auto operatorName = OperatorName(Type::Imm);
     operatorName.name = "";
     operatorName.value = this->value;
     return operatorName;
+  }
+
+  OperatorName Identifier::eval(RecordTable *record) {
+    auto varInfo = record->searchVar(name);
+    auto opName = OperatorName(Type::Var);
+    opName.name = varInfo->name;
+    opName.value = varInfo->value[0];
+    return opName;
+  }
+
+  OperatorName ArrayIdentifier::eval(RecordTable *record) {
+    auto varInfo = record->searchVar(name);
+    auto opName = OperatorName(Type::Var);
+    opName.name = varInfo->name;
   }
 
 

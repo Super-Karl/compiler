@@ -20,7 +20,7 @@ namespace compiler::mid::ir {
     Var
   };
 
-  class OperatorName {
+  class OperatorName {//ir中的操作数
   public:
     Type type;
     std::string name;
@@ -68,9 +68,11 @@ namespace compiler::mid::ir {
 
   class FunCallIR : public IR {
   public:
+    OperatorCode operatorCode = OperatorCode::Call;
     std::string funcName;
     std::vector<OperatorName> argList;
-
+    Type retType;
+    OperatorName dest;
     FunCallIR(std::string name) : IR(), funcName(name){};
   };
 
@@ -79,43 +81,37 @@ namespace compiler::mid::ir {
     Type retType;
     std::string name;
     std::vector<OperatorName> argList;
-    std::vector<AssignIR> funcBody;
+    IRList funcBody;
 
     FunDefIR(Type retTye, std::string name) : IR(), retType(retTye), name(name){};
   };
 
-  class ExprIR : public IR {
+  class AssignIR : public IR {
   public:
     OperatorCode operatorCode;
     OperatorName dest;
     OperatorName source1, source2;
-
-    ExprIR() : IR(){};
-
-    ExprIR(OperatorCode operatorCode, OperatorName dest, OperatorName op1, OperatorName op2) : IR(), operatorCode(
-                                                                                                         operatorCode),
-                                                                                               dest(dest),
-                                                                                               source1(op1),
-                                                                                               source2(op2){};
-  };
-
-  class AssignIR : public IR {
-  public:
-    OperatorName operatorName;
-    IR *expr;
-
     AssignIR() = default;
 
-    AssignIR(OperatorName operatorName, IR *expr) : operatorName(operatorName), expr(expr){};
+    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(dest), source1(source1), source2(source2){};
   };
 
   class JmpIR : public IR {
   public:
-    std::string label;
+    int label;
+    JmpIR(){};
   };
 
   class DeclIR : public IR {
   public:
+  };
+
+  class RetIR : public IR {
+  public:
+    OperatorCode operatorCode = OperatorCode::Ret;
+    OperatorName retVal;
+
+    RetIR(OperatorName retVal) : IR(), retVal(retVal){};
   };
 }// namespace compiler::mid::ir
 

@@ -30,6 +30,8 @@ namespace compiler::mid::ir {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())
       return varTable[name];//
+    else if (father != nullptr)
+      return father->searchVar(name);
     throw std::out_of_range("no var name " + name);
   }
 

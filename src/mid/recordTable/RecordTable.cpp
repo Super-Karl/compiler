@@ -18,9 +18,12 @@ namespace compiler::mid::ir {
     : name(name),isConst(isConst),isArray(false) {
       this->value={value};
   }
-  VarInfo::VarInfo(std::string name,std::vector<int>& inValue,std::vector<int>& inShape,bool isConst = false){
-
-
+  VarInfo::VarInfo(std::string name,std::vector<int>& inValue,std::initializer_list<int> inShape,bool isConst = false){
+    this->name = name;
+    this->shape = inShape;
+    this->value = inValue;
+    this->isConst = isConst;
+    this->isArray = true;
   }
 
   RecordTable &RecordTable::insertVar(std::string name, VarInfo v) {

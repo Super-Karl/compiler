@@ -130,7 +130,7 @@ namespace compiler {
 
       ArrayDeclareWithInit() {};
 
-      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
+      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

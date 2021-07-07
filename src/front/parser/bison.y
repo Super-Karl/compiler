@@ -124,7 +124,7 @@ ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}
-    |LBRACE RBRACE {new front::ast::ArrayInitVal();}
+    |LBRACE RBRACE {$$ = new front::ast::ArrayInitVal();}
     ;
 
 ListExp: ListExp COMMA ArrayInitList {$$->initValList.push_back($3);}

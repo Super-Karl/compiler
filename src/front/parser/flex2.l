@@ -34,8 +34,8 @@ void comment();
 "void"                      return TOKEN(VOID);
 
 [a-zA-Z_][a-zA-Z0-9_]*      SAVE_TOKEN;return IDENTIFIER;
-[0-9]+                      SAVE_TOKEN;return NUM;
 "0x"[0-9a-fA-F]+            SAVE_TOKEN;return NUM;
+[0-9]+                      SAVE_TOKEN;return NUM;
 
 "="                         return TOKEN(ASSIGN);
 "=="                        return TOKEN(EQ);

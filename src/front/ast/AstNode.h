@@ -28,15 +28,22 @@ namespace compiler {
     public:
     };
 
-    class Identifier : public Expression {
+    class ArrayInitVal : public Expression {
+    public:
+      vector<Expression *> initValList;
+
+      ArrayInitVal() {};
+
+      void print(int depth , bool isEnd = false) override;
+    };
+
+    class Identifier : public Node {
     public:
       Identifier(string name) : name(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
 
       string name;
-
-
     };
 
     class ArrayIdentifier : public Identifier {
@@ -44,8 +51,8 @@ namespace compiler {
       string name;
       vector<Expression *> index;
 
-      //      vector<Expression *> shape;
-      ArrayIdentifier(string name) : Identifier(name){};
+//      vector<Expression *> shape;
+      ArrayIdentifier(string name) : Identifier(name) {};
 
       void print(int depth, bool isEnd) override;
     };
@@ -58,7 +65,7 @@ namespace compiler {
     public:
       vector<Expression *> blockItem;
 
-      Block(){};
+      Block() {};
 
       void genIR(mid::ir::IRList &ir, RecordTable *record) override;
 
@@ -72,7 +79,7 @@ namespace compiler {
     public:
       Identifier *name;
 
-      Declare(){};
+      Declare() {};
 
       Declare(Identifier *name) {
         this->name = name;
@@ -84,13 +91,14 @@ namespace compiler {
       VarDeclare(Identifier *name) : Declare(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
     };
 
     class VarDeclareWithInit : public Declare {
     public:
       Expression *value;
 
-      VarDeclareWithInit(Identifier *name, Expression *value) : Declare(name), value(value){};
+      VarDeclareWithInit(Identifier *name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -99,38 +107,35 @@ namespace compiler {
     public:
       Expression *value;
 
-      ConstDeclare(Identifier *name, Expression *value) : Declare(name), value(value){};
+      ConstDeclare(Identifier *name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclare : public Declare {
     public:
-      vector<Expression *> shape;
 
-      ArrayDeclare(Identifier *name) : Declare(name){};
+      ArrayDeclare(Identifier *name) : Declare(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ConstArray : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
-      ConstArray(Identifier *name) : Declare(name){};
+      ConstArray(Identifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclareWithInit : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
-      ArrayDeclareWithInit(){};
+      ArrayDeclareWithInit() {};
 
-      ArrayDeclareWithInit(Identifier *name) : Declare(name){};
+      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -143,9 +148,9 @@ namespace compiler {
       Identifier *name;
       int type;
 
-      FunctionDefArg(){};
+      FunctionDefArg() {};
 
-      FunctionDefArg(int type, Identifier *name) : type(type), name(name){};
+      FunctionDefArg(int type, Identifier *name) : type(type), name(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -154,7 +159,7 @@ namespace compiler {
     public:
       vector<FunctionDefArg *> args;
 
-      FunctionDefArgList(){};
+      FunctionDefArgList() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -166,12 +171,12 @@ namespace compiler {
       FunctionDefArgList *args;
       Block *body;
 
-      FunctionDefine(){};
+      FunctionDefine() {};
 
       FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *block) : retType(retType),
                                                                                                name(name),
                                                                                                args(args),
-                                                                                               body(block){};
+                                                                                               body(block) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -184,7 +189,7 @@ namespace compiler {
     public:
       vector<Expression *> args;
 
-      FunctionCallArgList(){};
+      FunctionCallArgList() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -194,9 +199,9 @@ namespace compiler {
       Identifier *name;
       FunctionCallArgList *args;
 
-      FunctionCall(){};
+      FunctionCall() {};
 
-      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args){};
+      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -208,7 +213,7 @@ namespace compiler {
     public:
       vector<Expression *> expr;
 
-      CommaExpression(){};
+      CommaExpression() {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -217,7 +222,7 @@ namespace compiler {
     public:
       int value;
 
-      NumberExpression(int value) : value(value){};
+      NumberExpression(int value = 0) : value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
 
@@ -230,7 +235,7 @@ namespace compiler {
       Expression *leftExpr;
       Expression *rightExpr;
 
-      BinaryExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right){};
+      BinaryExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -240,19 +245,17 @@ namespace compiler {
       int op;
       Expression *right;
 
-      UnaryExpression(int op, Expression *right) : op(op), right(right){};
+      UnaryExpression(int op, Expression *right) : op(op), right(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class AssignExpression : public Stmt {//赋值表达式
+    class AssignStmt : public Stmt {//赋值表达式
     public:
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(Identifier *inName, Expression *right) : name(inName), rightExpr(right){};
-
-      void genIR(mid::ir::IRList &ir, RecordTable *record) override;
+      AssignStmt(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -264,9 +267,9 @@ namespace compiler {
     public:
       vector<Declare *> declareList;
 
-      DeclareStatement(){};
+      DeclareStatement() {};
 
-      DeclareStatement(vector<Declare *> declareList) : declareList(declareList){};
+      DeclareStatement(vector<Declare *> declareList) : declareList(declareList) {};
 
       void genIR(mid::ir::IRList &ir, RecordTable *record) override;
 
@@ -280,7 +283,7 @@ namespace compiler {
       Stmt *elseBlock;
 
       IfStatement(Expression *cond, Stmt *trueBlock, Stmt *elseBlock) : cond(cond), trueBlock(trueBlock),
-                                                                        elseBlock(elseBlock){};
+                                                                        elseBlock(elseBlock) {};
 
       void genIR(mid::ir::IRList &ir, RecordTable *record) override;
 
@@ -292,7 +295,7 @@ namespace compiler {
       Expression *cond;
       Stmt *loopBlock;
 
-      WhileStatement(Expression *cond, Stmt *loopBlock) : cond(cond), loopBlock(loopBlock){};
+      WhileStatement(Expression *cond, Stmt *loopBlock) : cond(cond), loopBlock(loopBlock) {};
 
       void genIR(mid::ir::IRList &ir, RecordTable *record) override;
 
@@ -322,7 +325,7 @@ namespace compiler {
     public:
       Expression *returnExp;
 
-      ReturnStatement(Expression *exp = NULL) : returnExp(exp){};
+      ReturnStatement(Expression *exp = NULL) : returnExp(exp) {};
 
       void genIR(mid::ir::IRList &ir, RecordTable *record) override;
 
@@ -334,7 +337,7 @@ namespace compiler {
     public:
       vector<Node *> codeBlock;
 
-      AST(){};
+      AST() {};
 
       void print(int depth = 0, bool isEnd = false);
     };

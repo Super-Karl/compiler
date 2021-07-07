@@ -18,14 +18,16 @@
     * FunctionDefine
     * FunctionCallArgList
     * FunctionCall
-    * CommaExpression
+    * CommaExpression :unuse
     * NumberExpression
     * LogicExpression
     * UnaryExpression
     * CalcExpression
+    * ArrayInitVal
     * Statement
       * Block
       * DeclareStatement
+      * AssignStmt
       * IfStatement
       * WhileStatement
       * BreakStatemet
@@ -34,6 +36,7 @@
       * ReturnStatement
   * FunctionDefArg
   * Identifier
+    * ArrayIdentifier
   * Declare
     * VarDeclare
     * VarDeclareWithInit

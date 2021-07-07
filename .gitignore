@@ -7,3 +7,4 @@
 /.idea
 /cmake-build-debug
 /.cache/
+/clang-format.txt

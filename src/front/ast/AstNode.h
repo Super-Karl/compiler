@@ -119,7 +119,7 @@ namespace compiler {
     public:
       ArrayInitVal *initVal;
 
-      ConstArray(Identifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
+      ConstArray(Identifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

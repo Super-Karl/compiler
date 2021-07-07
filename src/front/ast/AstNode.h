@@ -119,7 +119,7 @@ namespace compiler {
         class ArrayDeclare : public Declare {
         public:
 
-            ArrayDeclare(Identifier *name) : Declare(name) {};
+            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) {};
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -139,7 +139,7 @@ namespace compiler {
         public:
             ArrayInitVal *initVal;
 
-            ArrayDeclareWithInit(AstNodeType type = ArrayInitValType) : Declare(type) {};
+            ArrayDeclareWithInit(AstNodeType type = ArrayDeclareWithInitType) : Declare(type) {};
 
             ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal,
                                  AstNodeType type = ArrayDeclareWithInitType) : Declare(name, type),
@@ -156,7 +156,7 @@ namespace compiler {
             Identifier *name;
             int retType;
 
-            FunctionDefArg() {};
+            FunctionDefArg(AstNodeType type = FunctionDefArgType):Expression(type) {};
 
             FunctionDefArg(int retType, Identifier *name, AstNodeType type = FunctionDefArgType) : retType(retType),
                                                                                                    name(name),
@@ -210,7 +210,7 @@ namespace compiler {
             Identifier *name;
             FunctionCallArgList *args;
 
-            //FunctionCall() {};
+            FunctionCall(AstNodeType type = FunctionCallType):Expression(type) {};
 
             FunctionCall(Identifier *name, FunctionCallArgList *args, AstNodeType type = FunctionCallType) : name(name),
                                                                                                              args(args),
@@ -227,7 +227,7 @@ namespace compiler {
         public:
             vector<Expression *> expr;
 
-            CommaExpression() {};
+            CommaExpression(AstNodeType type = CommaExpressionType) : Expression(type) {};
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -259,7 +259,7 @@ namespace compiler {
             int op;
             Expression *right;
 
-            UnaryExpression(int op, Expression *right, AstNodeType type = ExpressionType) : op(op), right(right),
+            UnaryExpression(int op, Expression *right, AstNodeType type = UnaryExpressionType) : op(op), right(right),
                                                                                             Expression(type) {};
 
             void print(int depth = 0, bool isEnd = false) override;

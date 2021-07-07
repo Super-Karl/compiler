@@ -22,9 +22,7 @@
     * FunctionCall
     * CommaExpression
     * NumberExpression
-    * LogicExpression
     * UnaryExpression
-    * CalcExpression
     * Stmt
       * AssignStmt
       * Block

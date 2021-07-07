@@ -6,6 +6,7 @@
 #define COMPILER_ENUMS_H
 
 enum AstNodeType {
+
     NodeType = 0,
     ExpressionType,
     ArrayInitValType,
@@ -17,9 +18,7 @@ enum AstNodeType {
     FunctionCallType,
     CommaExpressionType,
     NumberExpressionType,
-    LogicExpressionType,
     UnaryExpressionType,
-    CalcExpressionType,
     StmtType,
     AssignStmtType,
     BlockType,

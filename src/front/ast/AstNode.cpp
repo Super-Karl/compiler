@@ -28,7 +28,7 @@ void Identifier::print(int depth, bool isEnd) {
 };
 
 void ArrayIdentifier::print(int depth, bool isEnd) {
-  this->print(depth, isEnd);
+  this->printPrefix(depth, isEnd);
   cout << "ArrayIdentifier: " + this->name << endl;
   for (auto i : index)
     i->print(depth + 1, i == index.back());
@@ -65,8 +65,6 @@ void ArrayDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclare: " << endl;
   this->name->print(depth + 1, false);
-  for (auto i : shape)
-    i->print(depth + 1, i == shape.back());
 }
 
 void ConstArray::print(int depth, bool isEnd) {
@@ -74,20 +72,21 @@ void ConstArray::print(int depth, bool isEnd) {
   cout << "ConstArray" << endl;
   this->name->print(depth + 1, false);
   cout << "shape" << endl;
-  for (auto i: shape)
-    i->print(depth + 1, false);
-
-  for (auto i : valueList)
-    i->print(depth + 1, i == valueList.back());
+  initVal->print(depth + 1, true);
 }
 
 void ArrayDeclareWithInit::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclareWithInit" << endl;
   this->name->print(depth + 1, false);
+  initVal->print(depth + 1, true);
+}
 
-  for (auto i : valueList)
-    i->print(depth + 1, i == valueList.back());
+void ArrayInitVal::print(int depth, bool isEnd) {
+  this->printPrefix(depth, isEnd);
+  cout << "ArrayInitVal: " << endl;
+  for (auto i : initValList)
+    i->print(depth + 1, i == initValList.back());
 }
 
 void FunctionDefArg::print(int depth, bool isEnd) {
@@ -102,20 +101,21 @@ void FunctionDefArgList::print(int depth, bool isEnd) {
   cout << "FunctionDefArgList" << endl;
 
   for (auto i : args)
-    i->printPrefix(depth + 1, i == args.back());
+    i->print(depth + 1, i == args.back());
 }
 
 void FunctionDefine::print(int depth, bool isEnd) {
-  this->print(depth, isEnd);
-  cout << "FunctionDefine" << endl;
-  cout << "returnType: " << retType << endl;
+  this->printPrefix(depth, isEnd);
+  cout << "FunctionDefine";
+  cout << " returnType: " << retType << endl;
   name->print(depth + 1, false);
-  args->printPrefix(depth + 1, isEnd);
-  body->print(depth + 1, true);
+  args->print(depth + 1, isEnd);
+  if (body != NULL)
+    body->print(depth + 1, true);
 }
 
 void FunctionCallArgList::print(int depth, bool isEnd) {
-  this->printPrefix(depth + 1, isEnd);
+  this->printPrefix(depth, isEnd);
   cout << "FunctionCallArgList" << endl;
   for (auto i : args)
     i->print(depth + 1, i == args.back());
@@ -140,7 +140,7 @@ void NumberExpression::print(int depth, bool isEnd) {
 
 void BinaryExpression::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "LogicExpression" << endl;
+  cout << "BinaryExpression " << "opcode: " << this->op << endl;
   leftExpr->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }
@@ -151,9 +151,9 @@ void UnaryExpression::print(int depth, bool isEnd) {
   right->print(depth + 1, true);
 }
 
-void AssignExpression::print(int depth, bool isEnd) {
+void AssignStmt::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
-  cout << "CalcExpression Operand: " << op << endl;
+  cout << "Assign: " << endl;
   name->print(depth + 1, false);
   rightExpr->print(depth + 1, true);
 }
@@ -198,7 +198,8 @@ void VoidStatement::print(int depth, bool isEnd) {
 void ReturnStatement::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ReturnStatement" << endl;
-  returnExp->print(depth + 1, true);
+  if (this->returnExp != NULL)
+    returnExp->print(depth + 1, true);
 }
 
 void AST::print(int depth, bool isEnd) {

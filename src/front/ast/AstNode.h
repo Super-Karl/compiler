@@ -23,7 +23,16 @@ namespace compiler {
     public:
     };
 
-    class Identifier : Node {
+    class ArrayInitVal : public Expression {
+    public:
+      vector<Expression *> initValList;
+
+      ArrayInitVal() {};
+
+      void print(int depth , bool isEnd = false) override;
+    };
+
+    class Identifier : public Node {
     public:
       Identifier(string name) : name(name) {};
 
@@ -37,6 +46,7 @@ namespace compiler {
       string name;
       vector<Expression *> index;
 
+//      vector<Expression *> shape;
       ArrayIdentifier(string name) : Identifier(name) {};
 
       void print(int depth, bool isEnd) override;
@@ -62,8 +72,10 @@ namespace compiler {
     public:
       Identifier *name;
 
-      Declare(string name, bool isArray = false) {
-        this->name = isArray ? (new ArrayIdentifier(name)) : new Identifier(name);
+      Declare() {};
+
+      Declare(Identifier *name) {
+        this->name = name;
       };
 
     };
@@ -71,7 +83,7 @@ namespace compiler {
     class VarDeclare : public Declare {
     public:
 
-      VarDeclare(string name) : Declare(name) {};
+      VarDeclare(Identifier *name) : Declare(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
 
@@ -81,7 +93,7 @@ namespace compiler {
     public:
       Expression *value;
 
-      VarDeclareWithInit(string name, Expression *value) : Declare(name), value(value) {};
+      VarDeclareWithInit(Identifier *name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -90,36 +102,35 @@ namespace compiler {
     public:
       Expression *value;
 
-      ConstDeclare(string name, Expression *value) : Declare(name), value(value) {};
+      ConstDeclare(Identifier *name, Expression *value) : Declare(name), value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclare : public Declare {
     public:
-      vector<Expression *> shape;
 
-      ArrayDeclare(string name) : Declare(name, true) {};
+      ArrayDeclare(Identifier *name) : Declare(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ConstArray : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
-      ConstArray(string name) : Declare(name, true) {};
+      ConstArray(Identifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class ArrayDeclareWithInit : public Declare {
     public:
-      vector<Expression *> shape;
-      vector<Expression *> valueList;
+      ArrayInitVal *initVal;
 
-      ArrayDeclareWithInit(string name) : Declare(name, true) {};
+      ArrayDeclareWithInit() {};
+
+      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -132,7 +143,9 @@ namespace compiler {
       Identifier *name;
       int type;
 
-      FunctionDefArg(string name, int type) : name(new Identifier(name)), type(type) {};
+      FunctionDefArg() {};
+
+      FunctionDefArg(int type, Identifier *name) : type(type), name(name) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -153,7 +166,12 @@ namespace compiler {
       FunctionDefArgList *args;
       Block *body;
 
-      FunctionDefine(int retType, string name) : retType(retType), name(new Identifier(name)) {};
+      FunctionDefine() {};
+
+      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *block) : retType(retType),
+                                                                                               name(name),
+                                                                                               args(args),
+                                                                                               body(block) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -176,7 +194,9 @@ namespace compiler {
       Identifier *name;
       FunctionCallArgList *args;
 
-      FunctionCall(string name) : name(new Identifier(name)) {};
+      FunctionCall() {};
+
+      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -197,7 +217,7 @@ namespace compiler {
     public:
       int value;
 
-      NumberExpression(int value);
+      NumberExpression(int value = 0) : value(value) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -223,12 +243,12 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
     };
 
-    class AssignExpression : public Expression {//赋值表达式
+    class AssignStmt : public Stmt {//赋值表达式
     public:
       Identifier *name;
       Expression *rightExpr;
 
-      AssignExpression(string name, Expression *right) :name(new Identifier(name)), rightExpr(right) {};
+      AssignStmt(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
@@ -249,22 +269,22 @@ namespace compiler {
 
     class IfStatement : public Stmt {
     public:
-      BinaryExpression *cond;//
-      Block *trueBlock;
-      Block *elseBlock;
+      Expression *cond;//
+      Stmt *trueBlock;
+      Stmt *elseBlock;
 
-      IfStatement(BinaryExpression *cond, Block *trueBlock, Block *elseBlock) : cond(cond), trueBlock(trueBlock),
-                                                                               elseBlock(elseBlock) {};
+      IfStatement(Expression *cond, Stmt *trueBlock, Stmt *elseBlock) : cond(cond), trueBlock(trueBlock),
+                                                                        elseBlock(elseBlock) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };
 
     class WhileStatement : public Stmt {
     public:
-      BinaryExpression *cond;
-      Block *loopBlock;
+      Expression *cond;
+      Stmt *loopBlock;
 
-      WhileStatement(BinaryExpression *cond, Block *loopBlock) : cond(cond), loopBlock(loopBlock) {};
+      WhileStatement(Expression *cond, Stmt *loopBlock) : cond(cond), loopBlock(loopBlock) {};
 
       void print(int depth = 0, bool isEnd = false) override;
     };

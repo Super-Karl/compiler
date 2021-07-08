@@ -128,7 +128,7 @@ namespace compiler {
         public:
             ArrayInitVal *initVal;
 
-            ConstArray(Identifier *name, ArrayInitVal *initVal1, AstNodeType type = ConstArrayType) : Declare(name,
+            ConstArray(ArrayIdentifier *name, ArrayInitVal *initVal, AstNodeType type = ConstArrayType) : Declare(name,
                                                                                                               type),
                                                                                                       initVal(initVal) {};
 
@@ -139,7 +139,7 @@ namespace compiler {
         public:
             ArrayInitVal *initVal;
 
-            ArrayDeclareWithInit(AstNodeType type = ArrayDeclareWithInitType) : Declare(type) {};
+            //ArrayDeclareWithInit(AstNodeType type = ArrayDeclareWithInitType) : Declare(type) {};
 
             ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal,
                                  AstNodeType type = ArrayDeclareWithInitType) : Declare(name, type),
@@ -156,7 +156,7 @@ namespace compiler {
             Identifier *name;
             int retType;
 
-            FunctionDefArg(AstNodeType type = FunctionDefArgType):Expression(type) {};
+            FunctionDefArg(AstNodeType type = FunctionDefArgType) : Expression(type) {};
 
             FunctionDefArg(int retType, Identifier *name, AstNodeType type = FunctionDefArgType) : retType(retType),
                                                                                                    name(name),
@@ -210,7 +210,7 @@ namespace compiler {
             Identifier *name;
             FunctionCallArgList *args;
 
-            FunctionCall(AstNodeType type = FunctionCallType):Expression(type) {};
+            FunctionCall(AstNodeType type = FunctionCallType) : Expression(type) {};
 
             FunctionCall(Identifier *name, FunctionCallArgList *args, AstNodeType type = FunctionCallType) : name(name),
                                                                                                              args(args),
@@ -260,7 +260,7 @@ namespace compiler {
             Expression *right;
 
             UnaryExpression(int op, Expression *right, AstNodeType type = UnaryExpressionType) : op(op), right(right),
-                                                                                            Expression(type) {};
+                                                                                                 Expression(type) {};
 
             void print(int depth = 0, bool isEnd = false) override;
         };

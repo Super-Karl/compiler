@@ -82,12 +82,12 @@ Decl: ConstDecl SEMI {$$ = $1;}
 
 BType: INT;
 
-ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);}
-    | ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
+ConstDecl:ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
+    | CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);} 
     ;
 
-ConstDef: ConstDefVal
-    | ConstDefArray
+ConstDef: ConstDefArray
+    |ConstDefVal 
     ;
 
 ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$3);}
@@ -96,7 +96,7 @@ ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$
 ConstInitialVal:AddExp
     ;
 
-ConstDefArray: CONST ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ConstArray($2,$4);}
+ConstDefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ConstArray($1,$3);}
     ;
 
 VarDecl: BType VarDef {$$ = new front::ast::DeclareStatement();$$->declareList.push_back($2);}

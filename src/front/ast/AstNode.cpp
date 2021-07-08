@@ -71,7 +71,6 @@ void ConstArray::print(int depth, bool isEnd) {
     this->printPrefix(depth, isEnd);
     cout << this->nodetype << " " <<"ConstArray" << endl;
     this->name->print(depth + 1, false);
-    cout << this->nodetype << " " <<"shape" << endl;
     initVal->print(depth + 1, true);
 }
 

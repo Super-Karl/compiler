@@ -8,6 +8,7 @@ namespace compiler::astpassir {
 
     compiler::front::ast::AST *FirstPass(compiler::front::ast::AST *root) {
         std::cout << "开始优化ast" << std::endl;
+
     }
 
 }

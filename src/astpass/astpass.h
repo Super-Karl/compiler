@@ -6,10 +6,12 @@
 #define COMPILER_ASTPASS_H
 
 #include <front/ast/AstNode.h>
+#include <unordered_map>
 
+using Hash = std::unordered_map<string, int>;
 namespace compiler::astpassir {
-    compiler::front::ast::AST *FirstPass(compiler::front::ast::AST *root);
-
+    void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale);
+    void FirstPassNode(compiler::front::ast::FunctionDefine *node, Hash constTbale);
 }
 
 #endif //COMPILER_ASTPASS_H

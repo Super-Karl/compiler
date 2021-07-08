@@ -97,9 +97,9 @@ namespace compiler {
 
         class VarDeclareWithInit : public Declare {
         public:
-            Expression *value;
+            Node *value;
 
-            VarDeclareWithInit(Identifier *name, Expression *value, AstNodeType type = VarDeclareWithInitType)
+            VarDeclareWithInit(Identifier *name, Node *value, AstNodeType type = VarDeclareWithInitType)
                     : Declare(name, type), value(value) {};
 
             void print(int depth = 0, bool isEnd = false) override;

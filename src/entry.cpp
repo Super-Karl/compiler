@@ -18,5 +18,6 @@ int main(int argc, char **argv) {
         root->print();
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root,constTbale);
+    root->print();
     return 0;
 }

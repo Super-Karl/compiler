@@ -39,11 +39,11 @@ namespace compiler {
             void print(int depth, bool isEnd = false) override;
         };
 
-        class Identifier : public Node {
+        class Identifier : public Expression {
         public:
             string name;
 
-            Identifier(string name, AstNodeType type = IdentifierType) : name(name), Node(type) {};
+            Identifier(string name, AstNodeType type = IdentifierType) : name(name), Expression(type) {};
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -97,9 +97,9 @@ namespace compiler {
 
         class VarDeclareWithInit : public Declare {
         public:
-            Node *value;
+            Expression *value;
 
-            VarDeclareWithInit(Identifier *name, Node *value, AstNodeType type = VarDeclareWithInitType)
+            VarDeclareWithInit(Identifier *name, Expression *value, AstNodeType type = VarDeclareWithInitType)
                     : Declare(name, type), value(value) {};
 
             void print(int depth = 0, bool isEnd = false) override;

@@ -102,10 +102,31 @@ namespace compiler::astpassir {
                 case AssignStmtType: {
                     if (static_cast<AssignStmt *>(item)->rightExpr->nodetype == IdentifierType) {
                         string rightName = static_cast<Identifier *>(static_cast<AssignStmt *>(item)->rightExpr)->name;
-                        delete static_cast<AssignStmt *>(item)->rightExpr;
-                        static_cast<AssignStmt *>(item)->rightExpr = new NumberExpression(constTbale[rightName]);
+                        if(constTbale.count(rightName)>0)
+                        {
+                            delete static_cast<AssignStmt *>(item)->rightExpr;
+                            static_cast<AssignStmt *>(item)->rightExpr = new NumberExpression(constTbale[rightName]);
+                        }
                     }
                     break;
+                }
+                case FunctionCallType:
+                {
+                    for(int i=0; i<static_cast<FunctionCall*>(item)->args->args.size(); i++)
+                    {
+                        if(static_cast<FunctionCall*>(item)->args->args[i]->nodetype==IdentifierType)
+                        {
+                            string Name = static_cast<Identifier *>(static_cast<FunctionCall*>(item)->args->args[i])->name;
+                            if(constTbale.count(Name)>0)
+                            {
+                                static_cast<FunctionCall*>(item)->args->args[i] = new NumberExpression(constTbale[Name]);
+                            }
+                        }
+                    }
+                }
+                case CommaExpressionType:
+                {
+
                 }
             }
             switch (item->nodetype) {

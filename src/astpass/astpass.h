@@ -13,6 +13,7 @@ namespace compiler::astpassir {
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale);
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale);
     void FirstPassStmt(compiler::front::ast::Stmt *stmt, Hash constTbale);
+    void FirstPassExpr(compiler::front::ast::Expression *expr, Hash constTbale);
 }
 
 #endif //COMPILER_ASTPASS_H

@@ -205,3 +205,127 @@ void AST::print(int depth, bool isEnd) {
     for (auto i : codeBlock)
         i->print(depth + 1, i == codeBlock.back());
 }
+//destructor
+Node::~Node(){
+
+}
+
+ArrayInitVal::~ArrayInitVal(){
+    for (auto &i:initValList){
+        delete i;
+        i = NULL;
+    }
+}
+
+ArrayIdentifier::~ArrayIdentifier(){
+    for (auto &i:index){
+        delete i;
+        i = NULL;
+    }
+}
+
+Block::~Block(){
+    for (auto &i:blockItem){
+        delete i;
+        i = NULL;
+    }
+}
+
+Declare::~Declare(){
+    delete name;
+    name = NULL;
+}
+
+VarDeclare::~VarDeclare(){
+
+}
+
+VarDeclareWithInit::~VarDeclareWithInit(){
+    delete value;
+    value = NULL;
+}
+
+ConstDeclare::~ConstDeclare(){
+    delete value;
+    value = NULL;
+}
+
+ArrayDeclare::~ArrayDeclare(){
+    
+}
+
+ConstArray::~ConstArray(){
+    delete initVal;
+}
+
+ArrayDeclareWithInit::~ArrayDeclareWithInit(){
+    delete initVal;
+}
+
+FunctionDefArg::~FunctionDefArg(){
+    delete name;
+}
+
+FunctionCallArgList::~FunctionCallArgList(){
+    for (auto &i:args){
+        delete i;
+    }
+}
+
+FunctionDefArgList::~FunctionDefArgList(){
+    for (auto &i:args){
+        delete i;
+    }
+}
+
+FunctionDefine::~FunctionDefine(){
+    delete name;
+    delete args;
+    delete body;
+}
+
+FunctionCall::~FunctionCall(){
+    delete name;
+    delete args;
+}
+
+BinaryExpression::~BinaryExpression(){
+    delete leftExpr;
+    delete rightExpr;
+}
+
+UnaryExpression::~UnaryExpression(){
+    delete right;
+}
+
+AssignStmt::~AssignStmt(){
+    delete name;
+    delete rightExpr;
+}
+
+DeclareStatement::~DeclareStatement(){
+    for (auto &i:declareList){
+        delete i;
+    }
+}
+
+IfStatement::~IfStatement(){
+    delete trueBlock;
+    delete elseBlock;
+    delete cond;
+}
+
+WhileStatement::~WhileStatement(){
+    delete cond;
+    delete loopBlock;
+}
+
+ReturnStatement::~ReturnStatement(){
+    delete returnExp;
+}
+
+AST::~AST(){
+    for (auto &i:codeBlock){
+        delete i;
+    }
+}

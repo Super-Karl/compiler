@@ -19,7 +19,7 @@ namespace compiler {
             AstNodeType nodetype;
 
             Node(AstNodeType type = NodeType) : nodetype(type) {}
-
+            virtual ~Node();
             virtual void print(int depth = 0, bool isEnd = false);
 
             void printPrefix(int depth = 0, bool isEnd = false);
@@ -33,7 +33,9 @@ namespace compiler {
         class ArrayInitVal : public Expression {
         public:
             ArrayInitVal(AstNodeType type = ArrayInitValType) : Expression(type) {}
-
+            
+            ~ArrayInitVal();
+            
             list<Expression *> initValList;
 
             void print(int depth, bool isEnd = false) override;
@@ -54,6 +56,8 @@ namespace compiler {
 
             ArrayIdentifier(string name, AstNodeType type = ArrayIdentifierType) : Identifier(name, type) {};
 
+            ~ArrayIdentifier();
+            
             void print(int depth, bool isEnd) override;
         };
 
@@ -67,6 +71,8 @@ namespace compiler {
             list<Expression *> blockItem;
 
             Block(AstNodeType type = BlockType) : Stmt(type) {};
+
+            ~Block();
 
             void print(int depth = 0, bool isEnd = false);
         };
@@ -84,12 +90,16 @@ namespace compiler {
                 this->name = name;
             };
 
+            ~Declare();
+
         };
 
         class VarDeclare : public Declare {
         public:
 
             VarDeclare(Identifier *name, AstNodeType type = VarDeclareType) : Declare(name, type) {};
+
+            ~VarDeclare();
 
             void print(int depth = 0, bool isEnd = false) override;
 
@@ -102,6 +112,8 @@ namespace compiler {
             VarDeclareWithInit(Identifier *name, Expression *value, AstNodeType type = VarDeclareWithInitType)
                     : Declare(name, type), value(value) {};
 
+            ~VarDeclareWithInit();
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -113,6 +125,8 @@ namespace compiler {
                                                                                                              type),
                                                                                                      value(value) {};
 
+            ~ConstDeclare();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -121,6 +135,8 @@ namespace compiler {
 
             ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) {};
 
+            ~ArrayDeclare();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -131,6 +147,8 @@ namespace compiler {
             ConstArray(ArrayIdentifier *name, ArrayInitVal *initVal, AstNodeType type = ConstArrayType) : Declare(name,
                                                                                                               type),
                                                                                                       initVal(initVal) {};
+
+            ~ConstArray();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -144,6 +162,8 @@ namespace compiler {
             ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal,
                                  AstNodeType type = ArrayDeclareWithInitType) : Declare(name, type),
                                                                                 initVal(initVal) {};
+
+            ~ArrayDeclareWithInit();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -162,6 +182,8 @@ namespace compiler {
                                                                                                    name(name),
                                                                                                    Expression(type) {};
 
+            ~FunctionDefArg();
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -171,6 +193,8 @@ namespace compiler {
 
             FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type) {};
 
+            ~FunctionDefArgList();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -189,6 +213,8 @@ namespace compiler {
                                                                     args(args),
                                                                     body(block), Expression(type) {};
 
+            ~FunctionDefine();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -202,6 +228,8 @@ namespace compiler {
 
             FunctionCallArgList(AstNodeType type = FunctionCallArgListType) : Expression(type) {};
 
+            ~FunctionCallArgList();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -216,6 +244,8 @@ namespace compiler {
                                                                                                              args(args),
                                                                                                              Expression(
                                                                                                                      type) {};
+
+            ~FunctionCall();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -251,6 +281,8 @@ namespace compiler {
             BinaryExpression(Expression *left, int op, Expression *right, AstNodeType type = BinaryExpressionType)
                     : leftExpr(left), op(op), rightExpr(right), Expression(type) {};
 
+            ~BinaryExpression();
+            
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -261,6 +293,8 @@ namespace compiler {
 
             UnaryExpression(int op, Expression *right, AstNodeType type = UnaryExpressionType) : op(op), right(right),
                                                                                                  Expression(type) {};
+            
+            ~UnaryExpression();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -277,6 +311,8 @@ namespace compiler {
                                                                                                    rightExpr(right),
                                                                                                    Stmt(type) {};
 
+            ~AssignStmt();
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -290,6 +326,8 @@ namespace compiler {
             DeclareStatement(list<Declare *> declareList, AstNodeType type = DeclareStatementType) : declareList(
                     declareList),
                                                                                                        Stmt(type) {};
+
+            ~DeclareStatement();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -306,6 +344,8 @@ namespace compiler {
                                                                                                                           elseBlock),
                                                                                                                   Stmt(type) {};
 
+            ~IfStatement();
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -318,6 +358,8 @@ namespace compiler {
                                                                                                        loopBlock(
                                                                                                                loopBlock),
                                                                                                        Stmt(type) {};
+
+            ~WhileStatement();
 
             void print(int depth = 0, bool isEnd = false) override;
         };
@@ -350,6 +392,8 @@ namespace compiler {
             ReturnStatement(Expression *exp = NULL, AstNodeType type = ReturnStatementType) : returnExp(exp),
                                                                                               Stmt(type) {};
 
+            ~ReturnStatement();
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -360,6 +404,7 @@ namespace compiler {
 
             AST() {};
 
+            ~AST();
             void print(int depth = 0, bool isEnd = false);
         };
     }

@@ -2,9 +2,9 @@
 // Created by karl on 2021/7/7.
 //
 #include "astpass.h"
+#include "parser.hpp"
 #include <unordered_map>
 #include <iostream>
-#include "../cmake-build-debug/front/parser.hpp"
 
 using namespace compiler::front::ast;
 
@@ -105,6 +105,38 @@ namespace compiler::astpassir {
                     return false;
                 }
             }
+            case UnaryExpressionType:{
+                auto exprTemp = static_cast<UnaryExpression *>(exp);
+                int res;
+                int resCan = caluExpersion(exprTemp->right, res);
+                if(resCan)
+                {
+                    delete exprTemp->right;
+                    exprTemp->right = NULL;
+                    switch (exprTemp->op) {
+                        case ADD:{
+                            result = res;
+                            return true;
+                        }
+                        case SUB:{
+                            result = -res;
+                            return true;
+                        }
+                        case NOT_EQUAL:{
+                            result = !res;
+                            return true;
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            default:{
+                return false;
+            }
         }
     }
 
@@ -117,11 +149,24 @@ namespace compiler::astpassir {
                     switch (subNode->nodetype) {
                         case VarDeclareWithInitType: {
                             static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            int result;
+                            if(caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value,result))
+                            {
+                                delete static_cast<VarDeclareWithInit *>(subNode)->value;
+                                static_cast<VarDeclareWithInit *>(subNode)->value = new NumberExpression(result);
+                            }
                             break;
                         }
                         case ConstDeclareType: {
                             static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
                             //替换完后加入到hashtable中
+                            int result;
+                            if(caluExpersion(static_cast<ConstDeclare *>(subNode)->value,result))
+                            {
+                                delete static_cast<ConstDeclare *>(subNode)->value;
+                                static_cast<ConstDeclare *>(subNode)->value = new NumberExpression(result);
+                            }
+
                             if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
                                 constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
                             }
@@ -145,10 +190,22 @@ namespace compiler::astpassir {
                         switch (subNode->nodetype) {
                             case VarDeclareWithInitType: {
                                 static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                                int result;
+                                if(caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value,result))
+                                {
+                                    delete static_cast<VarDeclareWithInit *>(subNode)->value;
+                                    static_cast<VarDeclareWithInit *>(subNode)->value = new NumberExpression(result);
+                                }
                                 break;
                             }
                             case ConstDeclareType: {
                                 static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                                int result;
+                                if(caluExpersion(static_cast<ConstDeclare *>(subNode)->value,result))
+                                {
+                                    delete static_cast<ConstDeclare *>(subNode)->value;
+                                    static_cast<ConstDeclare *>(subNode)->value = new NumberExpression(result);
+                                }
                                 //替换完后加入到hashtable中
                                 if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
                                     constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
@@ -285,8 +342,6 @@ namespace compiler::astpassir {
                 if (constTbale.count(Name) > 0) {
                     delete expr;
                     return new NumberExpression(constTbale[Name]);
-                } else {
-                    return expr;
                 }
                 break;
             }
@@ -294,23 +349,27 @@ namespace compiler::astpassir {
                 for (auto i = static_cast<FunctionCall *>(expr)->args->args.begin(); i != static_cast<FunctionCall *>(expr)->args->args.end(); i++) {
                     *i = FirstPassExpr(*i, constTbale);
                 }
-                return expr;
                 break;
             }
             case BinaryExpressionType: {
                 static_cast<BinaryExpression *>(expr)->rightExpr = FirstPassExpr(static_cast<BinaryExpression *>(expr)->rightExpr, constTbale);
                 static_cast<BinaryExpression *>(expr)->leftExpr = FirstPassExpr(static_cast<BinaryExpression *>(expr)->leftExpr, constTbale);
-                return expr;
                 break;
             }
             case UnaryExpressionType: {
                 static_cast<UnaryExpression *>(expr)->right = FirstPassExpr(static_cast<UnaryExpression *>(expr)->right, constTbale);
-                return expr;
                 break;
             }
-            default: {
-                return expr;
-            }
+        }
+        int result;
+        if(caluExpersion(expr,result))
+        {
+            delete expr;
+            return new NumberExpression(result);
+        }
+        else
+        {
+            return expr;
         }
     }
 }

@@ -22,7 +22,6 @@ namespace compiler::astpassir {
         std::cout << "开始优化ast" << std::endl;
         //遍历根节点中的Block,建立哈希表
         for (auto node:root->codeBlock) {
-            //替换
             if (node->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
                     switch (subNode->nodetype) {
@@ -32,31 +31,27 @@ namespace compiler::astpassir {
                             break;
                         }
                         case ConstDeclareType: {
-                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(
+                                    static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                            //替换完后加入到hashtable中
+                            if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
+                                constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
+                            }
                             break;
-                        }
-                    }
-                }
-            }
-            //加入table
-            if (node->nodetype == DeclareStatementType) {
-                for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
-                    if (subNode->nodetype == ConstDeclareType) {
-                        if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
-                            constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
                         }
                     }
                 }
             } else if (node->nodetype == FunctionDefineType) {
                 FirstPassNode(static_cast<Block *>(static_cast<FunctionDefine *>(node)->body), constTbale);
+            }else if(node->nodetype==VoidStatementType)
+            {
+                root->codeBlock.remove(node);
             }
         }
     }
 
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale) {
         for (auto item:node->blockItem) {
-            //替换
             switch (item->nodetype) {
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(item)->declareList) {
@@ -69,6 +64,7 @@ namespace compiler::astpassir {
                             case ConstDeclareType: {
                                 static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(
                                         static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                                //替换完后加入到hashtable中
                                 if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
                                     constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
                                 }
@@ -101,6 +97,9 @@ namespace compiler::astpassir {
                          i != static_cast<FunctionCall *>(item)->args->args.end(); i++) {
                         *i = FirstPassExpr(*i, constTbale);
                     }
+                }
+                case ReturnStatementType: {
+                    static_cast<ReturnStatement*>(item)->returnExp = FirstPassExpr(static_cast<ReturnStatement*>(item)->returnExp,constTbale);
                 }
             }
             /*//添加到table
@@ -206,8 +205,7 @@ namespace compiler::astpassir {
                     return expr;
                 }
             }
-            case FunctionCallType:
-            {
+            case FunctionCallType: {
                 for (auto i = static_cast<FunctionCall *>(expr)->args->args.begin();
                      i != static_cast<FunctionCall *>(expr)->args->args.end(); i++) {
                     *i = FirstPassExpr(*i, constTbale);

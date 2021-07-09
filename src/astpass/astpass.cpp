@@ -26,13 +26,11 @@ namespace compiler::astpassir {
                 for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
                     switch (subNode->nodetype) {
                         case VarDeclareWithInitType: {
-                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
                             break;
                         }
                         case ConstDeclareType: {
-                            static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(
-                                    static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                            static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
                             //替换完后加入到hashtable中
                             if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
                                 constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
@@ -43,27 +41,24 @@ namespace compiler::astpassir {
                 }
             } else if (node->nodetype == FunctionDefineType) {
                 FirstPassNode(static_cast<Block *>(static_cast<FunctionDefine *>(node)->body), constTbale);
-            }else if(node->nodetype==VoidStatementType)
-            {
+            } else if (node->nodetype == VoidStatementType) {
                 root->codeBlock.remove(node);
             }
         }
     }
 
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale) {
-        for (auto item:node->blockItem) {
-            switch (item->nodetype) {
+        for (auto item = node->blockItem.begin(); item != node->blockItem.end(); item++) {
+            switch ((*item)->nodetype) {
                 case DeclareStatementType: {
-                    for (auto subNode:static_cast<DeclareStatement *>(item)->declareList) {
+                    for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {
                             case VarDeclareWithInitType: {
-                                static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(
-                                        static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                                static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
                                 break;
                             }
                             case ConstDeclareType: {
-                                static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(
-                                        static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                                static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
                                 //替换完后加入到hashtable中
                                 if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
                                     constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
@@ -72,82 +67,80 @@ namespace compiler::astpassir {
                             }
                         }
                     }
+                    break;
                 }
                 case AssignStmtType: {
-                    static_cast<AssignStmt *>(item)->rightExpr = FirstPassExpr(
-                            static_cast<AssignStmt *>(item)->rightExpr, constTbale);
+                    static_cast<AssignStmt *>(*item)->rightExpr = FirstPassExpr(static_cast<AssignStmt *>(*item)->rightExpr, constTbale);
                     break;
                 }
                 case IfStatementType: {
-                    FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(item)->trueBlock), constTbale);
-                    if (static_cast<IfStatement *>(item)->elseBlock->nodetype == BlockType) {
-                        FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(item)->elseBlock), constTbale);
+                    static_cast<IfStatement *>(*item)->cond = FirstPassExpr(static_cast<IfStatement *>(*item)->cond, constTbale);
+                    if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
+                        FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock), constTbale);
                     } else {
-                        FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(item)->elseBlock),
-                                      constTbale);
+                        FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(*item)->trueBlock), constTbale);
+                    }
+                    if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
+                        FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock), constTbale);
+                    } else {
+                        FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(*item)->elseBlock), constTbale);
                     }
                     break;
                 }
                 case WhileStatementType: {
-                    FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(item)->loopBlock), constTbale);
+                    static_cast<WhileStatement *>(*item)->cond = FirstPassExpr(static_cast<IfStatement *>(*item)->cond,
+                                                                               constTbale);
+                    if (static_cast<WhileStatement *>(*item)->nodetype == BlockType) {
+                        FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock),
+                                      constTbale);
+                    } else {
+                        FirstPassStmt(static_cast<Stmt *>(static_cast<WhileStatement *>(*item)->loopBlock), constTbale);
+                    }
                     break;
                 }
                 case FunctionCallType: {
-                    for (auto i = static_cast<FunctionCall *>(item)->args->args.begin();
-                         i != static_cast<FunctionCall *>(item)->args->args.end(); i++) {
+                    for (auto i = static_cast<FunctionCall *>(*item)->args->args.begin();
+                         i != static_cast<FunctionCall *>(*item)->args->args.end(); i++) {
                         *i = FirstPassExpr(*i, constTbale);
                     }
+                    break;
                 }
                 case ReturnStatementType: {
-                    static_cast<ReturnStatement*>(item)->returnExp = FirstPassExpr(static_cast<ReturnStatement*>(item)->returnExp,constTbale);
+                    if (static_cast<ReturnStatement *>(*item)->returnExp == NULL) {
+                        node->blockItem.erase(item++);
+                        item--;
+                        break;
+                    }
+                    static_cast<ReturnStatement *>(*item)->returnExp = FirstPassExpr(
+                            static_cast<ReturnStatement *>(*item)->returnExp, constTbale);
+                    break;
+                }
+                case VoidStatementType: {
+                    node->blockItem.erase(item++);
+                    item--;
+                    break;
                 }
             }
-            /*//添加到table
-            switch (item->nodetype) {
-                case DeclareStatementType: {
-                    for (auto subNode:static_cast<DeclareStatement *>(item)->declareList) {
-                        switch (subNode->nodetype) {
-                            case ConstDeclareType: {
-                                if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
-                                    constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-                case IfStatementType: {
-                    FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(item)->trueBlock), constTbale);
-                    if (static_cast<IfStatement *>(item)->elseBlock->nodetype == BlockType) {
-                        FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(item)->elseBlock), constTbale);
-                    } else {
-                        FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(item)->elseBlock),
-                                      constTbale);
-                    }
-                    break;
-                }
-                case WhileStatementType: {
-                    FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(item)->loopBlock), constTbale);
-                    break;
-                }
-            }*/
         }
     }
 
     void FirstPassStmt(compiler::front::ast::Stmt *stmt, Hash constTbale) {
         switch (stmt->nodetype) {
             case DeclareStatementType: {
-                for (auto subNode:static_cast<DeclareStatement *>(stmt)->declareList) {
-                    switch (subNode->nodetype) {
+                for (auto subNode = static_cast<DeclareStatement *>(stmt)->declareList.begin();
+                     subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
+                    switch ((*subNode)->nodetype) {
                         case VarDeclareWithInitType: {
-                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(
+                                    static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
                             break;
                         }
                         case ConstDeclareType: {
-                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(
+                                    static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
+                            if (static_cast<ConstDeclare *>(*subNode)->value->nodetype == NumberExpressionType) {
+                                constTbale[static_cast<ConstDeclare *>(*subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(*subNode)->value)->value;
+                            }
                             break;
                         }
                     }
@@ -158,38 +151,43 @@ namespace compiler::astpassir {
                         static_cast<AssignStmt *>(stmt)->rightExpr, constTbale);
                 break;
             }
-        }
-        //添加table
-        switch (stmt->nodetype) {
-            case DeclareStatementType: {
-                for (auto subNode:static_cast<DeclareStatement *>(stmt)->declareList) {
-                    switch (subNode->nodetype) {
-                        case ConstDeclareType: {
-                            if (static_cast<ConstDeclare *>(subNode)->value->nodetype == NumberExpressionType) {
-                                constTbale[static_cast<ConstDeclare *>(subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(subNode)->value)->value;
-                            }
-                            break;
-                        }
-                    }
+            case BlockType:{
+                FirstPassNode(static_cast<Block *>(stmt),constTbale);
+                break;
+            }
+            case ReturnStatementType:{
+                if (static_cast<ReturnStatement *>(stmt)->returnExp == NULL) {
+                    break;
                 }
+                static_cast<ReturnStatement *>(stmt)->returnExp = FirstPassExpr(static_cast<ReturnStatement *>(stmt)->returnExp, constTbale);
                 break;
             }
             case IfStatementType: {
-                FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(stmt)->trueBlock), constTbale);
+                static_cast<IfStatement *>(stmt)->cond = FirstPassExpr(static_cast<IfStatement *>(stmt)->cond, constTbale);
+                if (static_cast<IfStatement *>(stmt)->trueBlock->nodetype == BlockType) {
+                    FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(stmt)->trueBlock), constTbale);
+                } else {
+                    FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(stmt)->trueBlock), constTbale);
+                }
                 if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype == BlockType) {
                     FirstPassNode(static_cast<Block *>(static_cast<IfStatement *>(stmt)->elseBlock), constTbale);
                 } else {
-                    FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(stmt)->elseBlock),
-                                  constTbale);
+                    FirstPassStmt(static_cast<IfStatement *>(static_cast<IfStatement *>(stmt)->elseBlock), constTbale);
                 }
                 break;
             }
             case WhileStatementType: {
-                FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock), constTbale);
+                static_cast<WhileStatement *>(stmt)->cond = FirstPassExpr(static_cast<IfStatement *>(stmt)->cond,constTbale);
+                if (static_cast<WhileStatement *>(stmt)->nodetype == BlockType) {
+                    FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock),constTbale);
+                } else {
+                    FirstPassStmt(static_cast<Stmt *>(static_cast<WhileStatement *>(stmt)->loopBlock), constTbale);
+                }
                 break;
             }
             default: {
-                std::cout << stmt->nodetype;
+                std::cout << stmt->nodetype<<" ";
+                break;
             }
         }
     }
@@ -204,12 +202,29 @@ namespace compiler::astpassir {
                 } else {
                     return expr;
                 }
+                break;
             }
             case FunctionCallType: {
                 for (auto i = static_cast<FunctionCall *>(expr)->args->args.begin();
                      i != static_cast<FunctionCall *>(expr)->args->args.end(); i++) {
                     *i = FirstPassExpr(*i, constTbale);
                 }
+                return expr;
+                break;
+            }
+            case BinaryExpressionType: {
+                static_cast<BinaryExpression *>(expr)->rightExpr = FirstPassExpr(
+                        static_cast<BinaryExpression *>(expr)->rightExpr, constTbale);
+                static_cast<BinaryExpression *>(expr)->leftExpr = FirstPassExpr(
+                        static_cast<BinaryExpression *>(expr)->leftExpr, constTbale);
+                return expr;
+                break;
+            }
+            case UnaryExpressionType: {
+                static_cast<UnaryExpression *>(expr)->right = FirstPassExpr(static_cast<UnaryExpression *>(expr)->right,
+                                                                            constTbale);
+                return expr;
+                break;
             }
             default: {
                 return expr;

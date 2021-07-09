@@ -6,7 +6,7 @@
 #define COMPILER_ASTNODE_H
 
 #include <iostream>
-#include <vector>
+#include <list>
 
 #include"enum/enums.h"
 
@@ -34,7 +34,7 @@ namespace compiler {
         public:
             ArrayInitVal(AstNodeType type = ArrayInitValType) : Expression(type) {}
 
-            vector<Expression *> initValList;
+            list<Expression *> initValList;
 
             void print(int depth, bool isEnd = false) override;
         };
@@ -50,7 +50,7 @@ namespace compiler {
 
         class ArrayIdentifier : public Identifier {
         public:
-            vector<Expression *> index;
+            list<Expression *> index;
 
             ArrayIdentifier(string name, AstNodeType type = ArrayIdentifierType) : Identifier(name, type) {};
 
@@ -64,7 +64,7 @@ namespace compiler {
 
         class Block : public Stmt {//语句块
         public:
-            vector<Expression *> blockItem;
+            list<Expression *> blockItem;
 
             Block(AstNodeType type = BlockType) : Stmt(type) {};
 
@@ -167,7 +167,7 @@ namespace compiler {
 
         class FunctionDefArgList : public Expression {
         public:
-            vector<FunctionDefArg *> args;
+            list<FunctionDefArg *> args;
 
             FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type) {};
 
@@ -198,7 +198,7 @@ namespace compiler {
          */
         class FunctionCallArgList : public Expression {
         public:
-            vector<Expression *> args;
+            list<Expression *> args;
 
             FunctionCallArgList(AstNodeType type = FunctionCallArgListType) : Expression(type) {};
 
@@ -225,7 +225,7 @@ namespace compiler {
          */
         class CommaExpression : public Expression {//逗号表达式
         public:
-            vector<Expression *> expr;
+            list<Expression *> expr;
 
             CommaExpression(AstNodeType type = CommaExpressionType) : Expression(type) {};
 
@@ -283,11 +283,11 @@ namespace compiler {
 
         class DeclareStatement : public Stmt {
         public:
-            vector<Declare *> declareList;
+            list<Declare *> declareList;
 
             DeclareStatement(AstNodeType type = DeclareStatementType) : Stmt(type) {};
 
-            DeclareStatement(vector<Declare *> declareList, AstNodeType type = DeclareStatementType) : declareList(
+            DeclareStatement(list<Declare *> declareList, AstNodeType type = DeclareStatementType) : declareList(
                     declareList),
                                                                                                        Stmt(type) {};
 
@@ -356,7 +356,7 @@ namespace compiler {
 
         class AST {
         public:
-            vector<Node *> codeBlock;
+            list<Node *> codeBlock;
 
             AST() {};
 

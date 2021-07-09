@@ -9,14 +9,14 @@
 using namespace compiler::front::ast;
 
 namespace compiler::astpassir {
-    int caluExpersion(Node *exp, Hash constTbale) {
+    /*int caluExpersion(Node *exp, Hash constTbale) {
         switch (exp->nodetype) {
             case NumberExpressionType:
                 return static_cast<NumberExpression *>(exp)->value;
             case IdentifierType:
                 return constTbale.at(static_cast<Identifier *>(exp)->name);
         }
-    }
+    }*/
 
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
         std::cout << "开始优化ast" << std::endl;
@@ -112,7 +112,18 @@ namespace compiler::astpassir {
                 }
                 case FunctionCallType:
                 {
-                    for(int i=0; i<static_cast<FunctionCall*>(item)->args->args.size(); i++)
+                    for(auto i = static_cast<FunctionCall*>(item)->args->args.begin(); i!=static_cast<FunctionCall*>(item)->args->args.end();i++)
+                    {
+                        if((*i)->nodetype==IdentifierType)
+                        {
+                            string Name = static_cast<Identifier *>(*i)->name;
+                            if(constTbale.count(Name)>0)
+                            {
+                                (*i) = new NumberExpression(constTbale[Name]);
+                            }
+                        }
+                    }
+                    /*for(int i=0; i<static_cast<FunctionCall*>(item)->args->args.size(); i++)
                     {
                         if(static_cast<FunctionCall*>(item)->args->args[i]->nodetype==IdentifierType)
                         {
@@ -122,7 +133,7 @@ namespace compiler::astpassir {
                                 static_cast<FunctionCall*>(item)->args->args[i] = new NumberExpression(constTbale[Name]);
                             }
                         }
-                    }
+                    }*/
                 }
                 case CommaExpressionType:
                 {

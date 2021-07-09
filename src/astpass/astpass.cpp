@@ -4,19 +4,109 @@
 #include "astpass.h"
 #include <unordered_map>
 #include <iostream>
-
+#include "../cmake-build-debug/front/parser.hpp"
 
 using namespace compiler::front::ast;
 
 namespace compiler::astpassir {
-    /*int caluExpersion(Node *exp, Hash constTbale) {
+    bool caluExpersion(compiler::front::ast::Expression *exp, int &result) {
         switch (exp->nodetype) {
             case NumberExpressionType:
-                return static_cast<NumberExpression *>(exp)->value;
+                result = static_cast<NumberExpression *>(exp)->value;
+                return true;
             case IdentifierType:
-                return constTbale.at(static_cast<Identifier *>(exp)->name);
+                return false;
+            case BinaryExpressionType: {
+                auto exprTemp = static_cast<BinaryExpression *>(exp);
+                int left;
+                int right;
+                int leftCan = caluExpersion(exprTemp->leftExpr, left);
+                int rightCan = caluExpersion(exprTemp->rightExpr, right);
+                if (leftCan && rightCan) {
+                    delete exprTemp->leftExpr;
+                    exprTemp->leftExpr = NULL;
+                    delete exprTemp->rightExpr;
+                    exprTemp->leftExpr = NULL;
+                    switch (exprTemp->op) {
+                        case ADD: {
+                            result = left + right;
+                            return true;
+                        }
+                        case SUB: {
+                            result = left - right;
+                            return true;
+                        }
+                        case MUL: {
+                            result = left * right;
+                            return true;
+                        }
+                        case DIV: {
+                            result = left / right;
+                            return true;
+                        }
+                        case MOD: {
+                            result = left % right;
+                            return true;
+                        }
+                        case EQ: {
+                            result = left == right;
+                            return true;
+                        }
+                        case NE: {
+                            result = left != right;
+                            return true;
+                        }
+                        case LT: {
+                            result = left < right;
+                            return true;
+                        }
+                        case LE: {
+                            result = left <= right;
+                            return true;
+                        }
+                        case GT: {
+                            result = left > right;
+                            return true;
+                        }
+                        case GE: {
+                            result = left >= right;
+                            return true;
+                        }
+                        case AND_OP: {
+                            result = left && right;
+                            return true;
+                        }
+                        case OR_OP: {
+                            result = left || right;
+                            return true;
+                        }
+                        case NOT_EQUAL: {
+                            result = left != right;
+                            return true;
+                        }
+                    }
+                } else if (exprTemp->op == AND_OP && ((leftCan && left == 0) || (rightCan && right == 0))) {
+                    delete exprTemp->leftExpr;
+                    exprTemp->leftExpr = NULL;
+                    delete exprTemp->rightExpr;
+                    exprTemp->leftExpr = NULL;
+                    result = 0;
+                    return true;
+                } else if (exprTemp->op == OR_OP && ((leftCan && left != 0) || (rightCan && right != 0))) {
+                    delete exprTemp->leftExpr;
+                    exprTemp->leftExpr = NULL;
+                    delete exprTemp->rightExpr;
+                    exprTemp->leftExpr = NULL;
+                    result = 1;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
-    }*/
+    }
 
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
         std::cout << "开始优化ast" << std::endl;
@@ -111,8 +201,7 @@ namespace compiler::astpassir {
                         item--;
                         break;
                     }
-                    static_cast<ReturnStatement *>(*item)->returnExp = FirstPassExpr(
-                            static_cast<ReturnStatement *>(*item)->returnExp, constTbale);
+                    static_cast<ReturnStatement *>(*item)->returnExp = FirstPassExpr(static_cast<ReturnStatement *>(*item)->returnExp, constTbale);
                     break;
                 }
                 case VoidStatementType: {
@@ -131,13 +220,11 @@ namespace compiler::astpassir {
                      subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
                     switch ((*subNode)->nodetype) {
                         case VarDeclareWithInitType: {
-                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
                             break;
                         }
                         case ConstDeclareType: {
-                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(
-                                    static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
                             if (static_cast<ConstDeclare *>(*subNode)->value->nodetype == NumberExpressionType) {
                                 constTbale[static_cast<ConstDeclare *>(*subNode)->name->name] = static_cast<NumberExpression *>(static_cast<ConstDeclare *>(*subNode)->value)->value;
                             }
@@ -147,15 +234,14 @@ namespace compiler::astpassir {
                 }
             }
             case AssignStmtType: {
-                static_cast<AssignStmt *>(stmt)->rightExpr = FirstPassExpr(
-                        static_cast<AssignStmt *>(stmt)->rightExpr, constTbale);
+                static_cast<AssignStmt *>(stmt)->rightExpr = FirstPassExpr(static_cast<AssignStmt *>(stmt)->rightExpr, constTbale);
                 break;
             }
-            case BlockType:{
-                FirstPassNode(static_cast<Block *>(stmt),constTbale);
+            case BlockType: {
+                FirstPassNode(static_cast<Block *>(stmt), constTbale);
                 break;
             }
-            case ReturnStatementType:{
+            case ReturnStatementType: {
                 if (static_cast<ReturnStatement *>(stmt)->returnExp == NULL) {
                     break;
                 }
@@ -177,16 +263,16 @@ namespace compiler::astpassir {
                 break;
             }
             case WhileStatementType: {
-                static_cast<WhileStatement *>(stmt)->cond = FirstPassExpr(static_cast<IfStatement *>(stmt)->cond,constTbale);
+                static_cast<WhileStatement *>(stmt)->cond = FirstPassExpr(static_cast<IfStatement *>(stmt)->cond, constTbale);
                 if (static_cast<WhileStatement *>(stmt)->nodetype == BlockType) {
-                    FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock),constTbale);
+                    FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock), constTbale);
                 } else {
                     FirstPassStmt(static_cast<Stmt *>(static_cast<WhileStatement *>(stmt)->loopBlock), constTbale);
                 }
                 break;
             }
             default: {
-                std::cout << stmt->nodetype<<" ";
+                std::cout << stmt->nodetype << " ";
                 break;
             }
         }
@@ -205,24 +291,20 @@ namespace compiler::astpassir {
                 break;
             }
             case FunctionCallType: {
-                for (auto i = static_cast<FunctionCall *>(expr)->args->args.begin();
-                     i != static_cast<FunctionCall *>(expr)->args->args.end(); i++) {
+                for (auto i = static_cast<FunctionCall *>(expr)->args->args.begin(); i != static_cast<FunctionCall *>(expr)->args->args.end(); i++) {
                     *i = FirstPassExpr(*i, constTbale);
                 }
                 return expr;
                 break;
             }
             case BinaryExpressionType: {
-                static_cast<BinaryExpression *>(expr)->rightExpr = FirstPassExpr(
-                        static_cast<BinaryExpression *>(expr)->rightExpr, constTbale);
-                static_cast<BinaryExpression *>(expr)->leftExpr = FirstPassExpr(
-                        static_cast<BinaryExpression *>(expr)->leftExpr, constTbale);
+                static_cast<BinaryExpression *>(expr)->rightExpr = FirstPassExpr(static_cast<BinaryExpression *>(expr)->rightExpr, constTbale);
+                static_cast<BinaryExpression *>(expr)->leftExpr = FirstPassExpr(static_cast<BinaryExpression *>(expr)->leftExpr, constTbale);
                 return expr;
                 break;
             }
             case UnaryExpressionType: {
-                static_cast<UnaryExpression *>(expr)->right = FirstPassExpr(static_cast<UnaryExpression *>(expr)->right,
-                                                                            constTbale);
+                static_cast<UnaryExpression *>(expr)->right = FirstPassExpr(static_cast<UnaryExpression *>(expr)->right, constTbale);
                 return expr;
                 break;
             }

@@ -10,6 +10,8 @@
 
 using Hash = std::unordered_map<string, int>;
 namespace compiler::astpassir {
+    bool caluExpersion(compiler::front::ast::Expression *exp, int &result);
+
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale);
 
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale);

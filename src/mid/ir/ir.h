@@ -16,12 +16,12 @@ namespace compiler::mid::ir {
 
   using IRList = std::vector<IR *>;
 
-  enum ElemType {
+  enum class ElemType {
     INT,
     VOID,
   };
 
-  enum Type {
+  enum class Type {
     Imm,
     Void,
     Var
@@ -40,7 +40,6 @@ namespace compiler::mid::ir {
     bool operator==(OperatorName &other);
 
     OperatorName operator=(std::string &name);
-
   };
 
   enum class OperatorCode {
@@ -125,6 +124,9 @@ namespace compiler::mid::ir {
   public:
     OperatorCode Opcode = OperatorCode::Alloca;
     int size;
+    std::string name;//with @,%
+
+    AllocaIR(std::string name, int size) : IR(), name(name), size(size){};
   };
 }// namespace compiler::mid::ir
 

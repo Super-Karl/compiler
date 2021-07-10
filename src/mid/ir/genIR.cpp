@@ -7,6 +7,10 @@
 #include <iostream>
 using namespace compiler::mid::ir;
 namespace compiler::front::ast {
+  void AST::genIR(IRList &ir, RecordTable *record) {
+    for (auto i : codeBlock)
+      i->genIR(ir, record);
+  }
 
   void Node::genIR(mid::ir::IRList &ir, RecordTable *record) {
     std::cout << "this node can't genIR" << std::endl;
@@ -14,7 +18,7 @@ namespace compiler::front::ast {
 
   void VarDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (record->getFarther() == nullptr) {
-      auto varInfo = new VarInfo("@" + std::to_string(record->getID()), INT32_MIN);
+      auto varInfo = new VarInfo("@" + this->name->name, INT32_MIN);
       record->insertVar(name->name, varInfo);
     } else {
       auto varInfo = new VarInfo("%" + std::to_string(record->getID()), INT32_MIN);
@@ -23,18 +27,18 @@ namespace compiler::front::ast {
   }
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
+    string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
     int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token + std::to_string(record->getID()), val);
+    auto varInfo = new VarInfo(token, val);
     record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
   }
 
   void ConstDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
+    string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
     int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token + std::to_string(record->getID()), val, true);
+    auto varInfo = new VarInfo(token, val, true);
     record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
@@ -48,6 +52,11 @@ namespace compiler::front::ast {
       shape.push_back(i->eval(record));
       size *= i->eval(record);
     };
+
+    //数组声明时的内存分配
+    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
+    ir.push_back(allocaIR);
+
     vector<int> value;
     value.resize(size, INT32_MIN);
     auto varInfo = new VarInfo(arrayName->name, shape, value);
@@ -55,11 +64,53 @@ namespace compiler::front::ast {
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {
+    string token = record->getFarther() == nullptr ? "@" : "%";
+    vector<int> shape;
+    int size = 1;
+    vector<int> value;
 
+    //计算数组的维度和每维的大小
+    for (auto i : arrayName->index) {
+      int tmp = i->eval(record);
+      shape.push_back(tmp);
+      size *= tmp;
+    }
+
+    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
+    ir.push_back(allocaIR);
+
+    value.resize(size);
+    //复制数组元素的值到符号表
+    for (int i = 0; i < initVal->initValList.size(); i++)
+      value[i] = initVal->initValList[i]->eval(record);
+
+    auto varInfo = new VarInfo(arrayName->name, shape, value, true);
+    record->insertVar(arrayName->name, varInfo);
   }
 
   void ArrayDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    string token = record->getFarther() == nullptr ? "@" : "%";
+    vector<int> shape;
+    int size = 1;
+    vector<int> value;
 
+    //计算数组的维度和每维的大小
+    for (auto i : arrayName->index) {
+      int tmp = i->eval(record);
+      shape.push_back(tmp);
+      size *= tmp;
+    }
+
+    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
+    ir.push_back(allocaIR);
+
+    value.resize(size);
+    //复制数组元素的值到符号表
+    for (int i = 0; i < initVal->initValList.size(); i++)
+      value[i] = initVal->initValList[i]->eval(record);
+
+    auto varInfo = new VarInfo(arrayName->name, shape, value);
+    record->insertVar(arrayName->name, varInfo);
   }
 
   void DeclareStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -69,12 +120,14 @@ namespace compiler::front::ast {
 
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto assign = new AssignIR();
-    assign->dest = name->eval(record);
+    assign->dest;
+
+    ir.push_back(assign);
   }
 
   //完成
   void FunctionDefine::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    //267代表bison生成的符号里的INT
+
     ElemType retType = this->retType == INT ? ElemType::INT : ElemType::VOID;
 
     //    创建函数作用域的符号表
@@ -137,11 +190,9 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-
   }
 }// namespace compiler::front::ast
 

@@ -372,6 +372,8 @@ namespace compiler {
       AST(){};
 
       void print(int depth = 0, bool isEnd = false);
+
+      void genIR(IRList &ir, RecordTable *record);
     };
   }// namespace front::ast
 }// namespace compiler

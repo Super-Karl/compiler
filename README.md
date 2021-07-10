@@ -34,6 +34,7 @@
       * ReturnStatement
   * FunctionDefArg
   * Identifier
+    * ArrayIdentifier    
   * Declare
     * VarDeclare
     * VarDeclareWithInit

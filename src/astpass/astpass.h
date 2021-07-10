@@ -6,6 +6,7 @@
 #define COMPILER_ASTPASS_H
 
 #include <front/ast/AstNode.h>
+#include <vector>
 #include <unordered_map>
 
 using Hash = std::unordered_map<string, int>;
@@ -18,7 +19,11 @@ namespace compiler::astpassir {
 
     void FirstPassStmt(compiler::front::ast::Stmt *stmt, Hash constTbale);
 
+    void FirstPassArray(compiler::front::ast::Declare *array, Hash constTbale);
+
     compiler::front::ast::Expression *FirstPassExpr(compiler::front::ast::Expression *expr, Hash constTbale);
+
+    vector<compiler::front::ast::Expression *> FirstPassArrayLinelize(int sizeIndex, vector<compiler::front::ast::Expression *> &index, vector<compiler::front::ast::Expression *> &values);
 }
 
 #endif //COMPILER_ASTPASS_H

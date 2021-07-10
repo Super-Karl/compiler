@@ -26,7 +26,7 @@ namespace compiler::astpassir {
                     delete exprTemp->leftExpr;
                     exprTemp->leftExpr = NULL;
                     delete exprTemp->rightExpr;
-                    exprTemp->leftExpr = NULL;
+                    exprTemp->rightExpr = NULL;
                     switch (exprTemp->op) {
                         case ADD: {
                             result = left + right;
@@ -96,45 +96,40 @@ namespace compiler::astpassir {
                     delete exprTemp->leftExpr;
                     exprTemp->leftExpr = NULL;
                     delete exprTemp->rightExpr;
-                    exprTemp->leftExpr = NULL;
+                    exprTemp->rightExpr = NULL;
                     result = 1;
                     return true;
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
-            case UnaryExpressionType:{
+            case UnaryExpressionType: {
                 auto exprTemp = static_cast<UnaryExpression *>(exp);
                 int res;
                 int resCan = caluExpersion(exprTemp->right, res);
-                if(resCan)
-                {
+                if (resCan) {
                     delete exprTemp->right;
                     exprTemp->right = NULL;
                     switch (exprTemp->op) {
-                        case ADD:{
+                        case ADD: {
                             result = res;
                             return true;
                         }
-                        case SUB:{
+                        case SUB: {
                             result = -res;
                             return true;
                         }
-                        case NOT_EQUAL:{
+                        case NOT_EQUAL: {
                             result = !res;
                             return true;
                         }
                     }
                     return true;
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
-            default:{
+            default: {
                 return false;
             }
         }
@@ -147,11 +142,18 @@ namespace compiler::astpassir {
             if (node->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
                     switch (subNode->nodetype) {
+                        case ArrayDeclareWithInitType: {
+                            FirstPassArray(subNode, constTbale);
+                            break;
+                        }
+                        case ConstArrayType: {
+                            FirstPassArray(subNode, constTbale);
+                            break;
+                        }
                         case VarDeclareWithInitType: {
                             static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
                             int result;
-                            if(caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value,result))
-                            {
+                            if (caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value, result)) {
                                 delete static_cast<VarDeclareWithInit *>(subNode)->value;
                                 static_cast<VarDeclareWithInit *>(subNode)->value = new NumberExpression(result);
                             }
@@ -161,8 +163,7 @@ namespace compiler::astpassir {
                             static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
                             //替换完后加入到hashtable中
                             int result;
-                            if(caluExpersion(static_cast<ConstDeclare *>(subNode)->value,result))
-                            {
+                            if (caluExpersion(static_cast<ConstDeclare *>(subNode)->value, result)) {
                                 delete static_cast<ConstDeclare *>(subNode)->value;
                                 static_cast<ConstDeclare *>(subNode)->value = new NumberExpression(result);
                             }
@@ -188,11 +189,18 @@ namespace compiler::astpassir {
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {
+                            case ArrayDeclareWithInitType: {
+                                FirstPassArray(subNode, constTbale);
+                                break;
+                            }
+                            case ConstArrayType: {
+                                FirstPassArray(subNode, constTbale);
+                                break;
+                            }
                             case VarDeclareWithInitType: {
                                 static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
                                 int result;
-                                if(caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value,result))
-                                {
+                                if (caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value, result)) {
                                     delete static_cast<VarDeclareWithInit *>(subNode)->value;
                                     static_cast<VarDeclareWithInit *>(subNode)->value = new NumberExpression(result);
                                 }
@@ -201,8 +209,7 @@ namespace compiler::astpassir {
                             case ConstDeclareType: {
                                 static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
                                 int result;
-                                if(caluExpersion(static_cast<ConstDeclare *>(subNode)->value,result))
-                                {
+                                if (caluExpersion(static_cast<ConstDeclare *>(subNode)->value, result)) {
                                     delete static_cast<ConstDeclare *>(subNode)->value;
                                     static_cast<ConstDeclare *>(subNode)->value = new NumberExpression(result);
                                 }
@@ -276,6 +283,14 @@ namespace compiler::astpassir {
                 for (auto subNode = static_cast<DeclareStatement *>(stmt)->declareList.begin();
                      subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
                     switch ((*subNode)->nodetype) {
+                        case ArrayDeclareWithInitType: {
+                            FirstPassArray(*subNode, constTbale);
+                            break;
+                        }
+                        case ConstArrayType: {
+                            FirstPassArray(*subNode, constTbale);
+                            break;
+                        }
                         case VarDeclareWithInitType: {
                             static_cast<VarDeclareWithInit *>(*subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(*subNode)->value, constTbale);
                             break;
@@ -335,8 +350,112 @@ namespace compiler::astpassir {
         }
     }
 
+    void FirstPassArray(compiler::front::ast::Declare *array, Hash constTbale) {
+        switch (array->nodetype) {
+            case ArrayDeclareWithInitType: {
+                auto Id = static_cast<ArrayIdentifier *>(static_cast<ArrayDeclareWithInit *>(array)->name);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+                        std::cout << "数组下标志不能计算";
+                    }
+                }
+                //数组线性化
+                static_cast<ArrayDeclareWithInit *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ArrayDeclareWithInit *>(array)->initVal->initValList);
+                break;
+            }
+            case ConstArrayType: {
+                auto Id = static_cast<ArrayIdentifier *>(static_cast<ConstArray *>(array)->name);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+                        std::cout << "数组下标志不能计算";
+                    }
+                }
+                static_cast<ConstArray *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ConstArray *>(array)->initVal->initValList);
+                break;
+            }
+            case ArrayDeclareType: {
+                auto Id = static_cast<ArrayIdentifier *>(static_cast<ConstArray *>(array)->name);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+                        std::cout << "数组下标志不能计算";
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    vector<compiler::front::ast::Expression *> FirstPassArrayLinelize(int sizeIndex, vector<compiler::front::ast::Expression *> &index, vector<compiler::front::ast::Expression *> &values) {
+        vector<Expression *> data;
+        int needSize = 1;
+        int count = 0;
+        if (sizeIndex + 1 < index.size()) {
+            for (int i = sizeIndex; i < index.size() - 1; i++) {
+                needSize = needSize * static_cast<NumberExpression *>(index[i + 1])->value;
+            }
+            for (int j = 0; j < values.size(); j++) {
+                if (values[j]->nodetype == ArrayInitValType) {
+                    vector<Expression *> temp = FirstPassArrayLinelize(sizeIndex + 1, index, static_cast<ArrayInitVal *>(values[j])->initValList);
+                    while (temp.size() < needSize) {
+                        temp.push_back(new NumberExpression(0));
+                    }
+                    data.insert(data.end(), temp.begin(), temp.end());
+                } else {
+                    data.push_back(values[j]);
+                    count = count + 1;
+                    count = count % (needSize + 1);
+                    if (count < needSize - 1 && (j + 1 == values.size() || values[j + 1]->nodetype == ArrayInitValType)) {
+                        while (count < needSize) {
+                            data.push_back(new NumberExpression(0));
+                            count++;
+                        }
+                        count = 0;
+                    }
+                }
+            }
+            while (needSize * static_cast<NumberExpression *>(index[sizeIndex])->value > data.size()) {
+                data.push_back(new NumberExpression(0));
+            }
+        } else {
+            data = values;
+            while (static_cast<NumberExpression *>(index[sizeIndex])->value > data.size()) {
+                data.push_back(new NumberExpression(0));
+            }
+        }
+        return data;
+    }
+
     compiler::front::ast::Expression *FirstPassExpr(compiler::front::ast::Expression *expr, Hash constTbale) {
         switch (expr->nodetype) {
+            case ArrayIdentifierType: {
+                auto Id = static_cast<ArrayIdentifier *>(expr);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+                        std::cout << "数组下标志不能计算";
+                    }
+                }
+                break;
+            }
             case IdentifierType: {
                 string Name = static_cast<Identifier *>(expr)->name;
                 if (constTbale.count(Name) > 0) {
@@ -362,14 +481,12 @@ namespace compiler::astpassir {
             }
         }
         int result;
-        if(caluExpersion(expr,result))
-        {
+        if (caluExpersion(expr, result)) {
             delete expr;
             return new NumberExpression(result);
-        }
-        else
-        {
+        } else {
             return expr;
         }
     }
 }
+

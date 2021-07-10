@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <list>
+#include <vector>
 
 #include"enum/enums.h"
 
@@ -19,7 +20,9 @@ namespace compiler {
             AstNodeType nodetype;
 
             Node(AstNodeType type = NodeType) : nodetype(type) {}
+
             virtual ~Node();
+
             virtual void print(int depth = 0, bool isEnd = false);
 
             void printPrefix(int depth = 0, bool isEnd = false);
@@ -33,10 +36,10 @@ namespace compiler {
         class ArrayInitVal : public Expression {
         public:
             ArrayInitVal(AstNodeType type = ArrayInitValType) : Expression(type) {}
-            
+
             ~ArrayInitVal();
-            
-            list<Expression *> initValList;
+
+            vector<Expression *> initValList;
 
             void print(int depth, bool isEnd = false) override;
         };
@@ -52,12 +55,12 @@ namespace compiler {
 
         class ArrayIdentifier : public Identifier {
         public:
-            list<Expression *> index;
+            vector<Expression *> index;
 
             ArrayIdentifier(string name, AstNodeType type = ArrayIdentifierType) : Identifier(name, type) {};
 
             ~ArrayIdentifier();
-            
+
             void print(int depth, bool isEnd) override;
         };
 
@@ -126,7 +129,7 @@ namespace compiler {
                                                                                                      value(value) {};
 
             ~ConstDeclare();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -136,7 +139,7 @@ namespace compiler {
             ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) {};
 
             ~ArrayDeclare();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -145,8 +148,8 @@ namespace compiler {
             ArrayInitVal *initVal;
 
             ConstArray(ArrayIdentifier *name, ArrayInitVal *initVal, AstNodeType type = ConstArrayType) : Declare(name,
-                                                                                                              type),
-                                                                                                      initVal(initVal) {};
+                                                                                                                  type),
+                                                                                                          initVal(initVal) {};
 
             ~ConstArray();
 
@@ -194,7 +197,7 @@ namespace compiler {
             FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type) {};
 
             ~FunctionDefArgList();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -214,7 +217,7 @@ namespace compiler {
                                                                     body(block), Expression(type) {};
 
             ~FunctionDefine();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -229,7 +232,7 @@ namespace compiler {
             FunctionCallArgList(AstNodeType type = FunctionCallArgListType) : Expression(type) {};
 
             ~FunctionCallArgList();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -282,7 +285,7 @@ namespace compiler {
                     : leftExpr(left), op(op), rightExpr(right), Expression(type) {};
 
             ~BinaryExpression();
-            
+
             void print(int depth = 0, bool isEnd = false) override;
         };
 
@@ -293,7 +296,7 @@ namespace compiler {
 
             UnaryExpression(int op, Expression *right, AstNodeType type = UnaryExpressionType) : op(op), right(right),
                                                                                                  Expression(type) {};
-            
+
             ~UnaryExpression();
 
             void print(int depth = 0, bool isEnd = false) override;
@@ -325,7 +328,7 @@ namespace compiler {
 
             DeclareStatement(list<Declare *> declareList, AstNodeType type = DeclareStatementType) : declareList(
                     declareList),
-                                                                                                       Stmt(type) {};
+                                                                                                     Stmt(type) {};
 
             ~DeclareStatement();
 
@@ -405,6 +408,7 @@ namespace compiler {
             AST() {};
 
             ~AST();
+
             void print(int depth = 0, bool isEnd = false);
         };
     }

@@ -30,21 +30,21 @@ namespace compiler::controller {
         }
       } else {
         if (writeToFile) {
-          if(std::string(argv[i]) == "-"){
+          if (std::string(argv[i]) == "-") {
             output = &std::cout;
-          }else
-            output = new std::ofstream(argv[i],std::ofstream::out);
+          } else
+            output = new std::ofstream(argv[i], std::ofstream::out);
         } else {
-          if(std::string(argv[i]) == "-")
+          if (std::string(argv[i]) == "-")
             input = stdin;
           else
-            input = fopen(argv[i],"r");
+            input = fopen(argv[i], "r");
         }
         writeToFile = true;
       }
     }
   }
-}
+}// namespace compiler::controller
 
 extern int yyparse();
 
@@ -64,4 +64,10 @@ namespace compiler::controller::generator {
     yylex_destroy();
     return root;
   }
-}
+
+  compiler::mid::ir::IRList genIR(compiler::front::ast::AST *root) {
+    compiler::mid::ir::IRList ir;
+    root->genIR(ir, record);
+    return ir;
+  }
+}// namespace compiler::controller::generator

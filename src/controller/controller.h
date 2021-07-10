@@ -6,9 +6,9 @@
 #define COMPILER_CONTROLLER_H
 
 #include <front/ast/AstNode.h>
-#include <mid/ir/ir.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <mid/ir/ir.h>
 
 namespace compiler::controller {
   class ArgParser {
@@ -23,10 +23,13 @@ namespace compiler::controller {
   };
   namespace generator {
     extern compiler::front::ast::AST *root;
+    mid::ir::RecordTable *record;
 
     compiler::front::ast::AST *generate(FILE *input = stdin);
-  }
-}
+
+    compiler::mid::ir::IRList genIR(compiler::front::ast::AST *root);
+  }// namespace generator
+}// namespace compiler::controller
 
 
-#endif //COMPILER_CONTROLLER_H
+#endif//COMPILER_CONTROLLER_H

@@ -67,6 +67,7 @@ namespace compiler::controller::generator {
 
   compiler::mid::ir::IRList genIR(compiler::front::ast::AST *root) {
     compiler::mid::ir::IRList ir;
+    compiler::mid::ir::RecordTable *record;
     root->genIR(ir, record);
     return ir;
   }

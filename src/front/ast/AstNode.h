@@ -47,12 +47,11 @@ namespace compiler {
 
       string name;
 
-      OperatorName eval(RecordTable *record);
+      int eval(RecordTable *record);
     };
 
     class ArrayIdentifier : public Identifier {
     public:
-      string name;
       vector<Expression *> index;
 
       //      vector<Expression *> shape;
@@ -60,7 +59,7 @@ namespace compiler {
 
       void print(int depth, bool isEnd) override;
 
-      OperatorName eval(RecordTable *record);
+      int eval(RecordTable *record);
     };
 
     class Stmt : public Expression {

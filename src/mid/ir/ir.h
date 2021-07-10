@@ -13,8 +13,7 @@ namespace compiler::mid::ir {
   class AssignIR;
 
   class IR;
-
-  using IRList = std::vector<IR *>;
+  class IRList;
 
   enum class ElemType {
     INT,
@@ -75,6 +74,11 @@ namespace compiler::mid::ir {
     IR(){};
   };
 
+  class IRList {
+  public:
+    std::vector<IR *> ir;
+  };
+
   class FunCallIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
@@ -128,6 +132,8 @@ namespace compiler::mid::ir {
 
     AllocaIR(std::string name, int size) : IR(), name(name), size(size){};
   };
+
+
 }// namespace compiler::mid::ir
 
 #endif//COMPILER_IR_H

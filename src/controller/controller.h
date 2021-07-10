@@ -23,7 +23,6 @@ namespace compiler::controller {
   };
   namespace generator {
     extern compiler::front::ast::AST *root;
-    mid::ir::RecordTable *record;
 
     compiler::front::ast::AST *generate(FILE *input = stdin);
 

@@ -55,7 +55,7 @@ namespace compiler::front::ast {
 
     //数组声明时的内存分配
     auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.push_back(allocaIR);
+    ir.ir.push_back(allocaIR);
 
     vector<int> value;
     value.resize(size, INT32_MIN);
@@ -77,7 +77,7 @@ namespace compiler::front::ast {
     }
 
     auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.push_back(allocaIR);
+    ir.ir.push_back(allocaIR);
 
     value.resize(size);
     //复制数组元素的值到符号表
@@ -102,7 +102,7 @@ namespace compiler::front::ast {
     }
 
     auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.push_back(allocaIR);
+    ir.ir.push_back(allocaIR);
 
     value.resize(size);
     //复制数组元素的值到符号表
@@ -122,7 +122,7 @@ namespace compiler::front::ast {
     auto assign = new AssignIR();
     assign->dest;
 
-    ir.push_back(assign);
+    ir.ir.push_back(assign);
   }
 
   //完成
@@ -131,20 +131,22 @@ namespace compiler::front::ast {
     ElemType retType = this->retType == INT ? ElemType::INT : ElemType::VOID;
 
     //    创建函数作用域的符号表
-    auto funcdef = FunDefIR(retType, name->name);
+    auto funcdef = new FunDefIR(retType, name->name);
     auto newTable = new RecordTable(record);
 
     //保存参数表
     for (auto i : args->args) {
       auto opName = OperatorName(Type::Var);
       opName.name = i->name->name;
-      funcdef.argList.push_back(opName);
+      funcdef->argList.push_back(opName);
     }
     //把函数的入参存入函数符号表
-    args->genIR(funcdef.funcBody, newTable);
+    args->genIR(funcdef->funcBody, newTable);
 
     //对函数体生成ir
-    body->genIR(funcdef.funcBody, newTable);
+    body->genIR(funcdef->funcBody, newTable);
+
+    ir.ir.push_back(funcdef);
   }
 
   //完成
@@ -172,7 +174,7 @@ namespace compiler::front::ast {
       auto opName = i->eval(record);
     }
 
-    ir.push_back(funCall);
+    ir.ir.push_back(funCall);
   }
 
 
@@ -210,18 +212,14 @@ namespace compiler::front::ast {
     return this->value;
   }
 
-  OperatorName Identifier::eval(RecordTable *record) {
-    auto varInfo = record->searchVar(name);
-    auto opName = OperatorName(Type::Var);
-    opName.name = varInfo->name;
-    opName.value = varInfo->value[0];
-    return opName;
+  int Identifier::eval(RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    return varInfo->value[0];
   }
 
-  OperatorName ArrayIdentifier::eval(RecordTable *record) {
+  int ArrayIdentifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(name);
-    auto opName = OperatorName(Type::Var);
-    opName.name = varInfo->name;
+    return 5;
   }
 
   int BinaryExpression::eval(RecordTable *record) {

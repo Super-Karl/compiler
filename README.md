@@ -23,9 +23,11 @@
     * LogicExpression
     * UnaryExpression
     * CalcExpression
+    * ArrayInitVal
     * Statement
       * Block
       * DeclareStatement
+      * AssignStmt
       * IfStatement
       * WhileStatement
       * BreakStatemet
@@ -34,7 +36,7 @@
       * ReturnStatement
   * FunctionDefArg
   * Identifier
-    * ArrayIdentifier    
+    * ArrayIdentifier
   * Declare
     * VarDeclare
     * VarDeclareWithInit
@@ -77,5 +79,3 @@
 |load|%op1 = %op2内存转载到寄存器|load %op1 %op2 |
 |label| |label labelName |
 |nop| | |
-
-

@@ -7,18 +7,18 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst = false) {
+  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst ) {
     this->name = name;
     this->shape = inShape;
     this->value = inValue;
     this->isConst = isConst;
     this->isArray = true;
   }
-  VarInfo::VarInfo(std::string name, int value, bool isConst = false)
+  VarInfo::VarInfo(std::string name, int value, bool isConst )
       : name(name), isConst(isConst), isArray(false) {
     this->value = {value};
   }
-  VarInfo::VarInfo(std::string name,std::vector<int>& inValue,std::initializer_list<int> inShape,bool isConst = false){
+  VarInfo::VarInfo(std::string name,std::vector<int>& inValue,std::initializer_list<int> inShape,bool isConst ){
     this->name = name;
     this->shape = inShape;
     this->value = inValue;

@@ -6,6 +6,7 @@
 #define COMPILER_IR_H
 
 #include <iostream>
+#include <mid/recordTable/RecordTable.h>
 #include <vector>
 
 namespace compiler::mid::ir {
@@ -14,6 +15,12 @@ namespace compiler::mid::ir {
   class IR;
 
   using IRList = std::vector<IR *>;
+
+  enum ElemType {
+    INT,
+    VOID,
+  };
+
   enum Type {
     Imm,
     Void,
@@ -23,7 +30,7 @@ namespace compiler::mid::ir {
   class OperatorName {//ir中的操作数
   public:
     Type type;
-    std::string name;
+    std::string name;//ir中的name
     int value;
 
     OperatorName(Type type = Type::Var) : type(type){};
@@ -31,6 +38,9 @@ namespace compiler::mid::ir {
     Type getType() const { return this->type; };
 
     bool operator==(OperatorName &other);
+
+    OperatorName operator=(std::string &name);
+
   };
 
   enum class OperatorCode {
@@ -71,19 +81,19 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode = OperatorCode::Call;
     std::string funcName;
     std::vector<OperatorName> argList;
-    Type retType;
+    ElemType retType;
     OperatorName dest;
     FunCallIR(std::string name) : IR(), funcName(name){};
   };
 
   class FunDefIR : public IR {
   public:
-    Type retType;
+    ElemType retType;
     std::string name;
     std::vector<OperatorName> argList;
     IRList funcBody;
 
-    FunDefIR(Type retTye, std::string name) : IR(), retType(retTye), name(name){};
+    FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(name){};
   };
 
   class AssignIR : public IR {
@@ -102,16 +112,19 @@ namespace compiler::mid::ir {
     JmpIR(){};
   };
 
-  class DeclIR : public IR {
-  public:
-  };
-
   class RetIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Ret;
     OperatorName retVal;
 
+    RetIR(){};
     RetIR(OperatorName retVal) : IR(), retVal(retVal){};
+  };
+
+  class AllocaIR : public IR {
+  public:
+    OperatorCode Opcode = OperatorCode::Alloca;
+    int size;
   };
 }// namespace compiler::mid::ir
 

@@ -18,4 +18,11 @@ namespace compiler::mid::ir {
         return true;
     };
   }
-}
+
+  OperatorName OperatorName::operator=(std::string &name) {
+    auto opName = OperatorName();
+    opName.name = name;
+    return opName;
+  }
+
+}// namespace compiler::mid::ir

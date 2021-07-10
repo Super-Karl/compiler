@@ -26,7 +26,8 @@ namespace compiler {
 
     class Expression : public Node {
     public:
-      OperatorName eval(RecordTable *record);
+      virtual int eval(RecordTable *record);
+      //      virtual OperatorName evalIR(IRList &ir, RecordTable *record);
     };
 
     class ArrayInitVal : public Expression {
@@ -96,6 +97,8 @@ namespace compiler {
       VarDeclare(Identifier *name) : Declare(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      void genIR(IRList &ir, RecordTable *record) override;
     };
 
     class VarDeclareWithInit : public Declare {
@@ -105,6 +108,8 @@ namespace compiler {
       VarDeclareWithInit(Identifier *name, Expression *value) : Declare(name), value(value){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      void genIR(IRList &ir, RecordTable *record) override;
     };
 
     class ConstDeclare : public Declare {
@@ -114,33 +119,43 @@ namespace compiler {
       ConstDeclare(Identifier *name, Expression *value) : Declare(name), value(value){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
     class ArrayDeclare : public Declare {
     public:
-      ArrayDeclare(Identifier *name) : Declare(name){};
+      ArrayIdentifier *arrayName;
+
+      ArrayDeclare(ArrayIdentifier *name) : Declare(name), arrayName(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      void genIR(IRList &ir, RecordTable *record) override;
     };
 
     class ConstArray : public Declare {
     public:
+      ArrayIdentifier *arrayName;
       ArrayInitVal *initVal;
 
-      ConstArray(Identifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal){};
+      ConstArray(ArrayIdentifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal), arrayName(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      void genIR(IRList &ir, RecordTable *record) override;
     };
 
     class ArrayDeclareWithInit : public Declare {
     public:
+      ArrayIdentifier *arrayName;
       ArrayInitVal *initVal;
 
       ArrayDeclareWithInit(){};
 
-      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal){};
+      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal) : Declare(name), arrayName(name), initVal(initVal){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
     /**
@@ -156,6 +171,7 @@ namespace compiler {
       FunctionDefArg(int type, Identifier *name) : type(type), name(name){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
     class FunctionDefArgList : public Expression {
@@ -165,6 +181,7 @@ namespace compiler {
       FunctionDefArgList(){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
     class FunctionDefine : public Expression {
@@ -182,6 +199,7 @@ namespace compiler {
                                                                                                body(block){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
 
@@ -207,6 +225,7 @@ namespace compiler {
       FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args){};
 
       void print(int depth = 0, bool isEnd = false) override;
+      void genIR(IRList &ir, RecordTable *record);
     };
 
     /**
@@ -219,17 +238,19 @@ namespace compiler {
       CommaExpression(){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      int eval(RecordTable *record);
     };
 
     class NumberExpression : public Expression {
     public:
       int value;
 
-      NumberExpression(int value) : value(value){};
+      NumberExpression(int value = 0) : value(value){};
 
       void print(int depth = 0, bool isEnd = false) override;
 
-      OperatorName eval(RecordTable *record);
+      int eval(RecordTable *record);
     };
 
     class BinaryExpression : public Expression {//逻辑表达式
@@ -241,6 +262,10 @@ namespace compiler {
       BinaryExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      int eval(RecordTable *record) override;
+
+      int evalIR(IRList &ir, RecordTable *record);
     };
 
     class UnaryExpression : public Expression {
@@ -251,6 +276,8 @@ namespace compiler {
       UnaryExpression(int op, Expression *right) : op(op), right(right){};
 
       void print(int depth = 0, bool isEnd = false) override;
+
+      int eval(RecordTable *record);
     };
 
     class AssignStmt : public Stmt {//赋值表达式

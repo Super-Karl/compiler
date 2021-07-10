@@ -3,9 +3,9 @@
 ################################################################################
 
 /.vscode
-/build
+/build/*
 /.idea
-/cmake-build-debug
-/.cache/
+/cmake-build-debug/*
+/.cache/*
 /test.cpp
 /test.s

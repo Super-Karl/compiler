@@ -65,8 +65,6 @@ void ArrayDeclare::print(int depth, bool isEnd) {
   this->printPrefix(depth, isEnd);
   cout << "ArrayDeclare: " << endl;
   this->name->print(depth + 1, false);
-  for (auto i : shape)
-    i->print(depth + 1, i == shape.back());
 }
 
 void ConstArray::print(int depth, bool isEnd) {

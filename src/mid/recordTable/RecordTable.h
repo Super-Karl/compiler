@@ -7,6 +7,7 @@
 
 #include "mid/ir/ir.h"
 #include <unordered_map>
+#include <vector>
 
 namespace compiler::mid::ir {
   class VarInfo {
@@ -23,8 +24,7 @@ namespace compiler::mid::ir {
     //可用{}将形状框起传参
   };
 
-  //全局的记录表,用来记录sy程序中变量的use,
-  /* TODO 没实现φ函数,多分支情况下的ssa变量选取*/
+  //全局的记录表,用来记录sy程序中变量的use
   class RecordTable {
   private:
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
@@ -32,7 +32,7 @@ namespace compiler::mid::ir {
     unsigned int id = 0;
 
   public:
-    RecordTable(RecordTable *rt = NULL) : father(rt) {}
+    RecordTable(RecordTable *rt = NULL) : father(rt), id(rt != nullptr ? rt->id : 0){};
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
     unsigned int getID() { return this->id++; }

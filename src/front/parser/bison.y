@@ -50,7 +50,6 @@ void yyerror(const char *s){
 %token <token> IF ELSE BREAK CONTINUE RETURN WHILE 
 %token <token> CONST INT VOID
 %token <token> ADD SUB MOD MUL DIV NOT_EQUAL LT GT LE GE AND_OP OR_OP EQ NE
-%token <token> AND OR
 %token <token> LBRACKET RBRACKET LBRACE RBRACE LSQARE RSQARE ASSIGN COLON COMMA SEMI
 
 %type <root> compUnit

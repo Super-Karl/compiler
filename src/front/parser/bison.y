@@ -282,3 +282,4 @@ Number: NUM {$$ = new front::ast::NumberExpression(std::stoi(*$1,0,0));}
 
 Ident: IDENTIFIER {$$ = new front::ast::Identifier(*$1);}
     ;
+    %%

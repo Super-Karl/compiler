@@ -23,11 +23,9 @@
     * LogicExpression
     * UnaryExpression
     * CalcExpression
-    * ArrayInitVal
     * Statement
       * Block
       * DeclareStatement
-      * AssignStmt
       * IfStatement
       * WhileStatement
       * BreakStatemet
@@ -36,7 +34,7 @@
       * ReturnStatement
   * FunctionDefArg
   * Identifier
-    * ArrayIdentifier
+    * ArrayIdentifier    
   * Declare
     * VarDeclare
     * VarDeclareWithInit

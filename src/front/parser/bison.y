@@ -95,7 +95,7 @@ ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$
 ConstInitialVal:AddExp
     ;
 
-ConstDefArray: CONST ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ConstArray($2,$4);}
+ConstDefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ConstArray($1,$3);}
     ;
 
 VarDecl: BType VarDef {$$ = new front::ast::DeclareStatement();$$->declareList.push_back($2);}

@@ -72,6 +72,9 @@ namespace compiler::mid::ir {
   class IR {
   public:
     IR(){};
+    virtual IR* getThis(){
+      return this;
+    }
   };
 
   class IRList {
@@ -87,6 +90,9 @@ namespace compiler::mid::ir {
     ElemType retType;
     OperatorName dest;
     FunCallIR(std::string name) : IR(), funcName(name){};
+    FunCallIR* getThis() {
+      return this;
+    }
   };
 
   class FunDefIR : public IR {
@@ -97,6 +103,10 @@ namespace compiler::mid::ir {
     IRList funcBody;
 
     FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(name){};
+
+    FunDefIR* getThis() {
+      return this;
+    }
   };
 
   class AssignIR : public IR {
@@ -107,12 +117,18 @@ namespace compiler::mid::ir {
     AssignIR() = default;
 
     AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(dest), source1(source1), source2(source2){};
+    AssignIR* getThis(){
+      return this;
+    }
   };
 
   class JmpIR : public IR {
   public:
     int label;
     JmpIR(){};
+    JmpIR* getThis(){
+      return this;
+    }
   };
 
   class RetIR : public IR {
@@ -122,6 +138,10 @@ namespace compiler::mid::ir {
 
     RetIR(){};
     RetIR(OperatorName retVal) : IR(), retVal(retVal){};
+
+    RetIR* getThis(){
+      return this;
+    }
   };
 
   class AllocaIR : public IR {
@@ -131,6 +151,9 @@ namespace compiler::mid::ir {
     std::string name;//with @,%
 
     AllocaIR(std::string name, int size) : IR(), name(name), size(size){};
+    AllocaIR* getThis(){
+      return this;
+    }
   };
 
 

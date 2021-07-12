@@ -2,7 +2,6 @@
 // Created by wnx on 2021/7/5.
 //
 #include "front/ast/AstNode.h"
-#include "mid/ir/ir.h"
 #include "parser.hpp"
 #include <iostream>
 using namespace compiler::mid::ir;
@@ -18,7 +17,7 @@ namespace compiler::front::ast {
 
   void VarDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (record->getFarther() == nullptr) {
-      auto varInfo = new VarInfo("@" + this->name->name, INT32_MIN);
+      auto varInfo = new VarInfo("@" + std::to_string(record->getID()), INT32_MIN);
       record->insertVar(name->name, varInfo);
     } else {
       auto varInfo = new VarInfo("%" + std::to_string(record->getID()), INT32_MIN);
@@ -27,10 +26,10 @@ namespace compiler::front::ast {
   }
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
+    string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
     int val = this->value->eval(record);
     auto varInfo = new VarInfo(token, val);
-    record->insertVar(name->name, varInfo);
+    record->insertVar(token, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
   }
@@ -46,6 +45,8 @@ namespace compiler::front::ast {
 
   void ArrayDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" : "%";
+    token = token + std::to_string(record->getID());
+
     vector<int> shape;
     int size = 1;
     for (auto i : arrayName->index) {
@@ -54,20 +55,20 @@ namespace compiler::front::ast {
     };
 
     //数组声明时的内存分配
-    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.ir.push_back(allocaIR);
+    auto allocaIR = new AllocaIR(token, size);
+    ir.push_back(allocaIR);
 
     vector<int> value;
     value.resize(size, INT32_MIN);
-    auto varInfo = new VarInfo(arrayName->name, shape, value);
+    auto varInfo = new VarInfo(token, shape, value);
     record->insertVar(arrayName->name, varInfo);
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" : "%";
+    token = token + std::to_string(record->getID());
     vector<int> shape;
     int size = 1;
-    vector<int> value;
 
     //计算数组的维度和每维的大小
     for (auto i : arrayName->index) {
@@ -76,23 +77,27 @@ namespace compiler::front::ast {
       size *= tmp;
     }
 
-    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.ir.push_back(allocaIR);
-
+    //resize到数组大小
+    vector<int> value;
     value.resize(size);
-    //复制数组元素的值到符号表
-    for (int i = 0; i < initVal->initValList.size(); i++)
-      value[i] = initVal->initValList[i]->eval(record);
 
-    auto varInfo = new VarInfo(arrayName->name, shape, value, true);
+    //分配内存空间
+    auto allocaIR = new AllocaIR(token, size);
+    ir.push_back(allocaIR);
+
+    //更新符号表,插入数组的记录
+    auto varInfo = new VarInfo(token, shape, value, true);
     record->insertVar(arrayName->name, varInfo);
+
+    //处理数组初始化元素
+    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void ArrayDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" : "%";
+    token = token + std::to_string(record->getID());
     vector<int> shape;
     int size = 1;
-    vector<int> value;
 
     //计算数组的维度和每维的大小
     for (auto i : arrayName->index) {
@@ -100,17 +105,16 @@ namespace compiler::front::ast {
       shape.push_back(tmp);
       size *= tmp;
     }
-
-    auto allocaIR = new AllocaIR(token + std::to_string(record->getID()), size);
-    ir.ir.push_back(allocaIR);
-
+    vector<int> value;
     value.resize(size);
-    //复制数组元素的值到符号表
-    for (int i = 0; i < initVal->initValList.size(); i++)
-      value[i] = initVal->initValList[i]->eval(record);
 
-    auto varInfo = new VarInfo(arrayName->name, shape, value);
+    auto allocaIR = new AllocaIR(token, size);
+    ir.push_back(allocaIR);
+
+    auto varInfo = new VarInfo(token, shape, value);
     record->insertVar(arrayName->name, varInfo);
+
+    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void DeclareStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -120,9 +124,20 @@ namespace compiler::front::ast {
 
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto assign = new AssignIR();
-    assign->dest;
+    auto var = record->searchVar(this->name->name);
+    if (var->isArray == true) {
+      std::vector<int> index;
 
-    ir.ir.push_back(assign);
+
+
+      auto Opname = name->evalOp(ir, record);
+      auto store = new StoreIR(name->evalOp(ir,record),rightExpr->eval(record),var->getArrayVal());
+    }
+
+    assign->source1 = this->rightExpr->evalOp(ir, record);
+    assign->dest = this->name->evalOp(ir, record);
+    assign->operatorCode = OperatorCode::Assign;
+    ir.push_back(assign);
   }
 
   //完成
@@ -146,7 +161,7 @@ namespace compiler::front::ast {
     //对函数体生成ir
     body->genIR(funcdef->funcBody, newTable);
 
-    ir.ir.push_back(funcdef);
+    ir.push_back(funcdef);
   }
 
   //完成
@@ -171,10 +186,11 @@ namespace compiler::front::ast {
   void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto funCall = new FunCallIR("@" + name->name);
     for (auto i : args->args) {
-      auto opName = i->eval(record);
+      auto val = i->eval(record);
+      funCall->argList.push_back(val);
     }
 
-    ir.ir.push_back(funCall);
+    ir.push_back(funCall);
   }
 
 
@@ -183,9 +199,8 @@ namespace compiler::front::ast {
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (returnExp != nullptr) {
-      returnExp->eval(record);
+      auto ret = returnExp->evalOp(ir, record);
     }
-    auto ret = new RetIR();
   }
 
   void BreakStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -212,6 +227,10 @@ namespace compiler::front::ast {
     return this->value;
   }
 
+  OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
+    return OperatorName(this->value, Type::Imm);
+  }
+
   int Identifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
     return varInfo->value[0];
@@ -219,7 +238,27 @@ namespace compiler::front::ast {
 
   int ArrayIdentifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(name);
-    return 5;
+    std::vector<int> index;
+    for (auto i : this->index)
+      index.push_back(i->eval(record));
+    return varInfo->getArrayVal(index);
+  }
+
+  OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    auto opName = OperatorName(varInfo->value[0], Type::Var);
+    opName.name = varInfo->name;
+    return opName;
+  }
+
+  OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    std::vector<int> index;
+    for (auto i : this->index)
+      index.push_back(i->eval(record));
+    auto opName = OperatorName(varInfo->getArrayVal(index));
+    opName.name = varInfo->name;
+    return opName;
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -256,9 +295,8 @@ namespace compiler::front::ast {
   }
 
   //binExpr分解expr的过程中生成ir
-  int BinaryExpression::evalIR(IRList &ir, RecordTable *record) {
+  OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
   }
-
 
   int UnaryExpression::eval(RecordTable *record) {
     //转换成binaryExpr
@@ -282,5 +320,25 @@ namespace compiler::front::ast {
     return expr[expr.size() - 1]->eval(record);
   }
 
+  OperatorName Expression::evalOp(IRList &ir, RecordTable *record) {
+    throw std::runtime_error("this type of node cannot be eval");
+  }
 
+
+}// namespace compiler::front::ast
+/*
+ * store array when init;
+ */
+
+namespace compiler::front::ast {
+  void ArrayInitVal::storeArray(ArrayIdentifier *name, IRList &ir, RecordTable *record) {
+    int index = 0;
+    std::string arrayIRIdent = record->searchVar(name->name)->name;
+    for (auto i : initValList) {
+      auto dest = OperatorName(Type::Var);
+      dest.name = arrayIRIdent;
+      auto store = new StoreIR(dest, i->eval(record), index++);
+      ir.push_back(store);
+    }
+  }
 }// namespace compiler::front::ast

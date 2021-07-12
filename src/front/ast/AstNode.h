@@ -5,7 +5,6 @@
 #ifndef COMPILER_ASTNODE_H
 #define COMPILER_ASTNODE_H
 
-#include "mid/ir/ir.h"
 #include <iostream>
 #include <mid/recordTable/RecordTable.h>
 #include <vector>
@@ -14,6 +13,9 @@ using namespace std;
 
 namespace compiler {
   namespace front::ast {
+    class Identifier;
+    class ArrayIdentifier;
+
     using namespace compiler::mid::ir;
     class Node {
     public:
@@ -27,7 +29,7 @@ namespace compiler {
     class Expression : public Node {
     public:
       virtual int eval(RecordTable *record);
-      //      virtual OperatorName evalIR(IRList &ir, RecordTable *record);
+      virtual OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class ArrayInitVal : public Expression {
@@ -37,6 +39,8 @@ namespace compiler {
       ArrayInitVal(){};
 
       void print(int depth, bool isEnd = false) override;
+
+      void storeArray(ArrayIdentifier *name, IRList &ir, RecordTable *record);
     };
 
     class Identifier : public Node {
@@ -48,6 +52,8 @@ namespace compiler {
       string name;
 
       int eval(RecordTable *record);
+
+      virtual OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class ArrayIdentifier : public Identifier {
@@ -60,6 +66,8 @@ namespace compiler {
       void print(int depth, bool isEnd) override;
 
       int eval(RecordTable *record);
+
+      virtual OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class Stmt : public Expression {
@@ -250,6 +258,8 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
 
       int eval(RecordTable *record);
+
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class BinaryExpression : public Expression {//逻辑表达式
@@ -264,7 +274,7 @@ namespace compiler {
 
       int eval(RecordTable *record) override;
 
-      int evalIR(IRList &ir, RecordTable *record);
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class UnaryExpression : public Expression {

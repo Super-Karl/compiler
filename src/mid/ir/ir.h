@@ -6,14 +6,12 @@
 #define COMPILER_IR_H
 
 #include <iostream>
-#include <mid/recordTable/RecordTable.h>
 #include <vector>
 
 namespace compiler::mid::ir {
-  class AssignIR;
-
   class IR;
-  class IRList;
+
+  using IRList = std::vector<IR *>;
 
   enum class ElemType {
     INT,
@@ -33,6 +31,8 @@ namespace compiler::mid::ir {
     int value;
 
     OperatorName(Type type = Type::Var) : type(type){};
+
+    OperatorName(int val, Type type = Type::Var) : value(val), type(type){};
 
     Type getType() const { return this->type; };
 
@@ -66,31 +66,27 @@ namespace compiler::mid::ir {
     Label,
     Ret,
     Nop,
+    Assign,
     Alloca
   };
 
   class IR {
   public:
     IR(){};
-    virtual IR* getThis(){
+    virtual IR *getThis() {
       return this;
     }
-  };
-
-  class IRList {
-  public:
-    std::vector<IR *> ir;
   };
 
   class FunCallIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
     std::string funcName;
-    std::vector<OperatorName> argList;
+    std::vector<int> argList;
     ElemType retType;
     OperatorName dest;
     FunCallIR(std::string name) : IR(), funcName(name){};
-    FunCallIR* getThis() {
+    FunCallIR *getThis() {
       return this;
     }
   };
@@ -104,7 +100,7 @@ namespace compiler::mid::ir {
 
     FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(name){};
 
-    FunDefIR* getThis() {
+    FunDefIR *getThis() {
       return this;
     }
   };
@@ -117,7 +113,7 @@ namespace compiler::mid::ir {
     AssignIR() = default;
 
     AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(dest), source1(source1), source2(source2){};
-    AssignIR* getThis(){
+    AssignIR *getThis() {
       return this;
     }
   };
@@ -126,7 +122,7 @@ namespace compiler::mid::ir {
   public:
     int label;
     JmpIR(){};
-    JmpIR* getThis(){
+    JmpIR *getThis() {
       return this;
     }
   };
@@ -139,7 +135,7 @@ namespace compiler::mid::ir {
     RetIR(){};
     RetIR(OperatorName retVal) : IR(), retVal(retVal){};
 
-    RetIR* getThis(){
+    RetIR *getThis() {
       return this;
     }
   };
@@ -147,16 +143,42 @@ namespace compiler::mid::ir {
   class AllocaIR : public IR {
   public:
     OperatorCode Opcode = OperatorCode::Alloca;
-    int size;
+    int size;        //这个size是数组大小,实际分配的内存空间为size * 4
     std::string name;//with @,%
 
     AllocaIR(std::string name, int size) : IR(), name(name), size(size){};
-    AllocaIR* getThis(){
+    AllocaIR *getThis() {
       return this;
     }
   };
 
+  class LoadIR : public IR {//数组元素的值赋值给变量
+  public:
+    OperatorCode operatorCode = OperatorCode::Load;
+    OperatorName dest;
+    int offset;//距离基址的偏移量,数组元素的下标,实际的偏移量为index*4
+    OperatorName source;
 
+    LoadIR(OperatorName dest, OperatorName source, int offset) : dest(std::move(dest)), source(source), offset(offset){};
+
+    LoadIR *getThis() {
+      return this;
+    }
+  };
+
+  class StoreIR : public IR {//将值加载进内存(即给数组元素赋值
+  public:
+    OperatorCode operatorCode = OperatorCode::Store;
+    OperatorName dest;
+    int offset;
+    int source;
+
+    StoreIR(OperatorName dest, int source, int offset) : dest(std::move(dest)), offset(offset), source(source){};
+
+    StoreIR *getThis() override {
+      return this;
+    }
+  };
 }// namespace compiler::mid::ir
 
 #endif//COMPILER_IR_H

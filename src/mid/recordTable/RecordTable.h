@@ -22,6 +22,9 @@ namespace compiler::mid::ir {
     VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst = false);
     //可用{}将形状框起传参
+    int getArrayVal(std::vector<int> index);
+
+    int getArrayIndex(std::vector<int> index);
   };
 
   //全局的记录表,用来记录sy程序中变量的use
@@ -33,10 +36,15 @@ namespace compiler::mid::ir {
 
   public:
     RecordTable(RecordTable *rt = NULL) : father(rt), id(rt != nullptr ? rt->id : 0){};
-    VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在hash表中的引用
+    VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
     unsigned int getID() { return this->id++; }
     RecordTable *getFarther() { return father; }
+
+    void setArrayVal(std::string name, std::vector<int> index, int val);//更新数组的数据
+
+    void setVal(std::string name, int val);
+
   };
 }// namespace compiler::mid::ir
 

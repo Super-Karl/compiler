@@ -185,24 +185,17 @@ namespace compiler::front::ast {
     for (auto item : blockItem)
       item->genIR(ir, newTable);
   }
-  //完成
-  void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto funCall = new FunCallIR("@" + name->name);
-    for (auto i : args->args) {
-      auto val = i->eval(record);
-      funCall->argList.push_back(val);
-    }
-
-    ir.push_back(funCall);
-  }
-
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (returnExp != nullptr) {
-      auto ret = returnExp->evalOp(ir, record);
+      auto ret = new RetIR(returnExp->evalOp(ir, record));
+      ir.push_back(ret);
+    } else {
+      auto ret = new RetIR();
+      ir.push_back(ret);
     }
   }
 
@@ -234,7 +227,7 @@ namespace compiler::front::ast {
     return OperatorName(this->value, Type::Imm);
   }
 
-  int Identifier::eval(RecordTable *record) {
+  int Identifier::eval(RecordTable *record) const {
     auto varInfo = record->searchVar(this->name);
     return varInfo->value[0];
   }
@@ -295,6 +288,19 @@ namespace compiler::front::ast {
       default:
         throw std::runtime_error("undefined op");
     }
+  }
+
+  //TODO
+  OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
+    auto funCall = new FunCallIR("@" + name->name);
+    OperatorName dest = OperatorName(Type::Var);
+    dest.name = "%" + std::to_string(record->getID());
+    for (auto i : args->args) {
+      auto val = i->evalOp(ir, record);
+      funCall->argList.push_back(val);
+    }
+    ir.push_back(funCall);
+    return dest;
   }
 
   //binExpr分解expr的过程中生成ir

@@ -51,7 +51,7 @@ namespace compiler {
 
       string name;
 
-      int eval(RecordTable *record);
+      virtual int eval(RecordTable *record) const;
 
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
 
@@ -240,7 +240,8 @@ namespace compiler {
       FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args){};
 
       void print(int depth = 0, bool isEnd = false) override;
-      void genIR(IRList &ir, RecordTable *record);
+
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     /**

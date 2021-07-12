@@ -54,20 +54,28 @@ namespace compiler {
       int eval(RecordTable *record);
 
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      virtual vector<Expression *> getIndex() {
+        vector<Expression *> index;
+        return index;
+      }
     };
 
     class ArrayIdentifier : public Identifier {
     public:
       vector<Expression *> index;
 
-      //      vector<Expression *> shape;
       ArrayIdentifier(string name) : Identifier(name){};
 
       void print(int depth, bool isEnd) override;
 
       int eval(RecordTable *record);
 
-      virtual OperatorName evalOp(IRList &ir, RecordTable *record);
+      OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      vector<Expression *> getIndex() override {
+        return this->index;
+      };
     };
 
     class Stmt : public Expression {

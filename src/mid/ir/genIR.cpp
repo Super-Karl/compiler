@@ -29,7 +29,7 @@ namespace compiler::front::ast {
     string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
     int val = this->value->eval(record);
     auto varInfo = new VarInfo(token, val);
-    record->insertVar(token, varInfo);
+    record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
   }
@@ -123,21 +123,25 @@ namespace compiler::front::ast {
   }
 
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto assign = new AssignIR();
     auto var = record->searchVar(this->name->name);
-    if (var->isArray == true) {
+    if (var->isArray) {
+      auto Opname = name->evalOp(ir, record);
+      Opname.name = var->name;
       std::vector<int> index;
 
+      for (auto i : name->getIndex())
+        index.push_back(i->eval(record));
 
-
-      auto Opname = name->evalOp(ir, record);
-      auto store = new StoreIR(name->evalOp(ir,record),rightExpr->eval(record),var->getArrayVal());
+      auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
+      ir.push_back(store);
+    } else {
+      auto opName = rightExpr->evalOp(ir, record);
+      auto assign = new AssignIR();
+      assign->operatorCode = OperatorCode::Assign;
+      assign->dest = name->evalOp(ir, record);
+      assign->source1 = rightExpr->evalOp(ir, record);
+      ir.push_back(assign);
     }
-
-    assign->source1 = this->rightExpr->evalOp(ir, record);
-    assign->dest = this->name->evalOp(ir, record);
-    assign->operatorCode = OperatorCode::Assign;
-    ir.push_back(assign);
   }
 
   //完成
@@ -180,7 +184,6 @@ namespace compiler::front::ast {
 
     for (auto item : blockItem)
       item->genIR(ir, newTable);
-    delete newTable;
   }
   //完成
   void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -337,7 +340,7 @@ namespace compiler::front::ast {
     for (auto i : initValList) {
       auto dest = OperatorName(Type::Var);
       dest.name = arrayIRIdent;
-      auto store = new StoreIR(dest, i->eval(record), index++);
+      auto store = new StoreIR(dest, i->evalOp(ir, record), OperatorName(index++, Type::Imm));
       ir.push_back(store);
     }
   }

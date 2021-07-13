@@ -117,11 +117,20 @@ namespace compiler::mid::ir {
       return this;
     }
   };
-
+  class LabelIR : public IR{
+  public:
+    std::string label;
+    LabelIR(IR);
+    LabelIR* getThis(){
+      return this;
+    }
+  };
   class JmpIR : public IR {
   public:
-    int label;
-    JmpIR(){};
+    OperatorCode action;
+    std::string label;
+    JmpIR(void);
+    JmpIR(OperatorCode opname ,std::string name):label(name),action(opname){};
     JmpIR *getThis() {
       return this;
     }

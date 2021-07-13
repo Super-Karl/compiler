@@ -6,6 +6,7 @@
 #define COMPILER_RECORDTABLE_H
 
 #include "mid/ir/ir.h"
+#include <stack>
 #include <unordered_map>
 #include <vector>
 
@@ -33,11 +34,15 @@ namespace compiler::mid::ir {
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
     RecordTable *father;
     unsigned int id = 0;
+    static std::stack<std::pair<JmpIR*,JmpIR*>> labelPairs;
 
   public:
     RecordTable(RecordTable *rt = NULL) : father(rt), id(rt != nullptr ? rt->id : 0){};
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
+    static void pushLabelPair(JmpIR*,JmpIR*);
+    static void popLabelPair();
+    static std::pair<JmpIR*,JmpIR*>& getTopLabel();
     unsigned int getID() { return this->id++; }
     RecordTable *getFarther() { return father; }
 

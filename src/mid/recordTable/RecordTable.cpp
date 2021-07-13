@@ -5,6 +5,7 @@
 #include "RecordTable.h"
 #include <iostream>
 #include <vector>
+#include <stack>
 
 namespace compiler::mid::ir {
   VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst) {
@@ -41,6 +42,19 @@ namespace compiler::mid::ir {
     if (sum < varInfo->value.size())
       varInfo->value[sum] = val;
     throw std::runtime_error("out of index");
+  }
+
+  void RecordTable::pushLabelPair(JmpIR *loopLabel,JmpIR *endLoopLabel){
+    std::pair<JmpIR*,JmpIR*>tmp(loopLabel,endLoopLabel);
+    labelPairs.push(tmp);
+  }
+
+  void RecordTable::popLabelPair() {
+    labelPairs.pop();
+  }
+
+  std::pair<JmpIR*,JmpIR*>& RecordTable::getTopLabel() {
+    return labelPairs.top();
   }
 
   void RecordTable::setVal(std::string name, int val) {

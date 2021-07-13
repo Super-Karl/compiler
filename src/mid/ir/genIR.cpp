@@ -131,7 +131,7 @@ namespace compiler::front::ast {
 
 
       auto Opname = name->evalOp(ir, record);
-      auto store = new StoreIR(name->evalOp(ir,record),rightExpr->eval(record),var->getArrayVal());
+      auto store = new StoreIR(name->evalOp(ir,record),rightExpr->eval(record),var->getArrayVal(index));
     }
 
     assign->source1 = this->rightExpr->evalOp(ir, record);
@@ -195,6 +195,13 @@ namespace compiler::front::ast {
 
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    cond->genIR(ir,record);
+    auto trueLabel  = new JmpIR(,".L"+std::to_string(record->getID()));
+    ir.push_back(trueLabel);
+    this->trueBlock->genIR(ir,record);
+    auto falseLabel = new LabelIR(".L"+std::to_string(record->getID()));
+    ir.push_back(trueLabel);
+    this->elseBlock->genIR(ir,record);
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -207,9 +214,16 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    cond->genIR(ir,record);
+    auto loopLabel = new JmpIR(,".L"+ std::to_string(record->getID()));
+    auto endLoopLabel = new JmpIR (,".L"+std::to_string(record->getID()));
+    RecordTable::pushLabelPair(loopLabel,endLoopLabel);
+    this->loopBlock->genIR(ir,record);
+    RecordTable::popLabelPair();
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+
   }
 }// namespace compiler::front::ast
 

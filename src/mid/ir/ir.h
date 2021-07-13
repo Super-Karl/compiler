@@ -31,9 +31,11 @@ namespace compiler::mid::ir {
     std::string name;//ir中的name
     int value;
 
-    OperatorName(Type type = Type::Var) : type(type){};
-
     OperatorName(int val, Type type = Type::Var) : value(val), type(type){};
+
+    OperatorName(std::string name, Type type = Type::Var) : type(type), name(std::move(name)) {}
+
+    OperatorName(Type type = Type::Var) : type(type){};
 
     Type getType() const { return this->type; };
 
@@ -110,6 +112,7 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode;
     OperatorName dest;
     OperatorName source1, source2;
+
     AssignIR() = default;
 
     AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(source1), source2(std::move(source2)){};
@@ -159,7 +162,7 @@ namespace compiler::mid::ir {
     OperatorName offset;//距离基址的偏移量,数组元素的下标,实际的偏移量为index*4
     OperatorName source;
 
-    LoadIR(OperatorName dest, OperatorName source, int offset) : dest(std::move(dest)), source(std::move(source)), offset(offset){};
+    LoadIR(OperatorName dest, OperatorName source, OperatorName offset) : dest(std::move(dest)), source(std::move(source)), offset(offset){};
 
     LoadIR *getThis() override {
       return this;

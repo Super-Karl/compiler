@@ -16,6 +16,7 @@ namespace compiler::mid::ir {
     bool isArray;
     std::vector<int> value;//存储数据,如果是int,只有一个元素,如果是数组,数据个数为数组转化为一维之后的长度
     std::vector<int> shape;
+    bool isAssign;
     std::string name;//with identifier @,% 为ssa中rename后的名字
 
     VarInfo(std::string name, int value, bool isConst = false);
@@ -44,7 +45,6 @@ namespace compiler::mid::ir {
     void setArrayVal(std::string name, std::vector<int> index, int val);//更新数组的数据
 
     void setVal(std::string name, int val);
-
   };
 }// namespace compiler::mid::ir
 

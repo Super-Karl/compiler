@@ -125,8 +125,8 @@ namespace compiler::front::ast {
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto var = record->searchVar(this->name->name);
     if (var->isArray) {
-      auto Opname = name->evalOp(ir, record);
-      Opname.name = var->name;
+      auto opName = name->evalOp(ir, record);
+      opName.name = var->name;
       std::vector<int> index;
 
       for (auto i : name->getIndex())
@@ -135,10 +135,9 @@ namespace compiler::front::ast {
       auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
       ir.push_back(store);
     } else {
-      auto opName = rightExpr->evalOp(ir, record);
       auto assign = new AssignIR();
       assign->operatorCode = OperatorCode::Assign;
-      assign->dest = name->evalOp(ir, record);
+      assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
       assign->source1 = rightExpr->evalOp(ir, record);
       ir.push_back(assign);
     }
@@ -155,8 +154,7 @@ namespace compiler::front::ast {
 
     //保存参数表
     for (auto i : args->args) {
-      auto opName = OperatorName(Type::Var);
-      opName.name = i->name->name;
+      auto opName = OperatorName(i->name->name, Type::Var);
       funcdef->argList.push_back(opName);
     }
     //把函数的入参存入函数符号表
@@ -326,8 +324,46 @@ namespace compiler::front::ast {
       return this->eval(record);
     } catch (...) {
     }
-    OperatorName dest = OperatorName();
+    OperatorName dest = OperatorName(record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID())), left, right;
 
+    if (this->op != AND_OP && this->op != OR_OP) {
+      try {
+        left = OperatorName(leftExpr->eval(record));
+      } catch (...) {
+        left = leftExpr->evalOp(ir, record);
+      }
+      try {
+        right = OperatorName(rightExpr->eval(record));
+      } catch (...) {
+        right = rightExpr->evalOp(ir, record);
+      }
+    }
+    AssignIR *assign;
+    switch (this->op) {
+      case ADD:
+        assign = new AssignIR(OperatorCode::Add, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case SUB:
+        assign = new AssignIR(OperatorCode::Sub, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case MUL:
+        assign = new AssignIR(OperatorCode::Mul, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case DIV:
+        assign = new AssignIR(OperatorCode::Div, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case MOD:
+        assign = new AssignIR(OperatorCode::Mod, dest, left, right);
+        ir.push_back(assign);
+        break;
+      default:
+        throw runtime_error("undefined op");
+    }
+    return dest;
   }
 
   OperatorName Expression::evalOp(IRList &ir, RecordTable *record) {
@@ -359,9 +395,12 @@ namespace compiler::front::ast {
     std::vector<int> index;
     for (auto i : this->index)
       index.push_back(i->eval(record));
-    auto opName = OperatorName(varInfo->getArrayVal(index));
-    opName.name = varInfo->name;
-    return opName;
+    auto dest = OperatorName(record->getFarther() == nullptr ? "@" + std::to_string(record->getID()) : "%" + std::to_string(record->getID()), Type::Var);
+    auto source = OperatorName(varInfo->name);
+    auto offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+    auto load = new LoadIR(dest, source, offset);
+    ir.push_back(load);
+    return dest;
   }
 }// namespace compiler::front::ast
 

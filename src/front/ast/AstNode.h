@@ -296,6 +296,8 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
 
       int eval(RecordTable *record);
+
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class AssignStmt : public Stmt {//赋值表达式

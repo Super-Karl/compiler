@@ -223,10 +223,6 @@ namespace compiler::front::ast {
     return this->value;
   }
 
-  OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
-    return OperatorName(this->value, Type::Imm);
-  }
-
   int Identifier::eval(RecordTable *record) const {
     auto varInfo = record->searchVar(this->name);
     return varInfo->value[0];
@@ -238,23 +234,6 @@ namespace compiler::front::ast {
     for (auto i : this->index)
       index.push_back(i->eval(record));
     return varInfo->getArrayVal(index);
-  }
-
-  OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
-    auto varInfo = record->searchVar(this->name);
-    auto opName = OperatorName(varInfo->value[0], Type::Var);
-    opName.name = varInfo->name;
-    return opName;
-  }
-
-  OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
-    auto varInfo = record->searchVar(this->name);
-    std::vector<int> index;
-    for (auto i : this->index)
-      index.push_back(i->eval(record));
-    auto opName = OperatorName(varInfo->getArrayVal(index));
-    opName.name = varInfo->name;
-    return opName;
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -290,29 +269,13 @@ namespace compiler::front::ast {
     }
   }
 
-  //TODO
-  OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
-    auto funCall = new FunCallIR("@" + name->name);
-    OperatorName dest = OperatorName(Type::Var);
-    dest.name = "%" + std::to_string(record->getID());
-    for (auto i : args->args) {
-      auto val = i->evalOp(ir, record);
-      funCall->argList.push_back(val);
-    }
-    ir.push_back(funCall);
-    return dest;
-  }
-
-  //binExpr分解expr的过程中生成ir
-  OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
-  }
-
   int UnaryExpression::eval(RecordTable *record) {
     //转换成binaryExpr
     auto binForm = new BinaryExpression(nullptr, 0, nullptr);
     switch (this->op) {
       case ADD:
         // binForm = new BinaryExpression();
+        binForm = new BinaryExpression(new NumberExpression(0), ADD, this->right);
         return binForm->eval(record);
       case SUB:
         binForm = new BinaryExpression(new NumberExpression(0), SUB, this->right);
@@ -328,13 +291,81 @@ namespace compiler::front::ast {
   int CommaExpression::eval(RecordTable *record) {
     return expr[expr.size() - 1]->eval(record);
   }
+}// namespace compiler::front::ast
+
+
+/*
+ *evalOp
+ */
+
+namespace compiler::front::ast {
+  OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
+    return OperatorName(this->value, Type::Imm);
+  }
+
+  OperatorName UnaryExpression::evalOp(IRList &ir, RecordTable *record) {
+    auto binForm = new BinaryExpression(nullptr, 0, nullptr);
+    switch (this->op) {
+      case ADD:
+        binForm = new BinaryExpression(new NumberExpression(0), ADD, right);
+        return binForm->evalOp(ir, record);
+      case SUB:
+        binForm = new BinaryExpression(new NumberExpression(0), SUB, right);
+        return binForm->evalOp(ir, record);
+      case NOT_EQUAL:
+        binForm = new BinaryExpression(new NumberExpression(0), EQ, right);
+        return binForm->evalOp(ir, record);
+      default:
+        throw runtime_error("undefined op");
+    }
+  }
+
+  //binExpr分解expr的过程中生成ir
+  OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
+    try {
+      return this->eval(record);
+    } catch (...) {
+    }
+    OperatorName dest = OperatorName();
+
+  }
 
   OperatorName Expression::evalOp(IRList &ir, RecordTable *record) {
     throw std::runtime_error("this type of node cannot be eval");
   }
 
+  //TODO
+  OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
+    auto funCall = new FunCallIR("@" + name->name);
+    OperatorName dest = OperatorName(Type::Var);
+    dest.name = "%" + std::to_string(record->getID());
+    for (auto i : args->args) {
+      auto val = i->evalOp(ir, record);
+      funCall->argList.push_back(val);
+    }
+    ir.push_back(funCall);
+    return dest;
+  }
 
+  OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    auto opName = OperatorName(varInfo->value[0], Type::Var);
+    opName.name = varInfo->name;
+    return opName;
+  }
+
+  OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    std::vector<int> index;
+    for (auto i : this->index)
+      index.push_back(i->eval(record));
+    auto opName = OperatorName(varInfo->getArrayVal(index));
+    opName.name = varInfo->name;
+    return opName;
+  }
 }// namespace compiler::front::ast
+
+
 /*
  * store array when init;
  */

@@ -195,6 +195,13 @@ namespace compiler::front::ast {
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    cond->ConditionAnalysis(ir,record);
+    auto trueLabel  = new LabelIR(".L"+std::to_string(record->getID()));
+    ir.push_back(trueLabel);
+    this->trueBlock->genIR(ir,record);
+    auto falseLabel = new LabelIR(".L"+std::to_string(record->getID()));
+    ir.push_back(falseLabel);
+    this->elseBlock->genIR(ir,record);
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -211,6 +218,12 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    cond->genIR(ir,record);
+    auto loopLabel = new JmpIR(,".L"+ std::to_string(record->getID()));
+    auto endLoopLabel = new JmpIR (,".L"+std::to_string(record->getID()));
+    RecordTable::pushLabelPair(loopLabel,endLoopLabel);
+    this->loopBlock->genIR(ir,record);
+    RecordTable::popLabelPair();
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -304,6 +317,42 @@ namespace compiler::front::ast {
   int CommaExpression::eval(RecordTable *record) {
     return expr[expr.size() - 1]->eval(record);
   }
+  /* *
+   *
+   * condition Analysis
+   *
+   * */
+  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *label){
+    LabelIR *temp = new LabelIR();
+    try{
+      if(this->eval(record)){
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp,temp));
+      }
+    }catch(runtime_error e) {
+      this->evalOp(ir,record);
+      ir.emplace_back(new JmpIR(OperatorCode::Jne,temp));
+    }
+  }
+  void BinaryExpression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR* label) {
+    if (this->op == AND_OP || this->op == OR_OP){
+      LabelIR* labelIr= new LabelIR(".L"+std::to_string(record->getID()));
+      leftExpr->ConditionAnalysis(ir,record,labelIr);
+      ir.push_back(labelIr);
+      rightExpr->ConditionAnalysis(ir,record,labelIr);
+    }
+    else
+    {
+      try{
+        if(this->eval(record)){
+          ir.emplace_back(new JmpIR(OperatorCode::Jmp,label));
+        }
+      }catch(runtime_error e) {
+        this->evalOp(ir,record);
+        ir.emplace_back(new JmpIR(OperatorCode::Jne,label));
+      }
+    }
+  }
+
 }// namespace compiler::front::ast
 
 

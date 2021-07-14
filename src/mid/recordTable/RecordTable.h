@@ -60,9 +60,9 @@ namespace compiler::mid::ir {
     RecordTable(RecordTable *rt = nullptr) : father(rt), id(rt != nullptr ? rt->id : 0){};
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
-    static void pushLabelPair(JmpIR*,JmpIR*);
+    static void pushLabelPair(LabelIR*,LabelIR*);
     static void popLabelPair();
-    static std::pair<JmpIR*,JmpIR*>& getTopLabel();
+    static std::pair<LabelIR*,LabelIR*>& getTopLabel();
     unsigned int getID() { return this->id++; }
 
     RecordTable *getFarther() { return father; }

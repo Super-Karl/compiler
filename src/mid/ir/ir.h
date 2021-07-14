@@ -57,6 +57,7 @@ namespace compiler::mid::ir {
     Jle,
     Cmp,
     Jne,
+    Jeq,
     And,
     Or,
     Xor,
@@ -121,6 +122,7 @@ namespace compiler::mid::ir {
   class LabelIR : public IR{
   public:
     std::string label;
+    LabelIR() = default;
     LabelIR(std::string label):label(label){}
     LabelIR* getThis(){
       return this;
@@ -132,6 +134,7 @@ namespace compiler::mid::ir {
     std::string label;
     JmpIR(void);
     JmpIR(OperatorCode opname ,std::string name):label(name),action(opname){};
+    JmpIR(OperatorCode opname ,LabelIR* name):label(name->label),action(opname){};
     JmpIR *getThis() {
       return this;
     }

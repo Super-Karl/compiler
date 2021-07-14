@@ -30,6 +30,7 @@ namespace compiler {
     public:
       virtual int eval(RecordTable *record);
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
+      virtual void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *label);
     };
 
     class ArrayInitVal : public Expression {
@@ -284,6 +285,8 @@ namespace compiler {
       int eval(RecordTable *record) override;
 
       OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      void ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *label);
     };
 
     class UnaryExpression : public Expression {

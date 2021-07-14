@@ -56,7 +56,7 @@ namespace compiler::mid::ir {
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
     RecordTable *father;
     unsigned int id = 0;
-    static std::stack<std::pair<JmpIR*,JmpIR*>> labelPairs;
+    static std::stack<std::pair<LabelIR*,LabelIR*>> labelPairs;
 
   public:
     RecordTable(RecordTable *rt = nullptr) : father(rt), id(rt != nullptr ? rt->id : 0){};

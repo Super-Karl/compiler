@@ -111,3 +111,15 @@ namespace compiler::mid::ir {
     }
   }
 }// namespace compiler::mid::ir
+
+namespace compiler::mid::ir{
+  void RecordTable::pushLabelPair(LabelIR* label1,LabelIR* label2){
+    labelPairs.push(std::make_pair(label1,label2));
+  }
+  void RecordTable::popLabelPair(){
+    labelPairs.pop();
+  }
+  std::pair<LabelIR*,LabelIR*>& RecordTable::getTopLabel(){
+    return labelPairs.top();
+  }
+}

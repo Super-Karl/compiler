@@ -210,13 +210,16 @@ namespace compiler::front::ast {
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    cond->ConditionAnalysis(ir,record);
-    auto trueLabel  = new LabelIR(".L"+std::to_string(record->getID()));
-    ir.push_back(trueLabel);
-    this->trueBlock->genIR(ir,record);
-    auto falseLabel = new LabelIR(".L"+std::to_string(record->getID()));
-    ir.push_back(falseLabel);
+    auto ifLabel = new LabelIR(".L"+std::to_string(record->getID()));
+    auto elseLabel = new LabelIR (".L"+std::to_string(record->getID()));
+    auto endLabel = new LabelIR(".L"+std::to_string(record->getID()));
+    cond->ConditionAnalysis(ir,record,ifLabel,elseLabel, true);
+    ir.push_back(ifLabel);
+    trueBlock->genIR(ir,record);
+    ir.push_back(new JmpIR(OperatorCode::Jmp,endLabel));
+    ir.push_back(elseLabel);
     this->elseBlock->genIR(ir,record);
+    ir.push_back(endLabel);
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -230,18 +233,22 @@ namespace compiler::front::ast {
   }
 
   void BreakStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    ir.emplace_back(new JmpIR(OperatorCode::Jmp,RecordTable::getTopLabel().second));
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    cond->genIR(ir,record);
-    auto loopLabel = new JmpIR(,".L"+ std::to_string(record->getID()));
-    auto endLoopLabel = new JmpIR (,".L"+std::to_string(record->getID()));
+    auto loopLabel = new LabelIR(".L"+ std::to_string(record->getID()));
+    auto endLoopLabel = new LabelIR (".L"+std::to_string(record->getID()));
+    cond->ConditionAnalysis(ir,record,loopLabel,endLoopLabel);
+    ir.push_back(loopLabel);
     RecordTable::pushLabelPair(loopLabel,endLoopLabel);
     this->loopBlock->genIR(ir,record);
+    ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
+    ir.emplace_back(new JmpIR(OperatorCode::Jmp,RecordTable::getTopLabel().first));
   }
 }// namespace compiler::front::ast
 
@@ -335,33 +342,75 @@ namespace compiler::front::ast {
    * condition Analysis
    *
    * */
-  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *label){
-    LabelIR *temp = new LabelIR();
+  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *ifLabel,LabelIR *elLable,bool trueJmp){
     try{
       if(this->eval(record)){
-        ir.emplace_back(new JmpIR(OperatorCode::Jmp,temp));
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp,ifLabel));
       }
     }catch(runtime_error e) {
-      this->evalOp(ir,record);
-      ir.emplace_back(new JmpIR(OperatorCode::Jne,temp));
+      try{
+        this->evalOp(ir,record);
+        ir.emplace_back(new JmpIR(OperatorCode::Jne,ifLabel));
+      }
+      catch (runtime_error e){
+        if (trueJmp)
+        {
+          ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
+        }
+        else
+        {
+          //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),)));
+        }
+      }
     }
   }
-  void BinaryExpression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR* label) {
-    if (this->op == AND_OP || this->op == OR_OP){
-      LabelIR* labelIr= new LabelIR(".L"+std::to_string(record->getID()));
-      leftExpr->ConditionAnalysis(ir,record,labelIr);
-      ir.push_back(labelIr);
-      rightExpr->ConditionAnalysis(ir,record,labelIr);
+  void BinaryExpression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR*ifLabel,LabelIR* elLabel,bool trueJmp) {
+
+
+    /*
+     * 关键问题在于:
+     * 最终的目的是能够利用好屏蔽效果，即每次调用的目标应该是跳转到本表达式的结束label
+     * 优化的策略则是利用屏蔽策略，能够屏蔽更多的运算，跳转到更远的地方
+     *
+     * 当前的简单策略，将每一个表达式拆分成if else两种结果，根据表达式含义推断跳转的位置
+    */
+    if (this->op == AND_OP ){
+      LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
+      leftExpr->ConditionAnalysis(ir,record,innerLabel,elLabel,true);
+      ir.push_back(innerLabel);
+      rightExpr->ConditionAnalysis(ir,record, ifLabel,elLabel, true)
+    }
+    else if (this->op == OR_OP){
+      LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
+      leftExpr->ConditionAnalysis(ir,record, ifLabel,innerLabel, true);
+      rightExpr->ConditionAnalysis(ir,record,ifLabel,elLabel,true);
     }
     else
     {
       try{
         if(this->eval(record)){
-          ir.emplace_back(new JmpIR(OperatorCode::Jmp,label));
+          ir.emplace_back(new JmpIR(OperatorCode::Jmp,ifLabel));
+        }
+        else
+        {
+          //别跳了
         }
       }catch(runtime_error e) {
-        this->evalOp(ir,record);
-        ir.emplace_back(new JmpIR(OperatorCode::Jne,label));
+        try{
+          this->evalOp(ir,record);
+          ir.emplace_back(new JmpIR(OperatorCode::Jne,ifLabel));
+        }
+        catch (runtime_error e){
+          if (trueJmp)
+          {
+            ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
+          }
+          else
+          {
+            //没有else
+            //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),elLabel)));
+          }
+        }
       }
     }
   }
@@ -485,6 +534,39 @@ namespace compiler::front::ast {
     auto load = new LoadIR(dest, source, offset);
     ir.push_back(load);
     return dest;
+  }
+
+  OperatorCode BinaryExpression::getRelOpCode(){
+    switch (op) {
+      case LT:
+        return mid::ir::OperatorCode::Jl;
+      case LE:
+        return mid::ir::OperatorCode::Jle;
+      case EQ:
+        return mid::ir::OperatorCode::Jeq;
+      case NE:
+        return mid::ir::OperatorCode::Jne;
+      case GT:
+        return mid::ir::OperatorCode::Jg;
+      case GE:
+        return mid::ir::OperatorCode::Jge;
+    }
+  }
+  OperatorCode BinaryExpression::getAntiRelOpCode() {
+    switch (op) {
+      case LT:
+        return mid::ir::OperatorCode::Jge;
+      case LE:
+        return mid::ir::OperatorCode::Jg;
+      case EQ:
+        return mid::ir::OperatorCode::Jne;
+      case NE:
+        return mid::ir::OperatorCode::Jeq;
+      case GT:
+        return mid::ir::OperatorCode::Jle;
+      case GE:
+        return mid::ir::OperatorCode::Jl;
+    }
   }
 }// namespace compiler::front::ast
 

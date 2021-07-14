@@ -43,9 +43,11 @@ namespace compiler::mid::ir {
 
     int getVal();
 
+    std::string getUseName();
+
     bool canAssign(std::vector<int> = {});
 
-    void updateVarUse(VarRedefChain var, std::vector<int> index);
+    void addVarUse(VarRedefChain var, std::vector<int> index = {});
   };
 
   //全局的记录表,用来记录sy程序中变量的use

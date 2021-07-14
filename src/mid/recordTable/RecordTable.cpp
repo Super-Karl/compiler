@@ -37,7 +37,8 @@ namespace compiler::mid::ir {
     this->arrayName = name;
     this->isConst = isConst;
     this->isArray = true;
-    varUse.resize(inShape.size());
+    this->shape = inShape;
+    varUse.resize(inValue.size());
     for (auto i = 0; i < inValue.size(); i++) {
       auto var = VarRedefChain("", inValue[i], true);
       varUse[i].push_front(var);
@@ -46,15 +47,16 @@ namespace compiler::mid::ir {
 
   VarInfo::VarInfo(std::string name, int value, bool canAssign, bool isConst)
       : isConst(isConst), isArray(false), arrayName("") {
+    this->varUse.resize(1);
     this->varUse[0].push_front(VarRedefChain(std::move(name), value, canAssign));
   }
 
   VarInfo::VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst) {
-    this->arrayName = name;
+    this->arrayName = std::move(name);
     this->shape = inShape;
     this->isConst = isConst;
     this->isArray = true;
-    varUse.resize(inShape.size());
+    varUse.resize(inValue.size());
     for (int i = 0; i < inShape.size(); ++i) {
       auto var = VarRedefChain("", inValue[i], true);
       varUse[i].push_front(var);
@@ -90,6 +92,10 @@ namespace compiler::mid::ir {
     return this->varUse[0].front().val;
   }
 
+  std::string VarInfo::getUseName() {
+    return this->varUse[0].front().defName;
+  }
+
   bool VarInfo::canAssign(std::vector<int> index) {
     if (isArray)
       return varUse[this->getArrayIndex(index)].front().canAssign;
@@ -97,7 +103,7 @@ namespace compiler::mid::ir {
       return varUse[0].front().canAssign;
   }
 
-  void VarInfo::updateVarUse(VarRedefChain var, std::vector<int> index) {
+  void VarInfo::addVarUse(VarRedefChain var, std::vector<int> index) {
     if (isArray) {
       this->varUse[getArrayIndex(std::move(index))].push_front(var);
     } else {

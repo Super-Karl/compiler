@@ -1,4 +1,4 @@
-//
+
 // Created by wnx on 2021/7/5.
 //
 #include "front/ast/AstNode.h"
@@ -127,22 +127,37 @@ namespace compiler::front::ast {
     if (var->isArray) {
       auto opName = name->evalOp(ir, record);
       opName.name = record->getFarther() == nullptr ? "%" : "@" + to_string(record->getID());
-      std::vector<int> index;
 
+      std::vector<int> index;
       for (auto i : name->getIndex())
         index.push_back(i->eval(record));
 
       auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
       ir.push_back(store);
+      VarRedefChain varUse;
 
-      var->name = opName.name;
+      try {
+        varUse = VarRedefChain(opName.name, this->name->eval(record), true);
+      } catch (...) {
+        varUse = VarRedefChain(opName.name, INT32_MIN, false);
+      }
+      var->addVarUse(varUse, index);
+
     } else {
       auto assign = new AssignIR();
       assign->source1 = rightExpr->evalOp(ir, record);
       assign->operatorCode = OperatorCode::Assign;
       assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
       ir.push_back(assign);
-      var->name = assign->dest.name;
+
+      //更新符号表
+      VarRedefChain varUse;
+      try {
+        varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+      } catch (...) {
+        varUse = VarRedefChain(assign->dest.name, INT32_MIN);
+      }
+      var->addVarUse(varUse);
     }
   }
 
@@ -246,20 +261,19 @@ namespace compiler::front::ast {
 
   int Identifier::eval(RecordTable *record) const {
     auto varInfo = record->searchVar(this->name);
-    if (varInfo != nullptr)
-      return varInfo->value[0];
-    throw std::logic_error("it's not assign");
+    if (varInfo->canAssign())
+      return varInfo->getVal();
+    throw std::logic_error("it cannot assign");
   }
 
   int ArrayIdentifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(name);
-    if (varInfo) {
-      std::vector<int> index;
-      for (auto i : this->index)
-        index.push_back(i->eval(record));
+    std::vector<int> index;
+    for (auto i : this->index)
+      index.push_back(i->eval(record));
+    if (varInfo->canAssign(index))
       return varInfo->getArrayVal(index);
-    }
-    throw std::logic_error("it's not assign");
+    throw std::logic_error("it cannot assign");
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -300,7 +314,6 @@ namespace compiler::front::ast {
     auto binForm = new BinaryExpression(nullptr, 0, nullptr);
     switch (this->op) {
       case ADD:
-        // binForm = new BinaryExpression();
         binForm = new BinaryExpression(new NumberExpression(0), ADD, this->right);
         return binForm->eval(record);
       case SUB:
@@ -388,7 +401,7 @@ namespace compiler::front::ast {
       return this->eval(record);
     } catch (...) {
     }*/
-    OperatorName dest = OperatorName(record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID())), left, right;
+    OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
 
     if (this->op != AND_OP && this->op != OR_OP) {
       /*try {
@@ -436,11 +449,9 @@ namespace compiler::front::ast {
     throw std::runtime_error("this type of node cannot be eval");
   }
 
-  //TODO
   OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
     auto funCall = new FunCallIR("@" + name->name);
-    OperatorName dest = OperatorName(Type::Var);
-    dest.name = "%" + std::to_string(record->getID());
+    OperatorName dest = OperatorName("%" + std::to_string(record->getID()), Type::Var);
     for (auto i : args->args) {
       auto val = i->evalOp(ir, record);
       funCall->argList.push_back(val);
@@ -451,19 +462,26 @@ namespace compiler::front::ast {
 
   OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
-    auto opName = OperatorName(varInfo->value[0], Type::Var);
-    opName.name = varInfo->name;
+    auto opName = OperatorName(varInfo->getUseName(), Type::Var);
     return opName;
   }
 
+  //TODO 下标canAssign为false的情况
   OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
     std::vector<int> index;
     for (auto i : this->index)
       index.push_back(i->eval(record));
-    auto dest = OperatorName(record->getFarther() == nullptr ? "@" + std::to_string(record->getID()) : "%" + std::to_string(record->getID()), Type::Var);
-    auto source = OperatorName(varInfo->name);
-    auto offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+
+    OperatorName offset;
+    try {
+      offset = OperatorName(varInfo->getArrayVal(index), Type::Imm);
+    } catch (...) {
+    }
+
+    auto dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + std::to_string(record->getID()), Type::Var);
+    auto source = OperatorName(varInfo->arrayName, Type::Var);
+    offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
     auto load = new LoadIR(dest, source, offset);
     ir.push_back(load);
     return dest;
@@ -478,12 +496,16 @@ namespace compiler::front::ast {
 namespace compiler::front::ast {
   void ArrayInitVal::storeArray(ArrayIdentifier *name, IRList &ir, RecordTable *record) {
     int index = 0;
-    std::string arrayIRIdent = record->searchVar(name->name)->name;
-    for (auto i : initValList) {
-      auto dest = OperatorName(Type::Var);
-      dest.name = arrayIRIdent;
-      auto store = new StoreIR(dest, i->evalOp(ir, record), OperatorName(index++, Type::Imm));
+    std::string arrayIRIdent = record->searchVar(name->name)->arrayName;
+    auto array = record->searchVar(name->name);
+    for (auto i = 0; i < initValList.size(); ++i) {
+      //生成storeIR
+      auto dest = OperatorName(arrayIRIdent, Type::Var);
+      auto store = new StoreIR(dest, initValList[i]->evalOp(ir, record), OperatorName(index++, Type::Imm));
       ir.push_back(store);
+      //更新数组元素的def链
+      auto varUse = VarRedefChain("", initValList[i]->eval(record), true);
+      array->addVarUse(varUse, {i});
     }
   }
 }// namespace compiler::front::ast

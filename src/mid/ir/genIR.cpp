@@ -126,7 +126,7 @@ namespace compiler::front::ast {
     auto var = record->searchVar(this->name->name);
     if (var->isArray) {
       auto opName = name->evalOp(ir, record);
-      opName.name = var->name;
+      opName.name = record->getFarther() == nullptr ? "%" : "@" + to_string(record->getID());
       std::vector<int> index;
 
       for (auto i : name->getIndex())
@@ -134,12 +134,15 @@ namespace compiler::front::ast {
 
       auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
       ir.push_back(store);
+
+      var->name = opName.name;
     } else {
       auto assign = new AssignIR();
+      assign->source1 = rightExpr->evalOp(ir, record);
       assign->operatorCode = OperatorCode::Assign;
       assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
-      assign->source1 = rightExpr->evalOp(ir, record);
       ir.push_back(assign);
+      var->name = assign->dest.name;
     }
   }
 
@@ -164,6 +167,13 @@ namespace compiler::front::ast {
     body->genIR(funcdef->funcBody, newTable);
 
     ir.push_back(funcdef);
+
+    RetIR *ret;
+    if (this->retType == INT) {
+      ret = new RetIR(OperatorName(0, Type::Var));
+    } else
+      ret = new RetIR(OperatorName(Type::Void));
+    ir.push_back(ret);
   }
 
   //完成
@@ -223,15 +233,20 @@ namespace compiler::front::ast {
 
   int Identifier::eval(RecordTable *record) const {
     auto varInfo = record->searchVar(this->name);
-    return varInfo->value[0];
+    if (varInfo != nullptr)
+      return varInfo->value[0];
+    throw std::logic_error("it's not assign");
   }
 
   int ArrayIdentifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(name);
-    std::vector<int> index;
-    for (auto i : this->index)
-      index.push_back(i->eval(record));
-    return varInfo->getArrayVal(index);
+    if (varInfo) {
+      std::vector<int> index;
+      for (auto i : this->index)
+        index.push_back(i->eval(record));
+      return varInfo->getArrayVal(index);
+    }
+    throw std::logic_error("it's not assign");
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -320,14 +335,14 @@ namespace compiler::front::ast {
 
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
-    try {
+    /*    try {
       return this->eval(record);
     } catch (...) {
-    }
+    }*/
     OperatorName dest = OperatorName(record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID())), left, right;
 
     if (this->op != AND_OP && this->op != OR_OP) {
-      try {
+      /*try {
         left = OperatorName(leftExpr->eval(record));
       } catch (...) {
         left = leftExpr->evalOp(ir, record);
@@ -336,7 +351,9 @@ namespace compiler::front::ast {
         right = OperatorName(rightExpr->eval(record));
       } catch (...) {
         right = rightExpr->evalOp(ir, record);
-      }
+      }*/
+      left = OperatorName(leftExpr->evalOp(ir, record));
+      right = OperatorName(rightExpr->evalOp(ir, record));
     }
     AssignIR *assign;
     switch (this->op) {

@@ -73,7 +73,7 @@ namespace compiler {
 
       OperatorName evalOp(IRList &ir, RecordTable *record);
 
-      vector<Expression *> getIndex() override {
+      vector<Expression *> getIndex() {
         return this->index;
       };
     };

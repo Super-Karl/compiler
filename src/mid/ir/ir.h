@@ -6,7 +6,6 @@
 #define COMPILER_IR_H
 
 #include <iostream>
-#include <utility>
 #include <vector>
 
 namespace compiler::mid::ir {

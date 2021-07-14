@@ -7,48 +7,6 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst) {
-    this->name = name;
-    this->shape = inShape;
-    this->value = inValue;
-    this->isConst = isConst;
-    this->isArray = true;
-  }
-  VarInfo::VarInfo(std::string name, int value, bool isConst)
-      : name(name), isConst(isConst), isArray(false) {
-    this->value = {value};
-  }
-  VarInfo::VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst) {
-    this->name = name;
-    this->shape = inShape;
-    this->value = inValue;
-    this->isConst = isConst;
-    this->isArray = true;
-  }
-
-  void RecordTable::insertVar(std::string name, VarInfo *v) {
-    varTable.insert({name, v});
-  }
-
-  void RecordTable::setArrayVal(std::string name, std::vector<int> index, int val) {
-    int tmp = 1;
-    int sum = 0;
-    auto varInfo = this->searchVar(name);
-    for (int i = index.size() - 1; i >= 0; i--) {
-      sum += tmp * index[i];
-      tmp *= varInfo->shape[i];
-    }
-    if (sum < varInfo->value.size())
-      varInfo->value[sum] = val;
-    throw std::runtime_error("out of index");
-  }
-
-  void RecordTable::setVal(std::string name, int val) {
-    auto var = this->searchVar(name);
-    if (var != nullptr)
-      var->value[0] = val;
-    throw std::runtime_error("no var name " + name);
-  }
 
   VarInfo *RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
@@ -59,6 +17,50 @@ namespace compiler::mid::ir {
     throw std::out_of_range("no var name " + name);
   }
 
+  void RecordTable::insertVar(std::string name, VarInfo *v) {
+    varTable.insert({name, v});
+  }
+
+  bool RecordTable::canExprAssign(std::string op1, std::string op2, std::vector<int> index1, std::vector<int> index2) {
+    auto var1 = this->searchVar(op1);
+    auto var2 = this->searchVar(op2);
+    return var1->canAssign(index1) && var2->canAssign(index2);
+  }
+
+  /*
+   *VarInfo
+   */
+
+  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst) {
+
+    this->arrayName = name;
+    this->isConst = isConst;
+    this->isArray = true;
+    varUse.resize(inShape.size());
+    for (auto i = 0; i < inValue.size(); i++) {
+      auto var = VarRedefChain("", inValue[i], true);
+      varUse[i].push_front(var);
+    }
+  }
+
+  VarInfo::VarInfo(std::string name, int value, bool canAssign, bool isConst)
+      : isConst(isConst), isArray(false), arrayName("") {
+    this->varUse[0].push_front(VarRedefChain(std::move(name), value, canAssign));
+  }
+
+  VarInfo::VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst) {
+    this->arrayName = name;
+    this->shape = inShape;
+    this->isConst = isConst;
+    this->isArray = true;
+    varUse.resize(inShape.size());
+    for (int i = 0; i < inShape.size(); ++i) {
+      auto var = VarRedefChain("", inValue[i], true);
+      varUse[i].push_front(var);
+    }
+  }
+
+
   int VarInfo::getArrayVal(std::vector<int> index) {
     int tmp = 1;
     int sum = 0;
@@ -66,8 +68,8 @@ namespace compiler::mid::ir {
       sum += tmp * index[i];
       tmp *= shape[i];
     }
-    if (sum < value.size())
-      return this->value[sum];
+    if (sum < varUse.size())
+      return varUse[sum].front().val;
     throw std::runtime_error("out of index");
   }
 
@@ -78,8 +80,27 @@ namespace compiler::mid::ir {
       sum += tmp * index[i];
       tmp *= shape[i];
     }
-    if (sum < value.size())
+    if (sum < varUse.size())
       return sum;
     throw std::runtime_error("out of index");
+  }
+
+  int VarInfo::getVal() {
+    return this->varUse[0].front().val;
+  }
+
+  bool VarInfo::canAssign(std::vector<int> index) {
+    if (isArray)
+      return varUse[this->getArrayIndex(index)].front().canAssign;
+    else
+      return varUse[0].front().canAssign;
+  }
+
+  void VarInfo::updateVarUse(VarRedefChain var, std::vector<int> index) {
+    if (isArray) {
+      this->varUse[getArrayIndex(std::move(index))].push_front(var);
+    } else {
+      this->varUse[0].push_front(var);
+    }
   }
 }// namespace compiler::mid::ir

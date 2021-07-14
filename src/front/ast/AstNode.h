@@ -51,23 +51,31 @@ namespace compiler {
 
       string name;
 
-      int eval(RecordTable *record);
+      virtual int eval(RecordTable *record) const;
 
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      virtual vector<Expression *> getIndex() {
+        vector<Expression *> index;
+        return index;
+      }
     };
 
     class ArrayIdentifier : public Identifier {
     public:
       vector<Expression *> index;
 
-      //      vector<Expression *> shape;
       ArrayIdentifier(string name) : Identifier(name){};
 
       void print(int depth, bool isEnd) override;
 
       int eval(RecordTable *record);
 
-      virtual OperatorName evalOp(IRList &ir, RecordTable *record);
+      OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      vector<Expression *> getIndex() {
+        return this->index;
+      };
     };
 
     class Stmt : public Expression {
@@ -232,7 +240,8 @@ namespace compiler {
       FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args){};
 
       void print(int depth = 0, bool isEnd = false) override;
-      void genIR(IRList &ir, RecordTable *record);
+
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     /**
@@ -287,6 +296,8 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
 
       int eval(RecordTable *record);
+
+      OperatorName evalOp(IRList &ir, RecordTable *record);
     };
 
     class AssignStmt : public Stmt {//赋值表达式

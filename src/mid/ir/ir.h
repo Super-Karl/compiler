@@ -30,9 +30,11 @@ namespace compiler::mid::ir {
     std::string name;//ir中的name
     int value;
 
-    OperatorName(Type type = Type::Var) : type(type){};
-
     OperatorName(int val, Type type = Type::Var) : value(val), type(type){};
+
+    OperatorName(std::string name, Type type = Type::Var) : type(type), name(std::move(name)) {}
+
+    OperatorName(Type type = Type::Var) : type(type){};
 
     Type getType() const { return this->type; };
 
@@ -82,11 +84,9 @@ namespace compiler::mid::ir {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
     std::string funcName;
-    std::vector<int> argList;
-    ElemType retType;
-    OperatorName dest;
-    FunCallIR(std::string name) : IR(), funcName(name){};
-    FunCallIR *getThis() {
+    std::vector<OperatorName> argList;
+    FunCallIR(std::string name) : IR(), funcName(std::move(name)){};
+    FunCallIR *getThis() override {
       return this;
     }
   };
@@ -98,9 +98,9 @@ namespace compiler::mid::ir {
     std::vector<OperatorName> argList;
     IRList funcBody;
 
-    FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(name){};
+    FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(std::move(name)){};
 
-    FunDefIR *getThis() {
+    FunDefIR *getThis() override {
       return this;
     }
   };
@@ -110,10 +110,11 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode;
     OperatorName dest;
     OperatorName source1, source2;
+
     AssignIR() = default;
 
-    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(dest), source1(source1), source2(source2){};
-    AssignIR *getThis() {
+    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(source1), source2(std::move(source2)){};
+    AssignIR *getThis() override {
       return this;
     }
   };
@@ -141,10 +142,10 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode = OperatorCode::Ret;
     OperatorName retVal;
 
-    RetIR(){};
-    RetIR(OperatorName retVal) : IR(), retVal(retVal){};
+    RetIR() { retVal = OperatorName(Type::Void); };
+    RetIR(OperatorName retVal) : IR(), retVal(std::move(retVal)){};
 
-    RetIR *getThis() {
+    RetIR *getThis() override {
       return this;
     }
   };
@@ -155,8 +156,8 @@ namespace compiler::mid::ir {
     int size;        //这个size是数组大小,实际分配的内存空间为size * 4
     std::string name;//with @,%
 
-    AllocaIR(std::string name, int size) : IR(), name(name), size(size){};
-    AllocaIR *getThis() {
+    AllocaIR(std::string name, int size) : IR(), name(std::move(name)), size(size){};
+    AllocaIR *getThis() override {
       return this;
     }
   };
@@ -165,12 +166,12 @@ namespace compiler::mid::ir {
   public:
     OperatorCode operatorCode = OperatorCode::Load;
     OperatorName dest;
-    int offset;//距离基址的偏移量,数组元素的下标,实际的偏移量为index*4
+    OperatorName offset;//距离基址的偏移量,数组元素的下标,实际的偏移量为index*4
     OperatorName source;
 
-    LoadIR(OperatorName dest, OperatorName source, int offset) : dest(std::move(dest)), source(source), offset(offset){};
+    LoadIR(OperatorName dest, OperatorName source, OperatorName offset) : dest(std::move(dest)), source(std::move(source)), offset(offset){};
 
-    LoadIR *getThis() {
+    LoadIR *getThis() override {
       return this;
     }
   };
@@ -179,10 +180,10 @@ namespace compiler::mid::ir {
   public:
     OperatorCode operatorCode = OperatorCode::Store;
     OperatorName dest;
-    int offset;
-    int source;
+    OperatorName offset;
+    OperatorName source;
 
-    StoreIR(OperatorName dest, int source, int offset) : dest(std::move(dest)), offset(offset), source(source){};
+    StoreIR(OperatorName dest, OperatorName source, OperatorName offset) : dest(std::move(dest)), offset(std::move(offset)), source(std::move(source)){};
 
     StoreIR *getThis() override {
       return this;

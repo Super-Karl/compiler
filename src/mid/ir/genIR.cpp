@@ -29,7 +29,7 @@ namespace compiler::front::ast {
     string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
     int val = this->value->eval(record);
     auto varInfo = new VarInfo(token, val);
-    record->insertVar(token, varInfo);
+    record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
   }
@@ -123,21 +123,27 @@ namespace compiler::front::ast {
   }
 
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto assign = new AssignIR();
     auto var = record->searchVar(this->name->name);
-    if (var->isArray == true) {
+    if (var->isArray) {
+      auto opName = name->evalOp(ir, record);
+      opName.name = record->getFarther() == nullptr ? "%" : "@" + to_string(record->getID());
       std::vector<int> index;
 
+      for (auto i : name->getIndex())
+        index.push_back(i->eval(record));
 
+      auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
+      ir.push_back(store);
 
-      auto Opname = name->evalOp(ir, record);
-      auto store = new StoreIR(name->evalOp(ir,record),rightExpr->eval(record),var->getArrayVal(index));
+      var->name = opName.name;
+    } else {
+      auto assign = new AssignIR();
+      assign->source1 = rightExpr->evalOp(ir, record);
+      assign->operatorCode = OperatorCode::Assign;
+      assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
+      ir.push_back(assign);
+      var->name = assign->dest.name;
     }
-
-    assign->source1 = this->rightExpr->evalOp(ir, record);
-    assign->dest = this->name->evalOp(ir, record);
-    assign->operatorCode = OperatorCode::Assign;
-    ir.push_back(assign);
   }
 
   //完成
@@ -151,8 +157,7 @@ namespace compiler::front::ast {
 
     //保存参数表
     for (auto i : args->args) {
-      auto opName = OperatorName(Type::Var);
-      opName.name = i->name->name;
+      auto opName = OperatorName(i->name->name, Type::Var);
       funcdef->argList.push_back(opName);
     }
     //把函数的入参存入函数符号表
@@ -162,6 +167,13 @@ namespace compiler::front::ast {
     body->genIR(funcdef->funcBody, newTable);
 
     ir.push_back(funcdef);
+
+    RetIR *ret;
+    if (this->retType == INT) {
+      ret = new RetIR(OperatorName(0, Type::Var));
+    } else
+      ret = new RetIR(OperatorName(Type::Void));
+    ir.push_back(ret);
   }
 
   //完成
@@ -180,33 +192,18 @@ namespace compiler::front::ast {
 
     for (auto item : blockItem)
       item->genIR(ir, newTable);
-    delete newTable;
   }
-  //完成
-  void FunctionCall::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto funCall = new FunCallIR("@" + name->name);
-    for (auto i : args->args) {
-      auto val = i->eval(record);
-      funCall->argList.push_back(val);
-    }
-
-    ir.push_back(funCall);
-  }
-
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    cond->genIR(ir,record);
-    auto trueLabel  = new LabelIR(".L"+std::to_string(record->getID()));
-    ir.push_back(trueLabel);
-    this->trueBlock->genIR(ir,record);
-    auto falseLabel = new LabelIR(".L"+std::to_string(record->getID()));
-    ir.push_back(falseLabel);
-    this->elseBlock->genIR(ir,record);
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (returnExp != nullptr) {
-      auto ret = returnExp->evalOp(ir, record);
+      auto ret = new RetIR(returnExp->evalOp(ir, record));
+      ir.push_back(ret);
+    } else {
+      auto ret = new RetIR();
+      ir.push_back(ret);
     }
   }
 
@@ -214,16 +211,9 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    cond->genIR(ir,record);
-    auto loopLabel = new JmpIR(,".L"+ std::to_string(record->getID()));
-    auto endLoopLabel = new JmpIR (,".L"+std::to_string(record->getID()));
-    RecordTable::pushLabelPair(loopLabel,endLoopLabel);
-    this->loopBlock->genIR(ir,record);
-    RecordTable::popLabelPair();
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-
   }
 }// namespace compiler::front::ast
 
@@ -241,38 +231,22 @@ namespace compiler::front::ast {
     return this->value;
   }
 
-  OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
-    return OperatorName(this->value, Type::Imm);
-  }
-
-  int Identifier::eval(RecordTable *record) {
+  int Identifier::eval(RecordTable *record) const {
     auto varInfo = record->searchVar(this->name);
-    return varInfo->value[0];
+    if (varInfo != nullptr)
+      return varInfo->value[0];
+    throw std::logic_error("it's not assign");
   }
 
   int ArrayIdentifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(name);
-    std::vector<int> index;
-    for (auto i : this->index)
-      index.push_back(i->eval(record));
-    return varInfo->getArrayVal(index);
-  }
-
-  OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
-    auto varInfo = record->searchVar(this->name);
-    auto opName = OperatorName(varInfo->value[0], Type::Var);
-    opName.name = varInfo->name;
-    return opName;
-  }
-
-  OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
-    auto varInfo = record->searchVar(this->name);
-    std::vector<int> index;
-    for (auto i : this->index)
-      index.push_back(i->eval(record));
-    auto opName = OperatorName(varInfo->getArrayVal(index));
-    opName.name = varInfo->name;
-    return opName;
+    if (varInfo) {
+      std::vector<int> index;
+      for (auto i : this->index)
+        index.push_back(i->eval(record));
+      return varInfo->getArrayVal(index);
+    }
+    throw std::logic_error("it's not assign");
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -308,16 +282,13 @@ namespace compiler::front::ast {
     }
   }
 
-  //binExpr分解expr的过程中生成ir
-  OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
-  }
-
   int UnaryExpression::eval(RecordTable *record) {
     //转换成binaryExpr
     auto binForm = new BinaryExpression(nullptr, 0, nullptr);
     switch (this->op) {
       case ADD:
         // binForm = new BinaryExpression();
+        binForm = new BinaryExpression(new NumberExpression(0), ADD, this->right);
         return binForm->eval(record);
       case SUB:
         binForm = new BinaryExpression(new NumberExpression(0), SUB, this->right);
@@ -333,23 +304,124 @@ namespace compiler::front::ast {
   int CommaExpression::eval(RecordTable *record) {
     return expr[expr.size() - 1]->eval(record);
   }
+}// namespace compiler::front::ast
+
+
+/*
+ *evalOp
+ */
+
+namespace compiler::front::ast {
+  OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
+    return OperatorName(this->value, Type::Imm);
+  }
+
+  OperatorName UnaryExpression::evalOp(IRList &ir, RecordTable *record) {
+    auto binForm = new BinaryExpression(nullptr, 0, nullptr);
+    switch (this->op) {
+      case ADD:
+        binForm = new BinaryExpression(new NumberExpression(0), ADD, right);
+        return binForm->evalOp(ir, record);
+      case SUB:
+        binForm = new BinaryExpression(new NumberExpression(0), SUB, right);
+        return binForm->evalOp(ir, record);
+      case NOT_EQUAL:
+        binForm = new BinaryExpression(new NumberExpression(0), EQ, right);
+        return binForm->evalOp(ir, record);
+      default:
+        throw runtime_error("undefined op");
+    }
+  }
+
+  //binExpr分解expr的过程中生成ir
+  OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
+    /*    try {
+      return this->eval(record);
+    } catch (...) {
+    }*/
+    OperatorName dest = OperatorName(record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID())), left, right;
+
+    if (this->op != AND_OP && this->op != OR_OP) {
+      /*try {
+        left = OperatorName(leftExpr->eval(record));
+      } catch (...) {
+        left = leftExpr->evalOp(ir, record);
+      }
+      try {
+        right = OperatorName(rightExpr->eval(record));
+      } catch (...) {
+        right = rightExpr->evalOp(ir, record);
+      }*/
+      left = OperatorName(leftExpr->evalOp(ir, record));
+      right = OperatorName(rightExpr->evalOp(ir, record));
+    }
+    AssignIR *assign;
+    switch (this->op) {
+      case ADD:
+        assign = new AssignIR(OperatorCode::Add, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case SUB:
+        assign = new AssignIR(OperatorCode::Sub, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case MUL:
+        assign = new AssignIR(OperatorCode::Mul, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case DIV:
+        assign = new AssignIR(OperatorCode::Div, dest, left, right);
+        ir.push_back(assign);
+        break;
+      case MOD:
+        assign = new AssignIR(OperatorCode::Mod, dest, left, right);
+        ir.push_back(assign);
+        break;
+      default:
+        throw runtime_error("undefined op");
+    }
+    return dest;
+  }
 
   OperatorName Expression::evalOp(IRList &ir, RecordTable *record) {
     throw std::runtime_error("this type of node cannot be eval");
   }
 
-  void ConditionAnalysis(BinaryExpression* cond,IRList &ir, RecordTable *record, LabelIR *target) {
-    if (cond->op == AND_OP || cond->op == OR_OP){
-      LabelIR* labelIr= new LabelIR(".L"+std::to_string(record->getID()));
-      ConditionAnalysis(static_cast<BinaryExpression*>(cond->leftExpr),ir,record,labelIr);
-      ConditionAnalysis(static_cast<BinaryExpression*>(cond->rightExpr),ir,record,labelIr);
+  //TODO
+  OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
+    auto funCall = new FunCallIR("@" + name->name);
+    OperatorName dest = OperatorName(Type::Var);
+    dest.name = "%" + std::to_string(record->getID());
+    for (auto i : args->args) {
+      auto val = i->evalOp(ir, record);
+      funCall->argList.push_back(val);
     }
-    else
-    {
+    ir.push_back(funCall);
+    return dest;
+  }
 
-    }
+  OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    auto opName = OperatorName(varInfo->value[0], Type::Var);
+    opName.name = varInfo->name;
+    return opName;
+  }
+
+  OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
+    auto varInfo = record->searchVar(this->name);
+    std::vector<int> index;
+    for (auto i : this->index)
+      index.push_back(i->eval(record));
+    auto dest = OperatorName(record->getFarther() == nullptr ? "@" + std::to_string(record->getID()) : "%" + std::to_string(record->getID()), Type::Var);
+    auto source = OperatorName(varInfo->name);
+    auto offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+    auto load = new LoadIR(dest, source, offset);
+    ir.push_back(load);
+    return dest;
   }
 }// namespace compiler::front::ast
+
+
 /*
  * store array when init;
  */
@@ -361,7 +433,7 @@ namespace compiler::front::ast {
     for (auto i : initValList) {
       auto dest = OperatorName(Type::Var);
       dest.name = arrayIRIdent;
-      auto store = new StoreIR(dest, i->eval(record), index++);
+      auto store = new StoreIR(dest, i->evalOp(ir, record), OperatorName(index++, Type::Imm));
       ir.push_back(store);
     }
   }

@@ -355,6 +355,9 @@ namespace compiler::front::ast {
       catch (runtime_error e){
         if (trueJmp)
         {
+          OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
+          AssignIR* assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+          ir.push_back(assign);
           ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
         }
         else
@@ -403,6 +406,9 @@ namespace compiler::front::ast {
         catch (runtime_error e){
           if (trueJmp)
           {
+            OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
+            AssignIR* assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+            ir.push_back(assign);
             ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
           }
           else

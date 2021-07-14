@@ -196,11 +196,11 @@ namespace compiler::front::ast {
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     cond->genIR(ir,record);
-    auto trueLabel  = new JmpIR(,".L"+std::to_string(record->getID()));
+    auto trueLabel  = new LabelIR(".L"+std::to_string(record->getID()));
     ir.push_back(trueLabel);
     this->trueBlock->genIR(ir,record);
     auto falseLabel = new LabelIR(".L"+std::to_string(record->getID()));
-    ir.push_back(trueLabel);
+    ir.push_back(falseLabel);
     this->elseBlock->genIR(ir,record);
   }
 
@@ -338,7 +338,17 @@ namespace compiler::front::ast {
     throw std::runtime_error("this type of node cannot be eval");
   }
 
+  void ConditionAnalysis(BinaryExpression* cond,IRList &ir, RecordTable *record, LabelIR *target) {
+    if (cond->op == AND_OP || cond->op == OR_OP){
+      LabelIR* labelIr= new LabelIR(".L"+std::to_string(record->getID()));
+      ConditionAnalysis(static_cast<BinaryExpression*>(cond->leftExpr),ir,record,labelIr);
+      ConditionAnalysis(static_cast<BinaryExpression*>(cond->rightExpr),ir,record,labelIr);
+    }
+    else
+    {
 
+    }
+  }
 }// namespace compiler::front::ast
 /*
  * store array when init;

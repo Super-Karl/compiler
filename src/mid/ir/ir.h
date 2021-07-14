@@ -120,7 +120,7 @@ namespace compiler::mid::ir {
   class LabelIR : public IR{
   public:
     std::string label;
-    LabelIR(IR);
+    LabelIR(std::string label):label(label){}
     LabelIR* getThis(){
       return this;
     }

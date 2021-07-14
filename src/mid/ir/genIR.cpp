@@ -239,7 +239,7 @@ namespace compiler::front::ast {
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto loopLabel = new LabelIR(".L"+ std::to_string(record->getID()));
     auto endLoopLabel = new LabelIR (".L"+std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir,record,loopLabel,endLoopLabel);
+    cond->ConditionAnalysis(ir,record,loopLabel,endLoopLabel, true);
     ir.push_back(loopLabel);
     RecordTable::pushLabelPair(loopLabel,endLoopLabel);
     this->loopBlock->genIR(ir,record);

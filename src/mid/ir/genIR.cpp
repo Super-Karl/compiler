@@ -446,14 +446,14 @@ namespace compiler::front::ast {
 
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
-    /*    try {
+        try {
       return this->eval(record);
     } catch (...) {
-    }*/
+    }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
 
     if (this->op != AND_OP && this->op != OR_OP) {
-      /*try {
+      try {
         left = OperatorName(leftExpr->eval(record));
       } catch (...) {
         left = leftExpr->evalOp(ir, record);
@@ -462,9 +462,9 @@ namespace compiler::front::ast {
         right = OperatorName(rightExpr->eval(record));
       } catch (...) {
         right = rightExpr->evalOp(ir, record);
-      }*/
-      left = OperatorName(leftExpr->evalOp(ir, record));
-      right = OperatorName(rightExpr->evalOp(ir, record));
+      }
+/*      left = OperatorName(leftExpr->evalOp(ir, record));
+      right = OperatorName(rightExpr->evalOp(ir, record));*/
     }
     AssignIR *assign;
     switch (this->op) {
@@ -589,5 +589,9 @@ namespace compiler::front::ast {
       auto varUse = VarRedefChain("", initValList[i]->eval(record), true);
       array->addVarUse(varUse, {i});
     }
+  }
+
+  OperatorName ArrayIdentifier::evalIndex(IRList &ir, RecordTable *record) {
+
   }
 }// namespace compiler::front::ast

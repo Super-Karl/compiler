@@ -58,7 +58,11 @@ namespace compiler {
       virtual vector<Expression *> getIndex() {
         vector<Expression *> index;
         return index;
-      }
+      };
+
+      virtual OperatorName evalIndex(IRList &ir, RecordTable *record) {
+        throw std::runtime_error("this node cannot evalIndex");
+      };
     };
 
     class ArrayIdentifier : public Identifier {
@@ -76,6 +80,8 @@ namespace compiler {
       vector<Expression *> getIndex() override {
         return this->index;
       };
+
+      OperatorName evalIndex(IRList &ir, RecordTable *record) override;
     };
 
     class Stmt : public Expression {

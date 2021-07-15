@@ -181,14 +181,14 @@ namespace compiler::front::ast {
     //对函数体生成ir
     body->genIR(funcdef->funcBody, newTable);
 
-    ir.push_back(funcdef);
-
     RetIR *ret;
     if (this->retType == INT) {
       ret = new RetIR(OperatorName(0, Type::Var));
     } else
       ret = new RetIR(OperatorName(Type::Void));
-    ir.push_back(ret);
+    funcdef->funcBody.push_back(ret);
+
+    ir.push_back(funcdef);
   }
 
   //完成
@@ -210,15 +210,15 @@ namespace compiler::front::ast {
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto ifLabel = new LabelIR(".L"+std::to_string(record->getID()));
-    auto elseLabel = new LabelIR (".L"+std::to_string(record->getID()));
-    auto endLabel = new LabelIR(".L"+std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir,record,ifLabel,elseLabel, true);
+    auto ifLabel = new LabelIR(".L" + std::to_string(record->getID()));
+    auto elseLabel = new LabelIR(".L" + std::to_string(record->getID()));
+    auto endLabel = new LabelIR(".L" + std::to_string(record->getID()));
+    cond->ConditionAnalysis(ir, record, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
-    trueBlock->genIR(ir,record);
-    ir.push_back(new JmpIR(OperatorCode::Jmp,endLabel));
+    trueBlock->genIR(ir, record);
+    ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    this->elseBlock->genIR(ir,record);
+    this->elseBlock->genIR(ir, record);
     ir.push_back(endLabel);
   }
 
@@ -233,22 +233,22 @@ namespace compiler::front::ast {
   }
 
   void BreakStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    ir.emplace_back(new JmpIR(OperatorCode::Jmp,RecordTable::getTopLabel().second));
+    ir.emplace_back(new JmpIR(OperatorCode::Jmp, RecordTable::getTopLabel().second));
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto loopLabel = new LabelIR(".L"+ std::to_string(record->getID()));
-    auto endLoopLabel = new LabelIR (".L"+std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir,record,loopLabel,endLoopLabel, true);
+    auto loopLabel = new LabelIR(".L" + std::to_string(record->getID()));
+    auto endLoopLabel = new LabelIR(".L" + std::to_string(record->getID()));
+    cond->ConditionAnalysis(ir, record, loopLabel, endLoopLabel, true);
     ir.push_back(loopLabel);
-    RecordTable::pushLabelPair(loopLabel,endLoopLabel);
-    this->loopBlock->genIR(ir,record);
+    RecordTable::pushLabelPair(loopLabel, endLoopLabel);
+    this->loopBlock->genIR(ir, record);
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    ir.emplace_back(new JmpIR(OperatorCode::Jmp,RecordTable::getTopLabel().first));
+    ir.emplace_back(new JmpIR(OperatorCode::Jmp, RecordTable::getTopLabel().first));
   }
 }// namespace compiler::front::ast
 
@@ -342,35 +342,30 @@ namespace compiler::front::ast {
    * condition Analysis
    *
    * */
-  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *ifLabel,LabelIR *elLable,bool trueJmp){
-    try{
-      if(this->eval(record)){
-        ir.emplace_back(new JmpIR(OperatorCode::Jmp,ifLabel));
+  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLable, bool trueJmp) {
+    try {
+      if (this->eval(record)) {
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
+      } else {
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLable));
       }
-      else{
-        ir.emplace_back(new JmpIR(OperatorCode::Jmp,elLable));
-      }
-    }catch(runtime_error e) {
-      try{
-        this->evalOp(ir,record);
-        ir.emplace_back(new JmpIR(OperatorCode::Jne,ifLabel));
-      }
-      catch (runtime_error e){
-        if (trueJmp)
-        {
+    } catch (runtime_error e) {
+      try {
+        this->evalOp(ir, record);
+        ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
+      } catch (runtime_error e) {
+        if (trueJmp) {
           OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
-          AssignIR* assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+          AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
           ir.push_back(assign);
-          ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
-        }
-        else
-        {
+          ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
+        } else {
           //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),)));
         }
       }
     }
   }
-  void BinaryExpression::ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR*ifLabel,LabelIR* elLabel,bool trueJmp) {
+  void BinaryExpression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp) {
 
 
     /*
@@ -380,43 +375,34 @@ namespace compiler::front::ast {
      *
      * 当前的简单策略，将每一个表达式拆分成if else两种结果，根据表达式含义推断跳转的位置
     */
-    if (this->op == AND_OP ){
-      LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
-      leftExpr->ConditionAnalysis(ir,record,innerLabel,elLabel,true);
+    if (this->op == AND_OP) {
+      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      leftExpr->ConditionAnalysis(ir, record, innerLabel, elLabel, true);
       ir.push_back(innerLabel);
-      rightExpr->ConditionAnalysis(ir,record, ifLabel,elLabel, true);
-    }
-    else if (this->op == OR_OP){
-      LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
-      leftExpr->ConditionAnalysis(ir,record, ifLabel,innerLabel, true);
+      rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
+    } else if (this->op == OR_OP) {
+      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      leftExpr->ConditionAnalysis(ir, record, ifLabel, innerLabel, true);
       ir.push_back(innerLabel);
-      rightExpr->ConditionAnalysis(ir,record,ifLabel,elLabel,true);
-    }
-    else
-    {
-      try{
-        if(this->eval(record)){
-          ir.emplace_back(new JmpIR(OperatorCode::Jmp,ifLabel));
+      rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
+    } else {
+      try {
+        if (this->eval(record)) {
+          ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
+        } else {
+          ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLabel));
         }
-        else
-        {
-          ir.emplace_back(new JmpIR(OperatorCode::Jmp,elLabel));
-        }
-      }catch(runtime_error e) {
-        try{
-          this->evalOp(ir,record);
-          ir.emplace_back(new JmpIR(OperatorCode::Jne,ifLabel));
-        }
-        catch (runtime_error e){
-          if (trueJmp)
-          {
+      } catch (runtime_error e) {
+        try {
+          this->evalOp(ir, record);
+          ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
+        } catch (runtime_error e) {
+          if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
-            AssignIR* assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+            AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
-            ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getRelOpCode(),ifLabel)));
-          }
-          else
-          {
+            ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
+          } else {
             //没有else
             //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),elLabel)));
           }
@@ -456,7 +442,7 @@ namespace compiler::front::ast {
 
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
-        try {
+    try {
       return this->eval(record);
     } catch (...) {
     }
@@ -473,7 +459,7 @@ namespace compiler::front::ast {
       } catch (...) {
         right = rightExpr->evalOp(ir, record);
       }
-/*      left = OperatorName(leftExpr->evalOp(ir, record));
+      /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
     }
     AssignIR *assign;
@@ -546,7 +532,7 @@ namespace compiler::front::ast {
     return dest;
   }
 
-  OperatorCode BinaryExpression::getRelOpCode(){
+  OperatorCode BinaryExpression::getRelOpCode() {
     switch (op) {
       case LT:
         return mid::ir::OperatorCode::Jl;
@@ -602,6 +588,5 @@ namespace compiler::front::ast {
   }
 
   OperatorName ArrayIdentifier::evalIndex(IRList &ir, RecordTable *record) {
-
   }
 }// namespace compiler::front::ast

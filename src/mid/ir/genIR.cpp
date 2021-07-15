@@ -381,7 +381,7 @@ namespace compiler::front::ast {
       LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir,record,innerLabel,elLabel,true);
       ir.push_back(innerLabel);
-      rightExpr->ConditionAnalysis(ir,record, ifLabel,elLabel, true)
+      rightExpr->ConditionAnalysis(ir,record, ifLabel,elLabel, true);
     }
     else if (this->op == OR_OP){
       LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));

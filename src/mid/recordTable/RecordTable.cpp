@@ -113,6 +113,7 @@ namespace compiler::mid::ir {
 }// namespace compiler::mid::ir
 
 namespace compiler::mid::ir{
+  std::stack<std::pair<LabelIR*,LabelIR*>> RecordTable::labelPairs;
   void RecordTable::pushLabelPair(LabelIR* label1,LabelIR* label2){
     labelPairs.push(std::make_pair(label1,label2));
   }

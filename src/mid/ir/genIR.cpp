@@ -396,12 +396,14 @@ namespace compiler::front::ast {
         try {
           this->evalOp(ir, record);
           ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
+          ir.emplace_back(new JmpIR(OperatorCode::Jeq,elLabel));
         } catch (runtime_error e) {
           if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
             AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
+            ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getAntiRelOpCode(), ifLabel)));
           } else {
             //没有else
             //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),elLabel)));

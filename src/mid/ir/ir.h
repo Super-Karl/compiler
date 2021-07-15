@@ -193,6 +193,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() override{
+      std::cout<<'\t';
       printOpCode(operatorCode);
       std::cout<<'\n';
     }

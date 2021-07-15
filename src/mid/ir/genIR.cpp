@@ -347,6 +347,9 @@ namespace compiler::front::ast {
       if(this->eval(record)){
         ir.emplace_back(new JmpIR(OperatorCode::Jmp,ifLabel));
       }
+      else{
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp,elLable));
+      }
     }catch(runtime_error e) {
       try{
         this->evalOp(ir,record);
@@ -386,6 +389,7 @@ namespace compiler::front::ast {
     else if (this->op == OR_OP){
       LabelIR *innerLabel = new LabelIR(".L"+std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir,record, ifLabel,innerLabel, true);
+      ir.push_back(innerLabel);
       rightExpr->ConditionAnalysis(ir,record,ifLabel,elLabel,true);
     }
     else
@@ -396,7 +400,7 @@ namespace compiler::front::ast {
         }
         else
         {
-          //别跳了
+          ir.emplace_back(new JmpIR(OperatorCode::Jmp,elLabel));
         }
       }catch(runtime_error e) {
         try{

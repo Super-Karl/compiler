@@ -27,6 +27,8 @@ namespace compiler::controller {
     compiler::front::ast::AST *generate(FILE *input = stdin);
 
     compiler::mid::ir::IRList genIR(compiler::front::ast::AST *root);
+
+    void printIR(compiler::mid::ir::IRList ir);
   }// namespace generator
 }// namespace compiler::controller
 

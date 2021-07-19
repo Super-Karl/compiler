@@ -66,7 +66,7 @@ namespace compiler::back{
         SWP,
         TEQ,
         TST,
-
+        NOP,
     };//TODO 加上除法(没有除法?)
     enum class BarCode{
         //生成的条件码
@@ -84,66 +84,72 @@ namespace compiler::back{
         LT,
         GT,
         LE,
-        AL
+        AL,
+        BNOP
     };
     enum class Suffix{
         //指令的后缀,只有!和 S两种
         S,
-        !,//这里可以直接加!吗
+        e_mark,//指!
+        SNOP
     };
+    //加点或符号会标错,所以用其他符号先代替
     enum class EQUKeywords{
         //定义伪操作
-       .byte,
-       .hword,
-       .short,
-       .word,
-       .int,
-       .quad,
-       .float,
-       .double,
-       .ascii,
-       .asciz,
-       .zero,
-       .space,
-       .code32,
-       .code16,
-       .fpu,
-       .section,
-       .text,
-       .data,
-       .bss,
-       .align,
-       .type,
-       .size,
-       .org,
-       .global,
-       .include,
-       .end,
+       byte,
+       hword,
+       Eshort,
+       word,
+       Eint,
+       quad,
+       Efloat,
+       Edouble,
+       ascii,
+       asciz,
+       zero,
+       space,
+       code32,
+       code16,
+       fpu,
+       section,
+       text,
+       data,
+       bss,
+       align,
+       type,
+       size,
+       org,
+       global,
+       include,
+       end,
        _start,
-       .macro,
-       .endm,
-       .exitm,
-       .ifdef,
-       .else,
-       .endif,
-       .rept,
-       .equ,
-       .list,
-       .nolist,
-       .req,
-       .unreq,
-       .pool
+       macro,
+       endm,
+       exitm,
+       ifdef,
+       Eelse,
+       endif,
+       rept,
+       equ,
+       list,
+       nolist,
+       req,
+       unreq,
+       pool,
+       nop
     };
+    //前面应该加上%
     enum class TYPE{
-        %object,
-        %function
+        object,
+        function
     };
 
     //现在是标号域
     class LABEL{
     public:
-        std::String LabelName;
+        std::string LabelName;
         LABEL(std::string name):LabelName(name){};
+        LABEL(){};
     };
 
     //操作助记符域
@@ -154,7 +160,9 @@ namespace compiler::back{
         BarCode barcode;
         OPERATION(Instruction instr,BarCode bcode):instruction(instr),barcode(bcode){};
         OPERATION(Instruction instr):instruction(instr){};
+        OPERATION(){};
     };
+
     //操作数域
     //寄存器后面可能会跟一个如LSL#1,代表左移三位,所以需要定义一个类来作为这个操作
     class OffsetOperate{
@@ -168,7 +176,7 @@ namespace compiler::back{
     public:
      OperateNum() = default;
      virtual OperateNum *getThis(){
-         return *this;
+         return this;
      }
     };
     //定义操作数,包括变量,常量,寄存器,表达式
@@ -181,15 +189,15 @@ namespace compiler::back{
         OffsetOperate offsetoperate;
         //TODO 完成这个类的构造,并不确定是否需要这个
         Direct_Reg(std::string name,Instruction instr,int num);
-        Direct_Reg(std::name, Suffix suf);
+        Direct_Reg(std::string name, Suffix suf);
         Direct_Reg(std::string name);
         Direct_Reg *getThis() override {
-            return *this;
+            return this;
         }
     };
     class Indirect_Reg:public OperateNum{
     public:
-        std::string RegNum;
+        std::string RegName;
         int RegNum;
         int Offset;
         //TODO 完成这两个类的构造,并不确定是否需要这个
@@ -202,7 +210,7 @@ namespace compiler::back{
         int value;
         ImmNum(int num):value(num){};
         ImmNum *getThis() override{
-            return *this;
+            return this;
         }
     };
 
@@ -211,23 +219,25 @@ namespace compiler::back{
         int value;
         ConstNum(int num):value(num){};
         ConstNum *getThis() override{
-            return *this;
+            return this;
         }
     };
 //操作数域
     class OPERAND{
     public:
         //TODO 最多只有三个操作数(?)
-        OperateNum *OPERAND1;//这个只能是寄存器类型,为了统一,所以直接使用指针
-        OperateNum *OPERAND2;
-        OperateNum *OPERAND3;
-        OPERAND(OperateNum operand1 = nullptr,OperateNum operand2 = nullptr,OperateNum operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3);
+        OperateNum *OPERAND1=nullptr;//这个只能是寄存器类型,为了统一,所以直接使用指针
+        OperateNum *OPERAND2=nullptr;
+        OperateNum *OPERAND3=nullptr;
+        //OPERAND(){};
+        OPERAND(OperateNum *operand1 = nullptr,OperateNum *operand2 = nullptr,OperateNum *operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3){};
     };
 //三大部分构造完毕,注释域不用管
 //将三大部分整合成一个语句
     class Sentence{
-        SENTENCE() = default;
-        virtual SENTENCE  *getThis(){
+    public:
+        Sentence() = default;
+        virtual Sentence  *getThis(){
             return this;
         }
     };
@@ -238,6 +248,7 @@ namespace compiler::back{
         OPERATION operation;
         OPERAND operand;
         LABEL b_label;//跳转的话是直接LABEL
+        //Instr_Sentence()=default;
         Instr_Sentence(LABEL label1,OPERATION operation1,OPERAND operand1): label(label1), operation(operation1),operand(operand1){};
         Instr_Sentence(OPERATION operation1,OPERAND operand1): operation(operation1), operand(operand1){};
         Instr_Sentence(LABEL label1):label(label1){};
@@ -254,7 +265,7 @@ namespace compiler::back{
     class BlockDeclaration:public  Sentence{
     public:
         BarCode barcode;
-        BlockDeclare(BarCode bcode):barcode(bcode);
+        BlockDeclaration(BarCode bcode):barcode(bcode){};
         BlockDeclaration *getThis() override{
             return this;
         }
@@ -271,10 +282,10 @@ namespace compiler::back{
     };
     class TypeDeclaration:public  Sentence{
     public:
-        BarCode barcode;
+        BarCode barcode;//???
         LABEL label;
         TYPE type;
-        VarDeclaration(BarCode bcode,LABEL label1,TYPE type1):barcode(bcode), label(label1),type(type1){};
+        TypeDeclaration(BarCode bcode,LABEL label1,TYPE type1):barcode(bcode), label(label1),type(type1){};
         TypeDeclaration *getThis() override{
             return this;
         }

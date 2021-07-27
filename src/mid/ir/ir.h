@@ -117,7 +117,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print(){
-      std::cout<<".Function Name:  "<<name<<"\n";
+      std::cout<<name<<':'<<"\n";
       for (auto &i:argList){
         printOpName(i,' ');
       }
@@ -125,7 +125,6 @@ namespace compiler::mid::ir {
       for (auto &i:funcBody){
         i->print();
       }
-      std::cout<<name<<"%End:\n";
     }
   };
 

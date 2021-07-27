@@ -97,12 +97,10 @@ namespace compiler::mid::ir {
     void print(){
       std::cout<<'\t';
       printOpCode(OperatorCode::Call);
-      std::cout<<".Name:"<<funcName<<"\n";
+      std::cout<<funcName<<' ';
       for (auto &i:argList){
         printOpName(i,' ');
       }
-      std::cout<<funcName<<"%Start: ";
-
     }
   };
 
@@ -212,7 +210,7 @@ namespace compiler::mid::ir {
     void print() override{
       std::cout<<'\t';
       printOpCode(Opcode);
-      std::cout<<size<<','<<name<<"\n";
+      std::cout<<name<<", 4byte *"<<size<<"\n";
     }
   };
 

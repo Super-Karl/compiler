@@ -101,6 +101,7 @@ namespace compiler::mid::ir {
       for (auto &i:argList){
         printOpName(i,' ');
       }
+      std::cout<<std::endl;
     }
   };
 
@@ -117,11 +118,11 @@ namespace compiler::mid::ir {
       return this;
     }
     void print(){
-      std::cout<<name<<':'<<"\n";
+      std::cout<<name<<':'<<" & ";
       for (auto &i:argList){
         printOpName(i,' ');
       }
-      std::cout<<name<<"%Start:\n";
+      std::cout<<'\n';
       for (auto &i:funcBody){
         i->print();
       }
@@ -192,6 +193,7 @@ namespace compiler::mid::ir {
     void print() override{
       std::cout<<'\t';
       printOpCode(operatorCode);
+      printOpName(retVal,' ');
       std::cout<<'\n';
     }
   };

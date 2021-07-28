@@ -6,6 +6,7 @@
 #define COMPILER_IR_H
 
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace compiler::mid::ir {
@@ -69,8 +70,8 @@ namespace compiler::mid::ir {
     Label,
     Ret,
     Nop,
-    Assign,
-    Alloca
+    Mov,
+    Alloca,
   };
   void printOpCode(OperatorCode op);
   void printOpName(OperatorName op,char sp = '\n');
@@ -94,8 +95,8 @@ namespace compiler::mid::ir {
     FunCallIR *getThis() override {
       return this;
     }
-    void print(){
-      std::cout<<'\t';
+    void print() {
+      std::cout << '\t';
       printOpCode(OperatorCode::Call);
       std::cout<<funcName<<' ';
       for (auto &i:argList){
@@ -137,7 +138,10 @@ namespace compiler::mid::ir {
 
     AssignIR() = default;
 
-    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(source1), source2(std::move(source2)){};
+    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(std::move(source1)), source2(std::move(source2)){};
+
+    AssignIR(OperatorName dest, OperatorName  source, OperatorCode opcode = OperatorCode::Mov) : dest(std::move(dest)), source1(std::move(source)), operatorCode(opcode){};
+
     AssignIR *getThis() override {
       return this;
     }

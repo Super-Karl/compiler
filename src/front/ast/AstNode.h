@@ -30,7 +30,7 @@ namespace compiler {
     public:
       virtual int eval(RecordTable *record);
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
-      virtual void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel,LabelIR *elLabel,bool trueJmp);
+      virtual void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp);
     };
 
     class ArrayInitVal : public Expression {
@@ -249,6 +249,8 @@ namespace compiler {
       void print(int depth = 0, bool isEnd = false) override;
 
       OperatorName evalOp(IRList &ir, RecordTable *record);
+
+      void genIR(IRList &ir, RecordTable *record) override;
     };
 
     /**
@@ -292,7 +294,7 @@ namespace compiler {
 
       OperatorName evalOp(IRList &ir, RecordTable *record);
 
-      void ConditionAnalysis(IRList &ir, RecordTable *record,LabelIR *ifLabel,LabelIR *elLabel,bool trueJmp);
+      void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp);
 
       OperatorCode getRelOpCode();
       OperatorCode getAntiRelOpCode();

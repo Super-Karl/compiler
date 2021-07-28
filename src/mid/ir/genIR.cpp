@@ -1,4 +1,3 @@
-
 // Created by wnx on 2021/7/5.
 //
 #include "front/ast/AstNode.h"
@@ -146,7 +145,7 @@ namespace compiler::front::ast {
     } else {
       auto assign = new AssignIR();
       assign->source1 = rightExpr->evalOp(ir, record);
-      assign->operatorCode = OperatorCode::Assign;
+      assign->operatorCode = OperatorCode::Mov;
       assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
       ir.push_back(assign);
 
@@ -250,6 +249,10 @@ namespace compiler::front::ast {
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     ir.emplace_back(new JmpIR(OperatorCode::Jmp, RecordTable::getTopLabel().first));
   }
+
+  void FunctionCall::genIR(IRList &ir, RecordTable *record) {
+    this->evalOp(ir, record);
+  }
 }// namespace compiler::front::ast
 
 /*
@@ -278,7 +281,7 @@ namespace compiler::front::ast {
     std::vector<int> index;
     for (auto i : this->index)
       index.push_back(i->eval(record));
-    if (varInfo->canAssign(index))
+    if (varInfo->isConst && varInfo->canAssign(index))
       return varInfo->getArrayVal(index);
     throw std::logic_error("it cannot assign");
   }
@@ -396,7 +399,7 @@ namespace compiler::front::ast {
         try {
           this->evalOp(ir, record);
           ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
-          ir.emplace_back(new JmpIR(OperatorCode::Jeq,elLabel));
+          ir.emplace_back(new JmpIR(OperatorCode::Jeq, elLabel));
         } catch (runtime_error e) {
           if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
@@ -516,21 +519,66 @@ namespace compiler::front::ast {
   //TODO 下标canAssign为false的情况
   OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
-    std::vector<int> index;
-    for (auto i : this->index)
-      index.push_back(i->eval(record));
 
-    OperatorName offset;
+    auto dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + std::to_string(record->getID()), Type::Var);
+    auto source = OperatorName(varInfo->arrayName);
     try {
-      offset = OperatorName(varInfo->getArrayVal(index), Type::Imm);
+      OperatorName offset;
+      std::vector<int> index;
+      for (auto i : this->index)
+        index.push_back(i->eval(record));
+
+      offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+      auto load = new LoadIR(dest, source, offset);
+      ir.push_back(load);
+      return dest;
     } catch (...) {
     }
 
-    auto dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + std::to_string(record->getID()), Type::Var);
-    auto source = OperatorName(varInfo->arrayName, Type::Var);
-    offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
-    auto load = new LoadIR(dest, source, offset);
-    ir.push_back(load);
+    if (this->index.size() == 1) {
+      auto load = new LoadIR(dest, source, this->index[0]->evalOp(ir, record));
+      ir.push_back(load);
+    } else {
+      //维度大于一的情况下,需要从最低维开始计算偏移量
+      auto tmpSize = OperatorName("%" + to_string(record->getID()));
+      //最低维的目标变量(ir)
+      auto indexContainer = OperatorName("%" + to_string(record->getID()));
+      //最低维的大小,是一个立即数
+      auto vSize = OperatorName("", Type::Imm);
+      vSize.value = varInfo->shape[varInfo->shape.size() - 1];
+      //把最后一个维度的值赋值给一个寄存器(mov
+      auto assign = new AssignIR(tmpSize, vSize);
+      ir.push_back(assign);
+
+      for (auto i = this->index.size() - 1; i >= 0; i--) {
+        if (i == this->index.size() - 1) {
+          auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
+          ir.push_back(mov);
+        } else {
+          auto tmp = OperatorName("%" + to_string(record->getID()));
+          auto tmp2 = OperatorName("%" + to_string(record->getID()));
+          auto t = new AssignIR(OperatorCode::Mul, tmp, tmpSize, this->index[i]->evalOp(ir, record));
+          ir.push_back(t);
+
+          auto add = new AssignIR(OperatorCode::Add, tmp2, indexContainer, tmp);
+          ir.push_back(add);
+          //已经处理的偏移量
+          indexContainer = tmp2;
+
+          //更新尺寸
+          if (i != 0) {
+            auto tmp = OperatorName("%" + to_string(record->getID()));
+            auto mul = new AssignIR(OperatorCode::Mul, tmp, tmpSize, this->index[i]->evalOp(ir, record));
+            ir.push_back(mul);
+            tmpSize = tmp;
+          }
+        }
+      }
+
+      auto load = new LoadIR(dest, source, indexContainer);
+      ir.push_back(load);
+    }
+
     return dest;
   }
 

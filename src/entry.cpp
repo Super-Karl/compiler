@@ -13,8 +13,6 @@ int main(int argc, char **argv) {
 
   auto root = compiler::controller::generator::generate(argParser->input);
   auto ir = compiler::controller::generator::genIR(root);
-  if (argParser->printAST)
-    root->print();
   compiler::controller::generator::printIR(ir);
   return 0;
 }

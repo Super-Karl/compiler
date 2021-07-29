@@ -115,6 +115,11 @@ namespace compiler::back {
                             backlist.push_back(new MOVE(0,vartable[nowfunc][name]->index,"reg2reg"));
                             break;
                         }
+                        case NumberExpressionType:
+                        {
+                            int value = static_cast<NumberExpression*>(static_cast<ReturnStatement *>((*item))->returnExp)->value;
+                            backlist.push_back(new MOVE(0,value));
+                        }
                     }
                     break;
                 }

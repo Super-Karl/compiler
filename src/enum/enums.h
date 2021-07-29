@@ -2,6 +2,48 @@
 // Created by karl on 2021/7/7.
 //
 
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
+enum yytokentype
+{
+    IDENTIFIER = 258,
+    NUM = 259,
+    IF = 260,
+    ELSE = 261,
+    BREAK = 262,
+    CONTINUE = 263,
+    RETURN = 264,
+    WHILE = 265,
+    CONST = 266,
+    INT = 267,
+    VOID = 268,
+    ADD = 269,
+    SUB = 270,
+    MOD = 271,
+    MUL = 272,
+    DIV = 273,
+    NOT_EQUAL = 274,
+    LT = 275,
+    GT = 276,
+    LE = 277,
+    GE = 278,
+    AND_OP = 279,
+    OR_OP = 280,
+    EQ = 281,
+    NE = 282,
+    LBRACKET = 283,
+    RBRACKET = 284,
+    LBRACE = 285,
+    RBRACE = 286,
+    LSQARE = 287,
+    RSQARE = 288,
+    ASSIGN = 289,
+    COLON = 290,
+    COMMA = 291,
+    SEMI = 292
+};
+#endif
+
 #ifndef COMPILER_ENUMS_H
 #define COMPILER_ENUMS_H
 

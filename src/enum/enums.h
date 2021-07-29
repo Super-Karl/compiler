@@ -39,4 +39,23 @@ enum AstNodeType {
     ConstArrayType,
     ArrayDeclareWithInitType
 };
+
+enum LableType{
+    FunctionType,
+    LoopType,
+    IfType,
+    ElseType,
+    WhileType
+};
+
+enum ThreeSourceType{
+    ADD3,
+    SUB3,
+    STR3,
+    LDR
+};
+
+enum TwoSourceTyoe{
+    MOV,
+};
 #endif //COMPILER_ENUMS_H

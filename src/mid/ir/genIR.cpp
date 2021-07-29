@@ -204,12 +204,49 @@ namespace compiler::front::ast {
 
   //完成
   void FunctionDefArgList::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    for (auto i : args)
-      i->genIR(ir, record);
+    for (int i = 0; i < this->args.size(); ++i) {
+      auto ident = dynamic_cast<ArrayIdentifier *>(args[i]->name);
+      if (ident) {
+        vector<int> shape;
+        int size = 1;
+        for (auto i : ident->index) {
+          shape.push_back(i->eval(record));
+          size *= i->eval(record);
+        }
+        auto token = "%" + to_string(record->getID());
+        auto dest = OperatorName(token);
+        auto source = OperatorName("$" + to_string(i));
+        auto assign = new AssignIR(dest, source);
+
+        vector<int> val;
+        val.resize(size, INT32_MIN);
+
+        auto var = new VarInfo(ident->name, shape, val, false);
+
+        record->insertVar(ident->name, var);
+        ir.push_back(assign);
+      } else {
+        string token = "%" + to_string(record->getID());
+        auto dest = OperatorName(token);
+        auto source = OperatorName("$" + to_string(i));
+        auto assign = new AssignIR(dest, source);
+        ir.push_back(assign);
+        auto var = new VarInfo(this->args[i]->name->name, INT32_MIN);
+        record->insertVar(this->args[i]->name->name, var);
+      }
+    }
   }
   //fine
   void FunctionDefArg::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto varInfo = new VarInfo(name->name, INT32_MIN);
+    auto ident = dynamic_cast<ArrayIdentifier *>(this);
+    if (ident) {
+
+    } else {
+      string token = "%" + to_string(record->getID());
+      auto dest = VarInfo(token, INT32_MIN);
+      auto assign = new AssignIR();
+    }
     record->insertVar(name->name, varInfo);
   }
   //完成

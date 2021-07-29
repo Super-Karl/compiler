@@ -242,7 +242,7 @@ namespace compiler {
 
     class FunctionDefArgList : public Expression {
     public:
-      list<FunctionDefArg *> args;
+      vector<FunctionDefArg *> args;
 
       FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type){};
 

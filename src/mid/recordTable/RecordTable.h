@@ -40,7 +40,7 @@ namespace compiler::mid::ir {
     std::vector<std::list<VarRedefChain>> varUse;//TODO试图用varRedefChain 表示变量的def链,use变量的时候实际使用的是def list的顶层
 
     VarInfo(std::string name, int value, bool canAssign = false, bool isConst = false);
-    VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst = false);
+    VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool canAssign = true, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst = false);
     VarInfo(){};
     //可用{}将形状框起传参

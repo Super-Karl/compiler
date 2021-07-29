@@ -1,7 +1,7 @@
 %{
 #include<iostream>
 #include<string>
-#include "../ast/AstNode.h"
+#include "front/ast/AstNode.h"
 #include "parser.hpp"
 
 

@@ -1,9 +1,9 @@
 %{
-#include "../ast/AstNode.h"
+#include "front/ast/AstNode.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include "../../controller/controller.h"
+#include "controller/controller.h"
 //using parser::ast;
 
 using compiler::controller::generator::root;

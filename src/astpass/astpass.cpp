@@ -2,9 +2,6 @@
 // Created by karl on 2021/7/7.
 //
 #include "astpass.h"
-#include "parser.hpp"
-#include <unordered_map>
-#include <iostream>
 
 using namespace compiler::front::ast;
 

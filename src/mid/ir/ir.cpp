@@ -111,8 +111,8 @@ namespace compiler::mid::ir {
     }
   }
 
-  void printOpName(OperatorName op, char sp) {
-    if (sp == '\n')
+  void printOpName(OperatorName op, char sp,bool notEnd) {
+    if (notEnd && sp == '\n')
       std::cout << '\t';
     switch (op.type) {
       case Type::Imm:

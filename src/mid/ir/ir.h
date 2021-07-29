@@ -74,7 +74,7 @@ namespace compiler::mid::ir {
     Alloca,
   };
   void printOpCode(OperatorCode op);
-  void printOpName(OperatorName op, char sp = '\n');
+  void printOpName(OperatorName op, char sp = '\n',bool = true);
   class IR {
   public:
     IR(){};
@@ -104,7 +104,14 @@ namespace compiler::mid::ir {
       for (auto &i : argList) {
         printOpName(i, ' ');
       }
-      std::cout << std::endl;
+      if (retType == ElemType::VOID)
+        std::cout << std::endl;
+      else
+      {
+        std::cout <<"& ";
+        printOpName(retOp,'\n',0);
+      }
+
     }
   };
 
@@ -121,7 +128,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() {
-      std::cout << name << ':' << " & ";
+      std::cout << name << ':' << " ";
       for (auto &i : argList) {
         printOpName(i, ' ');
       }

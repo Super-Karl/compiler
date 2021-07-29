@@ -25,5 +25,13 @@ int main(int argc, char **argv) {
     //生成后端
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);
     compiler::back::printASM(backlist);
+
+    string filename = string(argv[2]);
+    ofstream outfile;
+    outfile.open(filename.substr(0, filename.size()-1));
+    for(auto i:backlist)
+    {
+        outfile<<i->getFullIns();
+    }
     return 0;
 }

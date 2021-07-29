@@ -33,12 +33,6 @@ namespace compiler::back {
         for (auto i:list) {
             i->print();
         }
-        ofstream outfile;
-        outfile.open("test.s");
-        for(auto i:list)
-        {
-            outfile<<i->getFullIns();
-        }
     }
 
 

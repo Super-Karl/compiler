@@ -5,6 +5,7 @@
 #include "back.h"
 #include "generateBack.h"
 #include <list>
+#include <fstream>
 #include <front/ast/AstNode.h>
 #include <unordered_map>
 
@@ -31,6 +32,12 @@ namespace compiler::back {
     void printASM(list<compiler::back::INS *> &list) {
         for (auto i:list) {
             i->print();
+        }
+        ofstream outfile;
+        outfile.open("test.s");
+        for(auto i:list)
+        {
+            outfile<<i->getFullIns();
         }
     }
 

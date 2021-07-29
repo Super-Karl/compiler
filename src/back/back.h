@@ -55,6 +55,8 @@ namespace compiler::back {
         INS(INSType insType1) : insType(insType1) {}
 
         void print() { cout << fullIns; }
+
+        string getFullIns() { return fullIns; }
     };//基类
 
     class MACRO : public INS {
@@ -85,29 +87,30 @@ namespace compiler::back {
         }
     };
 
-    class FUNC:public INS{
+    class FUNC : public INS {
     public:
         string name;
-        FUNC(string name):name(name), INS(funcLable){
-            fullIns=".text\n"
-                    ".global\t"+name+"\n"
-                    ".type\t"+name+",\t%function\n"+
-                    name+":\n";
+
+        FUNC(string name) : name(name), INS(funcLable) {
+            fullIns = ".text\n"
+                      ".global\t" + name + "\n"
+                                           ".type\t" + name + ",\t%function\n" +
+                      name + ":\n";
         }
     };
 
     class STMDB : public INS {
     public:
         STMDB() : INS(stmdb) {
-            fullIns = "\tstmdb\tsp!\t{fp, lr}\n"
-                      "\tadd\tfp\tsp\t#4\n";
+            fullIns = "\tstmdb\tsp!,{fp, lr}\n"
+                      "\tadd\tfp,sp,#4\n";
         }
     };
 
     class LDMIA : public INS {
     public:
         LDMIA() : INS(ldmia) {
-            fullIns = "\tldmia\tsp!\t{fp, lr}\n"
+            fullIns = "\tldmia\tsp!,{fp, lr}\n"
                       "\tbx\tlr";
         }
     };
@@ -122,15 +125,15 @@ namespace compiler::back {
         }
     };
 
-    class MOVE:public INS{
+    class MOVE : public INS {
     public:
-        MOVE(int reg,int value): INS(move16){
-            fullIns="\tmove\tr"+to_string(reg)+"\t#"+to_string(value)+"\n";
+        MOVE(int reg, int value) : INS(move16) {
+            fullIns = "\tmov\tr" + to_string(reg) + ",#" + to_string(value) + "\n";
         }
-        MOVE(int reg,int value,string type): INS(move16){
-            if(type=="reg2reg")
-            {
-                fullIns="\tmove\tr"+to_string(reg)+"\tr"+to_string(value)+"\n";
+
+        MOVE(int reg, int value, string type) : INS(move16) {
+            if (type == "reg2reg") {
+                fullIns = "\tmov\tr" + to_string(reg) + ",r" + to_string(value) + "\n";
             }
         }
     };

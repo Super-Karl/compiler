@@ -4,7 +4,6 @@
 
 #include "RecordTable.h"
 #include <iostream>
-#include <vector>
 #include <stack>
 #include <vector>
 
@@ -111,17 +110,29 @@ namespace compiler::mid::ir {
       this->varUse[0].push_front(var);
     }
   }
+
+  ElemType RecordTable::getFunRet(std::string funcName) {
+    auto tmp = funDecl.find(funcName);
+    if (tmp != funDecl.end())
+      return funDecl[funcName];
+    else if (this->father != nullptr)
+      return father->getFunRet(funcName);
+  }
+
+  void RecordTable::setFunRet(std::pair<std::string, ElemType> pair) {
+    funDecl.insert(pair);
+  }
 }// namespace compiler::mid::ir
 
-namespace compiler::mid::ir{
-  std::stack<std::pair<LabelIR*,LabelIR*>> RecordTable::labelPairs;
-  void RecordTable::pushLabelPair(LabelIR* label1,LabelIR* label2){
-    labelPairs.push(std::make_pair(label1,label2));
+namespace compiler::mid::ir {
+  std::stack<std::pair<LabelIR *, LabelIR *>> RecordTable::labelPairs;
+  void RecordTable::pushLabelPair(LabelIR *label1, LabelIR *label2) {
+    labelPairs.push(std::make_pair(label1, label2));
   }
-  void RecordTable::popLabelPair(){
+  void RecordTable::popLabelPair() {
     labelPairs.pop();
   }
-  std::pair<LabelIR*,LabelIR*>& RecordTable::getTopLabel(){
+  std::pair<LabelIR *, LabelIR *> &RecordTable::getTopLabel() {
     return labelPairs.top();
   }
-}
+}// namespace compiler::mid::ir

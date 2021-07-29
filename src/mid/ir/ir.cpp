@@ -102,8 +102,8 @@ namespace compiler::mid::ir {
       case OperatorCode::Nop:
         std::cout << "Nop ";
         break;
-      case OperatorCode::Assign:
-        std::cout << "Assign ";
+      case OperatorCode::Mov:
+        std::cout << "Mov ";
         break;
       case OperatorCode::Alloca:
         std::cout << "Alloca ";

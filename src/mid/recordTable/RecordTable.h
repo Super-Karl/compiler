@@ -13,6 +13,12 @@
 #include <vector>
 
 namespace compiler::mid::ir {
+
+  class FuncDecl {
+  public:
+    ElemType retType;
+  };
+
   class VarRedefChain {
   public:
     bool canAssign = false;//能否计算出变量值
@@ -56,18 +62,23 @@ namespace compiler::mid::ir {
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
     RecordTable *father;
     unsigned int id = 0;
-    static std::stack<std::pair<LabelIR*,LabelIR*>> labelPairs;
+    std::unordered_map<std::string, ElemType> funDecl;
+    static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
 
   public:
     RecordTable(RecordTable *rt = nullptr) : father(rt), id(rt != nullptr ? rt->id : 0){};
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
-    static void pushLabelPair(LabelIR*,LabelIR*);
+    static void pushLabelPair(LabelIR *, LabelIR *);
     static void popLabelPair();
-    static std::pair<LabelIR*,LabelIR*>& getTopLabel();
+    static std::pair<LabelIR *, LabelIR *> &getTopLabel();
     unsigned int getID() { return this->id++; }
 
     RecordTable *getFarther() { return father; }
+
+    ElemType getFunRet(std::string funcName);
+
+    void setFunRet(std::pair<std::string, ElemType> pair);
 
     bool canExprAssign(std::string op1, std::string op2, std::vector<int> index1 = {}, std::vector<int> index2 = {});
   };

@@ -165,6 +165,8 @@ namespace compiler::front::ast {
 
     ElemType retType = this->retType == INT ? ElemType::INT : ElemType::VOID;
 
+    record->setFunRet({this->name->name, retType});
+
     //    创建函数作用域的符号表
     auto funcdef = new FunDefIR(retType, name->name);
     auto newTable = new RecordTable(record);
@@ -500,8 +502,13 @@ namespace compiler::front::ast {
   }
 
   OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
+    ElemType retType = record->getFunRet(this->name->name);
+
     auto funCall = new FunCallIR("@" + name->name);
-    OperatorName dest = OperatorName("%" + std::to_string(record->getID()), Type::Var);
+    funCall->retType = retType;
+    auto tmpType = retType == ElemType::INT ? Type::Var : Type::Void;
+    OperatorName dest = OperatorName("%" + std::to_string(record->getID()), tmpType);
+    funCall->retOp = dest;
     for (auto i : args->args) {
       auto val = i->evalOp(ir, record);
       funCall->argList.push_back(val);

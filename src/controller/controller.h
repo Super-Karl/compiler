@@ -7,6 +7,7 @@
 
 #include "../front/ast/AstNode.h"
 #include "../mid/ir/ir.h"
+#include "../front/parser/parser.hpp"
 #include <iostream>
 #include <fstream>
 

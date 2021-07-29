@@ -42,6 +42,7 @@ namespace compiler::mid::ir {
     VarInfo(std::string name, int value, bool canAssign = false, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst = false);
+    VarInfo(){};
     //可用{}将形状框起传参
     int getArrayVal(std::vector<int> index);
 
@@ -61,12 +62,12 @@ namespace compiler::mid::ir {
   private:
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
     RecordTable *father;
-    unsigned int id = 0;
+    static unsigned int id;
     std::unordered_map<std::string, ElemType> funDecl;
     static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
 
   public:
-    RecordTable(RecordTable *rt = nullptr) : father(rt), id(rt != nullptr ? rt->id : 0){};
+    RecordTable(RecordTable *rt = nullptr) : father(rt){};
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
     static void pushLabelPair(LabelIR *, LabelIR *);

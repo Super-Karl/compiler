@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-
+  unsigned int RecordTable::id = 0;
   VarInfo *RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())

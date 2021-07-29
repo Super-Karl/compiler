@@ -26,8 +26,18 @@ namespace compiler::front::ast {
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
-    int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token, val);
+    auto val = this->value->evalOp(ir, record);
+
+    VarRedefChain varUse;
+    VarInfo *varInfo;
+
+    if (val.type == Type::Imm) {
+      varInfo = new VarInfo(token, val.value, true, false);
+    } else {
+      varInfo = new VarInfo(token, INT32_MIN);
+    }
+
+
     record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
@@ -340,7 +350,7 @@ namespace compiler::front::ast {
   }
 
   int CommaExpression::eval(RecordTable *record) {
-    return expr[expr.size() - 1]->eval(record);
+    return expr.back()->eval(record);
   }
   /* *
    *
@@ -450,7 +460,10 @@ namespace compiler::front::ast {
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
     try {
-      return this->eval(record);
+      int tmp = this->eval(record);
+      auto opName = OperatorName("", Type::Imm);
+      opName.value = tmp;
+      return opName;
     } catch (...) {
     }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
@@ -639,7 +652,12 @@ namespace compiler::front::ast {
       auto store = new StoreIR(dest, initValList[i]->evalOp(ir, record), OperatorName(index++, Type::Imm));
       ir.push_back(store);
       //更新数组元素的def链
-      auto varUse = VarRedefChain("", initValList[i]->eval(record), true);
+      auto tmp = initValList[i]->evalOp(ir, record);
+      VarRedefChain varUse;
+      if (tmp.type == Type::Imm)
+        varUse = VarRedefChain("", tmp.value, true);
+      else
+        varUse = VarRedefChain("", INT32_MIN);
       array->addVarUse(varUse, {i});
     }
   }

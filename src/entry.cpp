@@ -12,11 +12,10 @@ using namespace std;
 
 using Hash = std::unordered_map<string, int>;
 int main(int argc, char **argv) {
-    auto *argParser = new compiler::controller::ArgParser(argc, argv);
-
-    auto *root = compiler::controller::generator::generate(argParser->input);
-    if (argParser->printAST)
-        root->print();
+    //auto *argParser = new compiler::controller::ArgParser(argc, argv);
+    FILE* input = fopen(argv[3],"r");
+    auto *root = compiler::controller::generator::generate(input);
+    root->print();
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root,constTbale);
     root->print();
@@ -25,9 +24,8 @@ int main(int argc, char **argv) {
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);
     compiler::back::printASM(backlist);
 
-    string filename = string(argv[2]);
     ofstream outfile;
-    outfile.open(filename.substr(0, filename.size()-1));
+    outfile.open(argv[4]);
     for(auto i:backlist)
     {
         outfile<<i->getFullIns();

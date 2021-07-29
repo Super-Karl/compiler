@@ -6,6 +6,8 @@
 #include "front/ast/AstNode.h"
 #include "controller/controller.h"
 #include "astpass/astpass.h"
+#include "back/back.h"
+#include "back/generateBack.h"
 
 using namespace std;
 
@@ -19,5 +21,9 @@ int main(int argc, char **argv) {
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root,constTbale);
     root->print();
+
+    //生成后端
+    list<compiler::back::INS*> backlist = compiler::back::generateBack(root);
+    compiler::back::printASM(backlist);
     return 0;
 }

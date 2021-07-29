@@ -4,6 +4,9 @@
 
 #include "back.h"
 
-compiler::back::Lable::~Lable() = default;
+int compiler::back::VarSource::count = 0;
 
-compiler::back::Lable::Lable(LableType lableType, int count) : lableType(lableType), count(count) {}
+int compiler::back::Lable::FunctionCount=0;
+
+int compiler::back::Lable::IfCount=0;
+

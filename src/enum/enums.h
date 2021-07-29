@@ -58,4 +58,19 @@ enum ThreeSourceType{
 enum TwoSourceTyoe{
     MOV,
 };
+
+enum SourceType{
+    VarSourceType,
+    NumSourceType
+};
+
+enum INSType{
+    macroType,
+    INSlableType,
+    funcLable,
+    stmdb,
+    ldmia,
+    move32,
+    move16
+};
 #endif //COMPILER_ENUMS_H

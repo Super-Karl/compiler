@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace compiler::mid::ir {
-
+  unsigned int RecordTable::id = 0;
   VarInfo *RecordTable::searchVar(std::string name) {
     auto tmp = varTable.find(name);
     if (tmp != varTable.end())
@@ -32,11 +32,11 @@ namespace compiler::mid::ir {
    *VarInfo
    */
 
-  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool isConst) {
+  VarInfo::VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool canAssign, bool isConst) {
 
     this->arrayName = name;
     this->isConst = isConst;
-    this->isArray = true;
+    this->isArray = canAssign;
     this->shape = inShape;
     varUse.resize(inValue.size());
     for (auto i = 0; i < inValue.size(); i++) {

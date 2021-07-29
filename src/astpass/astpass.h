@@ -6,7 +6,7 @@
 #define COMPILER_ASTPASS_H
 
 #include "../front/ast/AstNode.h"
-#include "../front/parser.hpp"
+#include "../../front/parser.hpp"
 #include <iostream>
 #include <vector>
 #include <unordered_map>

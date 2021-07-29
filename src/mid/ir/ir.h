@@ -128,7 +128,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() {
-      std::cout << name << ':' << " ";
+      std::cout <<"@"<< name << ':' << " ";
       for (auto &i : argList) {
         printOpName(i, ' ');
       }

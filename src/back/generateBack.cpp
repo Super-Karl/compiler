@@ -1,13 +1,7 @@
 //
 // Created by karl on 2021/7/29.
 //
-
-#include "back.h"
 #include "generateBack.h"
-#include <list>
-#include <fstream>
-#include <front/ast/AstNode.h>
-#include <unordered_map>
 
 using namespace compiler::front::ast;
 namespace compiler::back {

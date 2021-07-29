@@ -5,7 +5,7 @@
 #ifndef COMPILER_ASTPASS_H
 #define COMPILER_ASTPASS_H
 
-#include <front/ast/AstNode.h>
+#include "../front/ast/AstNode.h"
 #include <vector>
 #include <unordered_map>
 

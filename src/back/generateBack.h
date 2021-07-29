@@ -4,10 +4,12 @@
 
 #ifndef COMPILER_GENERATEBACK_H
 #define COMPILER_GENERATEBACK_H
-#include "back.h"
+
 #include <list>
-#include <front/ast/AstNode.h>
 #include <unordered_map>
+#include "back.h"
+#include "../front/ast/AstNode.h"
+
 
 namespace compiler::back {
     void printASM(list<compiler::back::INS *> &list);

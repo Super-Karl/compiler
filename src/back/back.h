@@ -5,8 +5,8 @@
 #ifndef COMPILER_BACK_H
 #define COMPILER_BACK_H
 
-#include <enum/enums.h>
 #include <iostream>
+#include "../enum/enums.h"
 
 using namespace std;
 

@@ -141,9 +141,11 @@ namespace compiler::front::ast {
       dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
 
       std::vector<int> index;
-      for (auto i : name->getIndex())
-        index.push_back(i->eval(record));
-
+      try {
+        for (auto i : name->getIndex())
+          index.push_back(i->eval(record));
+      } catch (...) {
+      }
       VarRedefChain varUse;
 
       try {
@@ -156,7 +158,6 @@ namespace compiler::front::ast {
         } catch (...) {
         }
       }
-
 
     } else {
       auto assign = new AssignIR();

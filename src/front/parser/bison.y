@@ -168,8 +168,8 @@ Stmt: Assignment SEMI {$$ = $1;}
     | Block
     | IfStmt
     | WhileStmt
-    | BreakStmt SEMI { $$ = $1;}
-    | ContinueStmt SEMI { $$ = $1;}
+    | BreakStmt { $$ = $1;}
+    | ContinueStmt { $$ = $1;}
     | ReturnStmt SEMI {$$ = $1;}
     | functStmt SEMI {$$ = $1;}
     | VoidStmt 

@@ -81,12 +81,12 @@ Decl: ConstDecl SEMI {$$ = $1;}
 
 BType: INT;
 
-ConstDecl: CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);}
-    | ConstDecl COMMA ConstDef{$$->declareList.push_back($3);} 
+ConstDecl:ConstDecl COMMA ConstDef{$$->declareList.push_back($3);}
+    | CONST BType ConstDef{ $$ = new front::ast::DeclareStatement();$$->declareList.push_back($3);}
     ;
 
-ConstDef: ConstDefVal
-    | ConstDefArray
+ConstDef: ConstDefArray
+    |ConstDefVal
     ;
 
 ConstDefVal: Ident ASSIGN ConstInitialVal{$$ = new front::ast::ConstDeclare($1,$3);}
@@ -102,7 +102,7 @@ VarDecl: BType VarDef {$$ = new front::ast::DeclareStatement();$$->declareList.p
     | VarDecl COMMA VarDef{$$->declareList.push_back($3);} 
     ;
 
-VarDef: DefVal
+VarDef: DefVal 
     | DefArray
     ;
 
@@ -123,7 +123,7 @@ ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}
-    |LBRACE RBRACE {new front::ast::ArrayInitVal();}
+    |LBRACE RBRACE {$$ = new front::ast::ArrayInitVal();}
     ;
 
 ListExp: ListExp COMMA ArrayInitList {$$->initValList.push_back($3);}
@@ -172,10 +172,10 @@ Stmt: Assignment SEMI {$$ = $1;}
     | ContinueStmt SEMI { $$ = $1;}
     | ReturnStmt SEMI {$$ = $1;}
     | functStmt SEMI {$$ = $1;}
-    | VoidStmt
+    | VoidStmt 
     ;
 
-functStmt:FunctCall
+functStmt:FunctCall 
     ;
 
 Assignment:LVal ASSIGN Exp {$$ = new front::ast::AssignStmt($1,$3);}
@@ -244,7 +244,7 @@ FunctionCallArgList: FunctionCallArgList COMMA FuncCallArg {$$->args.push_back($
     | FuncCallArg {$$ = new front::ast::FunctionCallArgList(); $$->args.push_back($1);}
     ;
 
-FuncCallArg:AddExp
+FuncCallArg:AddExp 
     ;
 
 PrimaryExp: Number 
@@ -281,3 +281,4 @@ Number: NUM {$$ = new front::ast::NumberExpression(std::stoi(*$1,0,0));}
 
 Ident: IDENTIFIER {$$ = new front::ast::Identifier(*$1);}
     ;
+    %%

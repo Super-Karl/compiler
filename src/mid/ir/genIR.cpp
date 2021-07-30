@@ -550,6 +550,9 @@ namespace compiler::front::ast {
   OperatorName Expression::evalOp(IRList &ir, RecordTable *record) {
     throw std::runtime_error("this type of node cannot be eval");
   }
+  void Expression::genIR(IRList &ir, RecordTable *record) {
+    Node::genIR(ir, record);
+  }
 
   OperatorName FunctionCall::evalOp(IRList &ir, RecordTable *record) {
     ElemType retType = record->getFunRet(this->name->name);

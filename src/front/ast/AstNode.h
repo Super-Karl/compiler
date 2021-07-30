@@ -37,10 +37,13 @@ namespace compiler {
 
     class Expression : public Node {
     public:
+      void genIR(IRList &ir, RecordTable *record) override;
       virtual int eval(RecordTable *record);
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
       virtual void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp);
       Expression(AstNodeType type = ExpressionType) : Node(type) {}
+
+      ~Expression() override = default;
     };
 
     class ArrayInitVal : public Expression {

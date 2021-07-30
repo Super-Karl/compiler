@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
 
   auto *root = compiler::controller::generator::generate(argParser->input);
 
+  root->print();
   Hash constTbale;
   compiler::astpassir::FirstPassRoot(root, constTbale);
 

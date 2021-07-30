@@ -28,6 +28,8 @@ namespace compiler::controller {
         if (std::string(argv[i]) == "-debug") {
           yydebug = 1;
         }
+        if (std::string(argv[i]) == "-S") {
+        }
       } else {
         if (writeToFile) {
           if (std::string(argv[i]) == "-") {
@@ -72,10 +74,10 @@ namespace compiler::controller::generator {
     return ir;
   }
 
-  void printIR(compiler::mid::ir::IRList ir){
-    std::cout<<"------------------------------\n\nIR:\n\n";
+  void printIR(compiler::mid::ir::IRList ir) {
+    std::cout << "------------------------------\n\nIR:\n\n";
 
-    for (auto i:ir){
+    for (auto i : ir) {
       i->print();
     }
   }

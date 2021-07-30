@@ -109,11 +109,12 @@ enum SourceType{
 enum INSType{
     macroType,
     INSlableType,
+    global,
     funcLable,
     stmdb,
     ldmia,
-    move32,
-    move16,
+    mov32,
+    mov16,
     str,
     ldr
 };

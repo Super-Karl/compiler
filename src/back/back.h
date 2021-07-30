@@ -49,7 +49,20 @@ namespace compiler::back {
     public:
         string addr;
         address(string reg,int offset){
-            addr="["+reg+",#"+to_string(offset)+"]";
+            if(offset==0)
+            {
+                addr="["+reg+"]";
+            }
+            else
+            {
+                addr="["+reg+",#"+to_string(offset)+"]";
+            }
+        }
+        address(string reg,int offset,string s){
+            addr="["+reg+",#"+to_string(offset)+"]"+s;
+        }
+        address(string reg){
+            addr=reg;
         }
     };
 
@@ -94,8 +107,15 @@ namespace compiler::back {
         }
     };
 
-    class GLOBAL:INS{
+    class GLOBAL:public INS{
     public:
+        GLOBAL(string name,int value):INS(global)
+        {
+            fullIns=".data\n"
+                    ".global gv_"+name+"\n"
+                                       "gv_"+name+":\n"
+                    ".word "+to_string(value)+"\n";
+        }
     };
 
     class FUNC : public INS {
@@ -122,27 +142,28 @@ namespace compiler::back {
     public:
         LDMIA() : INS(ldmia) {
             fullIns = "\tldmia\tsp!,{fp, lr}\n"
-                      "\tbx\tlr";
+                      "\tbx\tlr\n";
         }
     };
 
-    class MOVE32 : public INS {
+    class MOV32 : public INS {
     public:
-        Source source1;
-        Source source2;
 
-        MOVE32(int num, INSType insType = move32) : INS(insType) {
-            fullIns = "\tmove32 ";
+        MOV32(int reg,string name) : INS(mov32) {
+            fullIns = "\tmov32 r"+to_string(reg)+", "+name+"\n";
+        }
+        MOV32(int reg,int value) : INS(mov32) {
+            fullIns = "\tmov32 r"+to_string(reg)+", "+to_string(value)+"\n";
         }
     };
 
-    class MOVE : public INS {
+    class MOV : public INS {
     public:
-        MOVE(int reg, int value) : INS(move16) {
+        MOV(int reg, int value) : INS(mov16) {
             fullIns = "\tmov\tr" + to_string(reg) + ",#" + to_string(value) + "\n";
         }
 
-        MOVE(int reg, int value, string type) : INS(move16) {
+        MOV(int reg, int value, string type) : INS(mov16) {
             if (type == "reg2reg") {
                 fullIns = "\tmov\tr" + to_string(reg) + ",r" + to_string(value) + "\n";
             }
@@ -152,14 +173,14 @@ namespace compiler::back {
     class STR:public INS{
     public:
         STR(int reg,address addr):INS(str){
-            fullIns = "str r"+to_string(reg)+", "+addr.addr+"\n";
+            fullIns = "\tstr r"+to_string(reg)+", "+addr.addr+"\n";
         }
     };
 
     class LDR:public INS{
     public:
         LDR(int reg,address addr):INS(ldr){
-            fullIns = "ldr r"+to_string(reg)+", "+addr.addr+"\n";
+            fullIns = "\tldr r"+to_string(reg)+", "+addr.addr+"\n";
         }
     };
 }

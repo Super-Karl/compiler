@@ -190,8 +190,15 @@ namespace compiler::front::ast {
 
     //保存参数表
     for (auto i : args->args) {
-      auto opName = OperatorName(i->name->name, Type::Var);
-      funcdef->argList.push_back(opName);
+      auto ident = dynamic_cast<ArrayIdentifier *>(i->name);
+      if (ident) {
+        auto opName = OperatorName(".A" + i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      }
+      else{
+        auto opName = OperatorName(i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      }
     }
     //把函数的入参存入函数符号表
     args->genIR(funcdef->funcBody, newTable);

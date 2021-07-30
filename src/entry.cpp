@@ -13,7 +13,14 @@ using namespace std;
 using Hash = std::unordered_map<string, int>;
 int main(int argc, char **argv) {
     //auto *argParser = new compiler::controller::ArgParser(argc, argv);
-    FILE* input = fopen(argv[3],"r");
+    string inputfile = argv[3];
+
+    FILE* input = fopen(inputfile.substr(1,inputfile.size()-1).c_str(),"r");
+    if(input==NULL)
+    {
+        cout<<"读取文件错误";
+        return 0;
+    }
     auto *root = compiler::controller::generator::generate(input);
     root->print();
     Hash constTbale;
@@ -25,7 +32,8 @@ int main(int argc, char **argv) {
     compiler::back::printASM(backlist);
 
     ofstream outfile;
-    outfile.open(argv[4]);
+    string outputfile = argv[4];
+    outfile.open(outputfile.substr(1,outputfile.size()-1).c_str());
     for(auto i:backlist)
     {
         outfile<<i->getFullIns();

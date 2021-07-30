@@ -12,12 +12,16 @@
 
 
 namespace compiler::back {
+    class VAR;
+
+    int tableFind(vector<VAR>&vartable,string name);
+
     void printASM(list<compiler::back::INS *> &list);
 
     list<compiler::back::INS *> generateBack(compiler::front::ast::AST *root);
 
-    void generateBackFunction(list<INS *> &backlist, compiler::front::ast::FunctionDefine *func);
+    void generateBackFunction(vector<VAR>vartable, list<INS *> &backlist, compiler::front::ast::FunctionDefine *func);
     //pos表示是计算当前是上一级的左表达式（-1），右表达式（1），最高表达式（0）
-    void generateBinaryExpression(list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression,int pos);
+    void generateBinaryExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression,int pos);
 }
 #endif //COMPILER_GENERATEBACK_H

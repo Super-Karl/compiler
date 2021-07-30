@@ -18,11 +18,24 @@ namespace compiler::back {
 
     //变量
     std::unordered_map<string, VAR *> globalVartable;
-    std::unordered_map<string, std::unordered_map<string, VAR *>> vartable;
+    //std::unordered_map<string, std::unordered_map<string, VAR *>> vartable;
 
     //std::unordered_map<string, int> tableIndex;
 
+    int tableIndex = 0;//一个函数的参数个数，用于编号
+
     string nowfunc;
+
+    int tableFind(vector<VAR>&vartable,string name){
+        for(int i=vartable.size()-1; i>=0; i--)
+        {
+            if(vartable[i].name==name)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     void printASM(list<compiler::back::INS *> &list) {
         for (auto i:list) {
@@ -41,11 +54,11 @@ namespace compiler::back {
             if (block->nodetype == FunctionDefineType) {
                 FunctionDefine *func = static_cast<FunctionDefine *>(block);
                 nowfunc = func->name->name;
-                //tableIndex[nowfunc] = 0;
                 backlist.push_back(new FUNC(func->name->name));
                 backlist.push_back(new STMDB());
                 //生成函数back
-                generateBackFunction(backlist, func);
+                vector<VAR>vartable;//记录当前代码块的变量
+                generateBackFunction(vartable,backlist, func);
                 backlist.push_back(new LDMIA());
             } else if (block->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(block)->declareList) {
@@ -57,10 +70,7 @@ namespace compiler::back {
                                 value = static_cast<NumberExpression *>(static_cast<VarDeclareWithInit *>(subNode)->value)->value;
                             }
                             int index = globalVartable.size();
-                            //int index = tableIndex["global"];
                             globalVartable[name]=new VAR(name, value, index);
-                            //vartable["global"][name] = new VAR(name, value, index);
-                            //tableIndex["global"]++;
                             backlist.push_back(new GLOBAL(name, value));
                             break;
                         }
@@ -68,9 +78,6 @@ namespace compiler::back {
                             string name = subNode->name->name;
                             int index = globalVartable.size();
                             globalVartable[name]=new VAR(name, 0, index);
-                            //int index = tableIndex["global"];
-                            //vartable["global"][name] = new VAR(name, 0, index);
-                            //tableIndex["global"]++;
                             backlist.push_back(new GLOBAL(name, 0));
                             break;
                         }
@@ -81,18 +88,13 @@ namespace compiler::back {
         return backlist;
     }
 
-    void generateBackFunction(list<INS *> &backlist, compiler::front::ast::FunctionDefine *func) {
+    void generateBackFunction(vector<VAR>vartable,list<INS *> &backlist, compiler::front::ast::FunctionDefine *func) {
         for (auto item = func->body->blockItem.begin(); item != func->body->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {
                             case VarDeclareWithInitType: {
-                                string name = subNode->name->name;
-                                //int index = tableIndex[nowfunc];
-                                int index = vartable[nowfunc].size();
-                                vartable[nowfunc][name] = new VAR(name, 0, index);
-                                //tableIndex[nowfunc]++;
                                 //把右值放到r2
                                 switch (static_cast<VarDeclareWithInit *>(subNode)->value->nodetype) {
                                     case NumberExpressionType: {
@@ -109,8 +111,9 @@ namespace compiler::back {
                                     case IdentifierType: {
                                         //右值为单个字母
                                         string name = static_cast<Identifier *>(static_cast<VarDeclareWithInit *>(subNode)->value)->name;
-                                        int isglobal = vartable[nowfunc].count(name) == 0;
-                                        if (isglobal) {
+                                        //int isglobal = vartable[nowfunc].count(name) == 0;
+                                        int index = tableFind(vartable,name);
+                                        if (index==-1) {
                                             //全局变量
                                             //取地址到r4
                                             backlist.push_back(new MOV32(4, "gv_" + name));
@@ -118,26 +121,25 @@ namespace compiler::back {
                                             backlist.push_back(new LDR(2, address("r4", 0)));
                                         } else {
                                             //读到r2
-                                            backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                                            backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
                                         }
                                         break;
                                     }
                                     case BinaryExpressionType: {
                                         //右值为BinaryExpression，计算后将计算后的值放在r2
-                                        generateBinaryExpression(backlist, static_cast<BinaryExpression *>(static_cast<VarDeclareWithInit *>(subNode)->value), 0);
+                                        generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(static_cast<VarDeclareWithInit *>(subNode)->value), 0);
                                         break;
                                     }
                                 }
+                                string name = subNode->name->name;
+                                vartable.push_back(VAR(name, 0, tableIndex++));
                                 //存到内存中
-                                backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable.back().index)));
                                 break;
                             }
                             case VarDeclareType: {
                                 string name = subNode->name->name;
-                                int index = vartable[nowfunc].size();
-                                //int index = tableIndex[nowfunc];
-                                vartable[nowfunc][name] = new VAR(name, 0, index);
-                                //tableIndex[nowfunc]++;
+                                vartable.push_back(VAR(name, 0, tableIndex++));
                                 backlist.push_back(new STR(0, address("sp", -4, "!")));
                                 break;
                             }
@@ -163,34 +165,34 @@ namespace compiler::back {
                         case IdentifierType: {
                             //右值为单个字母
                             string name = static_cast<Identifier *>(static_cast<AssignStmt *>(*item)->rightExpr)->name;
-                            int isglobal = vartable[nowfunc].count(name) == 0;
-                            if (isglobal) {
+                            int index = tableFind(vartable,name);
+                            if (index==-1) {
                                 //全局变量
                                 //取地址到r4
                                 backlist.push_back(new MOV32(4, "gv_" + name));
                                 //读到r2
                                 backlist.push_back(new LDR(2, address("r4", 0)));
                             } else {
-                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
                             }
                             break;
                         }
                         case BinaryExpressionType: {
                             //右值为BinaryExpression，计算后将计算后的值放在r2
-                            generateBinaryExpression(backlist, static_cast<BinaryExpression *>(static_cast<AssignStmt *>(*item)->rightExpr), 0);
+                            generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(static_cast<AssignStmt *>(*item)->rightExpr), 0);
                             break;
                         }
                     }
 
                     //判断全局变量还是局部变量
-                    int isglobal = vartable[nowfunc].count(name) == 0;
-                    if (isglobal) {
+                    int index = tableFind(vartable,name);
+                    if (index==-1) {
                         //全局变量
                         //取地址到r3
                         backlist.push_back(new MOV32(3, "gv_" + name));
                         backlist.push_back(new STR(2, address("r3", 0)));
                     } else {
-                        backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                        backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[index].index)));
                     }
                     break;
                 }
@@ -198,15 +200,15 @@ namespace compiler::back {
                     switch (static_cast<ReturnStatement *>((*item))->returnExp->nodetype) {
                         case IdentifierType: {
                             string name = static_cast<Identifier *>(static_cast<ReturnStatement *>((*item))->returnExp)->name;
-                            int isglobal = vartable[nowfunc].count(name) == 0;
-                            if (isglobal) {
+                            int index = tableFind(vartable,name);
+                            if (index==-1) {
                                 //全局变量
                                 //取地址到r4
                                 backlist.push_back(new MOV32(4, "gv_" + name));
                                 //读到r3
                                 backlist.push_back(new LDR(0, address("r4", 0)));
                             } else {
-                                backlist.push_back(new LDR(0, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new LDR(0, address("fp", -8 - 4 * vartable[index].index)));
                             }
                             break;
                         }
@@ -217,7 +219,7 @@ namespace compiler::back {
                         }
                         case BinaryExpressionType: {
                             //右值为BinaryExpression，计算后将计算后的值放在r2
-                            generateBinaryExpression(backlist, static_cast<BinaryExpression *>(static_cast<ReturnStatement *>((*item))->returnExp), 0);
+                            generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(static_cast<ReturnStatement *>((*item))->returnExp), 0);
                             backlist.push_back(new MOV(0,2,"reg2reg"));
                             break;
                         }
@@ -228,7 +230,7 @@ namespace compiler::back {
         }
     }
 
-    void generateBinaryExpression(list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression, int pos) {
+    void generateBinaryExpression(vector<VAR>&vartable, list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression, int pos) {
         int reg1;
         int reg2;//最终结果
         int reg3;
@@ -264,21 +266,21 @@ namespace compiler::back {
             {
                 //右值为单个字母
                 string name = static_cast<Identifier *>(expression->leftExpr)->name;
-                int isglobal = vartable[nowfunc].count(name) == 0;
-                if (isglobal) {
+                int index = tableFind(vartable,name);
+                if (index==-1) {
                     //全局变量
                     //取地址到r4
                     backlist.push_back(new MOV32(4, "gv_" + name));
                     //读到r2
                     backlist.push_back(new LDR(reg1, address("r4", 0)));
                 } else {
-                    backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                    backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
                 }
                 break;
             }
             case BinaryExpressionType:
             {
-                generateBinaryExpression(backlist, static_cast<BinaryExpression*>(expression->leftExpr), -1);
+                generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression*>(expression->leftExpr), -1);
                 break;
             }
         }
@@ -299,21 +301,21 @@ namespace compiler::back {
             {
                 //右值为单个字母
                 string name = static_cast<Identifier *>(expression->rightExpr)->name;
-                int isglobal = vartable[nowfunc].count(name) == 0;
-                if (isglobal) {
+                int index = tableFind(vartable,name);
+                if (index==-1) {
                     //全局变量
                     //取地址到r4
                     backlist.push_back(new MOV32(4, "gv_" + name));
                     //读到r3
                     backlist.push_back(new LDR(reg3, address("r4", 0)));
                 } else {
-                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
+                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[index].index)));
                 }
                 break;
             }
             case BinaryExpressionType:
             {
-                generateBinaryExpression(backlist, static_cast<BinaryExpression*>(expression->rightExpr), 1);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression*>(expression->rightExpr), 1);
                 break;
             }
         }

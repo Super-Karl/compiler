@@ -126,7 +126,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() {
-      std::cout << name << ':' << " ";
+      std::cout <<"@"<< name << ':' << " ";
       for (auto &i : argList) {
         printOpName(i, ' ');
       }
@@ -243,7 +243,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source);
+      printOpName(source,'\n',false);
     }
   };
 
@@ -264,7 +264,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source);
+      printOpName(source,'\n', false);
     }
   };
 }// namespace compiler::mid::ir

@@ -190,8 +190,15 @@ namespace compiler::front::ast {
 
     //保存参数表
     for (auto i : args->args) {
-      auto opName = OperatorName(i->name->name, Type::Var);
-      funcdef->argList.push_back(opName);
+      auto ident = dynamic_cast<ArrayIdentifier *>(i->name);
+      if (ident) {
+        auto opName = OperatorName(".A" + i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      }
+      else{
+        auto opName = OperatorName(i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      }
     }
     //把函数的入参存入函数符号表
     args->genIR(funcdef->funcBody, newTable);
@@ -401,12 +408,12 @@ namespace compiler::front::ast {
    * condition Analysis
    *
    * */
-  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLable, bool trueJmp) {
+  void Expression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp) {
     try {
       if (this->eval(record)) {
         ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
       } else {
-        ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLable));
+        ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLabel));
       }
     } catch (...) {
       try {
@@ -418,6 +425,7 @@ namespace compiler::front::ast {
           AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
           ir.push_back(assign);
           ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
+          ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), elLabel)));
         } else {
           //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),)));
         }
@@ -458,11 +466,13 @@ namespace compiler::front::ast {
           ir.emplace_back(new JmpIR(OperatorCode::Jeq, elLabel));
         } catch (...) {
           if (trueJmp) {
-            OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
+            OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
+            auto left = leftExpr->evalOp(ir,record);
+            auto right = rightExpr->evalOp(ir,record);
             AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
-            ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getAntiRelOpCode(), ifLabel)));
+            ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getAntiRelOpCode(), elLabel)));
           } else {
             //没有else
             //ir.emplace_back((new JmpIR (static_cast<BinaryExpression*>(this)->getAntiRelOpCode(),elLabel)));
@@ -508,24 +518,30 @@ namespace compiler::front::ast {
       auto opName = OperatorName("", Type::Imm);
       opName.value = tmp;
       return opName;
-    } catch (...) {
+    }
+    catch (...) {
     }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
 
-    if (this->op != AND_OP && this->op != OR_OP) {
-      try {
-        left = OperatorName(leftExpr->eval(record));
-      } catch (...) {
-        left = leftExpr->evalOp(ir, record);
-      }
-      try {
-        right = OperatorName(rightExpr->eval(record));
-      } catch (...) {
-        right = rightExpr->evalOp(ir, record);
-      }
+    int RelOP[8] = {AND_OP,OR_OP,LT,LE,GE,GT,NE,EQ};
+    for (int i=0;i<8;i++){
+      if (this->op == RelOP[i])
+        throw runtime_error("rel op");
+    }
+    //排除所有的逻辑运算符
+    try {
+      left = OperatorName(leftExpr->eval(record),Type::Imm);
+    } catch (...) {
+      left = leftExpr->evalOp(ir, record);
+    }
+    try {
+      right = OperatorName(rightExpr->eval(record),Type::Imm);
+    } catch (...) {
+      right = rightExpr->evalOp(ir, record);
+    }
       /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
-    }
+
     AssignIR *assign;
     switch (this->op) {
       case ADD:

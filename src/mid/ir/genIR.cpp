@@ -140,6 +140,7 @@ namespace compiler::front::ast {
 
       dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
 
+      //尝试计算下标
       std::vector<int> index;
       try {
         for (auto i : name->getIndex())
@@ -148,14 +149,13 @@ namespace compiler::front::ast {
       }
       VarRedefChain varUse;
 
-      try {
-        varUse = VarRedefChain("", this->rightExpr->eval(record), true);
-        var->addVarUse(varUse, index);
-      } catch (...) {
+      if (!index.empty()) {
         try {
-          varUse = VarRedefChain("", INT32_MIN, false);
+          varUse = VarRedefChain("", this->rightExpr->eval(record), true);
           var->addVarUse(varUse, index);
         } catch (...) {
+          varUse = VarRedefChain("", INT32_MIN, false);
+          var->addVarUse(varUse, index);
         }
       }
 

@@ -31,7 +31,7 @@ namespace compiler::mid::ir {
     std::string name;//ir中的name
     int value;
 
-    OperatorName(int val, Type type = Type::Var) : value(val), type(type){};
+    OperatorName(int val, Type type = Type::Var) : value(val), type(type), name(""){};
 
     OperatorName(std::string name, Type type = Type::Var) : type(type), name(std::move(name)) {}
 
@@ -58,6 +58,7 @@ namespace compiler::mid::ir {
     Jle,
     Cmp,
     Jne,
+    Jeq,
     And,
     Or,
     Xor,
@@ -69,14 +70,16 @@ namespace compiler::mid::ir {
     Label,
     Ret,
     Nop,
-    Assign,
-    Alloca
+    Mov,
+    Alloca,
   };
-
+  void printOpCode(OperatorCode op);
+  void printOpName(OperatorName op, char sp = '\n', bool = true);
   class IR {
   public:
-    IR() = default;
-    ;
+    IR(){};
+    virtual void print() {
+    }
     virtual IR *getThis() {
       return this;
     }
@@ -87,9 +90,26 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode = OperatorCode::Call;
     std::string funcName;
     std::vector<OperatorName> argList;
+    ElemType retType;
+    OperatorName retOp;
+
     FunCallIR(std::string name) : IR(), funcName(std::move(name)){};
     FunCallIR *getThis() override {
       return this;
+    }
+    void print() {
+      std::cout << '\t';
+      printOpCode(OperatorCode::Call);
+      std::cout << funcName << ' ';
+      for (auto &i : argList) {
+        printOpName(i, ' ');
+      }
+      if (retType == ElemType::VOID)
+        std::cout << std::endl;
+      else {
+        std::cout << "& ";
+        printOpName(retOp, '\n', 0);
+      }
     }
   };
 
@@ -105,6 +125,16 @@ namespace compiler::mid::ir {
     FunDefIR *getThis() override {
       return this;
     }
+    void print() {
+      std::cout << name << ':' << " ";
+      for (auto &i : argList) {
+        printOpName(i, ' ');
+      }
+      std::cout << '\n';
+      for (auto &i : funcBody) {
+        i->print();
+      }
+    }
   };
 
   class AssignIR : public IR {
@@ -115,18 +145,48 @@ namespace compiler::mid::ir {
 
     AssignIR() = default;
 
-    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(source1), source2(std::move(source2)){};
+    AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(std::move(source1)), source2(std::move(source2)){};
+
+    AssignIR(OperatorName dest, OperatorName source, OperatorCode opcode = OperatorCode::Mov) : dest(std::move(dest)), source1(std::move(source)), operatorCode(opcode){};
+
     AssignIR *getThis() override {
       return this;
     }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(operatorCode);
+      printOpName(dest, ' ');
+      printOpName(source1, ' ');
+      printOpName(source2, ' ');
+      std::cout << '\n';
+    }
   };
-
+  class LabelIR : public IR {
+  public:
+    std::string label;
+    LabelIR() = default;
+    LabelIR(std::string label) : label(label) {}
+    LabelIR *getThis() {
+      return this;
+    }
+    void print() override {
+      std::cout << label << ":\n";
+    }
+  };
   class JmpIR : public IR {
   public:
-    int label;
-    JmpIR(){};
-    JmpIR *getThis() override {
+    OperatorCode action;
+    std::string label;
+    JmpIR(void);
+    JmpIR(OperatorCode opname, std::string name) : label(name), action(opname){};
+    JmpIR(OperatorCode opname, LabelIR *name) : label(name->label), action(opname){};
+    JmpIR *getThis() {
       return this;
+    }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(action);
+      std::cout << label << '\n';
     }
   };
 
@@ -141,6 +201,12 @@ namespace compiler::mid::ir {
     RetIR *getThis() override {
       return this;
     }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(operatorCode);
+      printOpName(retVal, ' ');
+      std::cout << '\n';
+    }
   };
 
   class AllocaIR : public IR {
@@ -152,6 +218,11 @@ namespace compiler::mid::ir {
     AllocaIR(std::string name, int size) : IR(), name(std::move(name)), size(size){};
     AllocaIR *getThis() override {
       return this;
+    }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(Opcode);
+      std::cout << name << ", 4byte *" << size << "\n";
     }
   };
 
@@ -167,6 +238,13 @@ namespace compiler::mid::ir {
     LoadIR *getThis() override {
       return this;
     }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(operatorCode);
+      printOpName(dest, ' ');
+      printOpName(offset, ' ');
+      printOpName(source);
+    }
   };
 
   class StoreIR : public IR {//将值加载进内存(即给数组元素赋值
@@ -180,6 +258,13 @@ namespace compiler::mid::ir {
 
     StoreIR *getThis() override {
       return this;
+    }
+    void print() override {
+      std::cout << '\t';
+      printOpCode(operatorCode);
+      printOpName(dest, ' ');
+      printOpName(offset, ' ');
+      printOpName(source);
     }
   };
 }// namespace compiler::mid::ir

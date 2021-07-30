@@ -264,7 +264,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source);
+      printOpName(source,'\n', false);
     }
   };
 }// namespace compiler::mid::ir

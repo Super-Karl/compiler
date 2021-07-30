@@ -45,6 +45,13 @@ namespace compiler::back {
         explicit NumSource(int num, SourceType type = NumSourceType) : Source(type), num(num) {}
     };
 
+    class address :public Source{
+    public:
+        string addr;
+        address(string reg,int offset){
+            addr="["+reg+",#"+to_string(offset)+"]";
+        }
+    };
 
     //指令
     class INS {
@@ -85,6 +92,10 @@ namespace compiler::back {
                 }
             }
         }
+    };
+
+    class GLOBAL:INS{
+    public:
     };
 
     class FUNC : public INS {
@@ -135,6 +146,20 @@ namespace compiler::back {
             if (type == "reg2reg") {
                 fullIns = "\tmov\tr" + to_string(reg) + ",r" + to_string(value) + "\n";
             }
+        }
+    };
+
+    class STR:public INS{
+    public:
+        STR(int reg,address addr):INS(str){
+            fullIns = "str r"+to_string(reg)+", "+addr.addr+"\n";
+        }
+    };
+
+    class LDR:public INS{
+    public:
+        LDR(int reg,address addr):INS(ldr){
+            fullIns = "ldr r"+to_string(reg)+", "+addr.addr+"\n";
         }
     };
 }

@@ -113,6 +113,8 @@ enum INSType{
     stmdb,
     ldmia,
     move32,
-    move16
+    move16,
+    str,
+    ldr
 };
 #endif //COMPILER_ENUMS_H

@@ -37,10 +37,13 @@ namespace compiler {
 
     class Expression : public Node {
     public:
+      void genIR(IRList &ir, RecordTable *record) override;
       virtual int eval(RecordTable *record);
       virtual OperatorName evalOp(IRList &ir, RecordTable *record);
       virtual void ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp);
       Expression(AstNodeType type = ExpressionType) : Node(type) {}
+
+      ~Expression() override = default;
     };
 
     class ArrayInitVal : public Expression {
@@ -64,7 +67,7 @@ namespace compiler {
 
       void print(int depth = 0, bool isEnd = false) override;
 
-      virtual int eval(RecordTable *record) const;
+      int eval(RecordTable *record) override;
 
       virtual OperatorName evalOp(IRList &ir, RecordTable *record) override;
 
@@ -97,6 +100,7 @@ namespace compiler {
       };
 
       OperatorName evalIndex(IRList &ir, RecordTable *record) override;
+      void storeRuntime(IRList &ir, RecordTable *record, OperatorName source);
     };
 
     class Stmt : public Expression {

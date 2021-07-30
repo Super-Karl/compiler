@@ -31,7 +31,7 @@ namespace compiler::mid::ir {
     std::string name;//ir中的name
     int value;
 
-    OperatorName(int val, Type type = Type::Var) : value(val), type(type){};
+    OperatorName(int val, Type type = Type::Var) : value(val), type(type), name(""){};
 
     OperatorName(std::string name, Type type = Type::Var) : type(type), name(std::move(name)) {}
 
@@ -74,7 +74,7 @@ namespace compiler::mid::ir {
     Alloca,
   };
   void printOpCode(OperatorCode op);
-  void printOpName(OperatorName op, char sp = '\n',bool = true);
+  void printOpName(OperatorName op, char sp = '\n', bool = true);
   class IR {
   public:
     IR(){};
@@ -106,12 +106,10 @@ namespace compiler::mid::ir {
       }
       if (retType == ElemType::VOID)
         std::cout << std::endl;
-      else
-      {
-        std::cout <<"& ";
-        printOpName(retOp,'\n',0);
+      else {
+        std::cout << "& ";
+        printOpName(retOp, '\n', 0);
       }
-
     }
   };
 

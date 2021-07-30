@@ -22,6 +22,8 @@ namespace compiler::controller {
     ArgParser(int argc, char **argv);
   };
   namespace generator {
+
+
     extern compiler::front::ast::AST *root;
 
     compiler::front::ast::AST *generate(FILE *input = stdin);

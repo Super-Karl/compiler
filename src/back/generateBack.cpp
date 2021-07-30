@@ -316,23 +316,23 @@ namespace compiler::back {
                 backlist.push_back(new OP("add",reg2,reg1,reg3));
                 break;
             }
-            /*case SUB: {
-                result = left - right;
-                return true;
+            case SUB: {
+                backlist.push_back(new OP("sub",reg2,reg1,reg3));
+                break;
             }
             case MUL: {
-                result = left * right;
-                return true;
+                backlist.push_back(new OP("mul",reg2,reg1,reg3));
+                break;
             }
             case DIV: {
-                result = left / right;
-                return true;
+                backlist.push_back(new OP("sdiv",reg2,reg1,reg3));
+                break;
             }
             case MOD: {
-                result = left % right;
-                return true;
+                backlist.push_back(new OP("aaa",reg2,reg1,reg3));
+                break;
             }
-            case EQ: {
+            /*case EQ: {
                 result = left == right;
                 return true;
             }

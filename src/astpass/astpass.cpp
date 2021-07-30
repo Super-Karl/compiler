@@ -400,7 +400,7 @@ namespace compiler::astpassir {
     vector<compiler::front::ast::Expression *> FirstPassArrayLinelize(int sizeIndex, vector<compiler::front::ast::Expression *> &index, vector<compiler::front::ast::Expression *> &values) {
         vector<Expression *> data;
         int needSize = 1;
-        int count = 0;
+        int count = -1;
         if (sizeIndex + 1 < index.size()) {
             for (int i = sizeIndex; i < index.size() - 1; i++) {
                 needSize = needSize * static_cast<NumberExpression *>(index[i + 1])->value;
@@ -415,13 +415,13 @@ namespace compiler::astpassir {
                 } else {
                     data.push_back(values[j]);
                     count = count + 1;
-                    count = count % (needSize + 1);
+                    count = count % needSize;
                     if (count < needSize - 1 && (j + 1 == values.size() || values[j + 1]->nodetype == ArrayInitValType)) {
-                        while (count < needSize) {
+                        while (count < needSize - 1) {
                             data.push_back(new NumberExpression(0));
                             count++;
                         }
-                        count = 0;
+                        count = -1;
                     }
                 }
             }

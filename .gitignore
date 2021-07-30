@@ -3,8 +3,12 @@
 ################################################################################
 
 /.vscode
-/build/*
+/build
 /.idea
+/cmake-build-debug
+/.cache/
+/cmake*
+/clang-format.txt
 /cmake-build-debug/*
 /.cache/*
 /test.cpp

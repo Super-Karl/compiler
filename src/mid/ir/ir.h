@@ -15,12 +15,11 @@ namespace compiler::mid::ir {
   using IRList = std::vector<IR *>;
 
   enum class ElemType {
-      //声明元素类型
     INT,
     VOID,
   };
+
   enum class Type {
-      //
     Imm,
     Void,
     Var
@@ -28,7 +27,6 @@ namespace compiler::mid::ir {
 
   class OperatorName {//ir中的操作数
   public:
-      //声明类型,名字和变量值
     Type type;
     std::string name;//ir中的name
     int value;
@@ -78,22 +76,18 @@ namespace compiler::mid::ir {
   class IR {
   public:
     IR() = default;
-
+    ;
     virtual IR *getThis() {
       return this;
     }
   };
 
-  class FunCallIR : public IR {//函数调用
+  class FunCallIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
-
-    std::string funcName;//function name 就是函数名的命名
-
-    std::vector<OperatorName> argList;//参数列表.
-
+    std::string funcName;
+    std::vector<OperatorName> argList;
     FunCallIR(std::string name) : IR(), funcName(std::move(name)){};
-
     FunCallIR *getThis() override {
       return this;
     }
@@ -101,15 +95,12 @@ namespace compiler::mid::ir {
 
   class FunDefIR : public IR {
   public:
-    ElemType retType;   //返回值
-
-    std::string name;   //函数名
-
+    ElemType retType;
+    std::string name;
     std::vector<OperatorName> argList;
+    IRList funcBody;
 
-    IRList funcBody;//函数体
-
-    FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(std::move(name)){};//构造函数
+    FunDefIR(ElemType retTye, std::string name) : IR(), retType(retTye), name(std::move(name)){};
 
     FunDefIR *getThis() override {
       return this;

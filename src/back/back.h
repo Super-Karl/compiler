@@ -45,24 +45,24 @@ namespace compiler::back {
         explicit NumSource(int num, SourceType type = NumSourceType) : Source(type), num(num) {}
     };
 
-    class address :public Source{
+    class address : public Source {
     public:
         string addr;
-        address(string reg,int offset){
-            if(offset==0)
-            {
-                addr="["+reg+"]";
-            }
-            else
-            {
-                addr="["+reg+",#"+to_string(offset)+"]";
+
+        address(string reg, int offset) {
+            if (offset == 0) {
+                addr = "[" + reg + "]";
+            } else {
+                addr = "[" + reg + ",#" + to_string(offset) + "]";
             }
         }
-        address(string reg,int offset,string s){
-            addr="["+reg+",#"+to_string(offset)+"]"+s;
+
+        address(string reg, int offset, string s) {
+            addr = "[" + reg + ",#" + to_string(offset) + "]" + s;
         }
-        address(string reg){
-            addr=reg;
+
+        address(string reg) {
+            addr = reg;
         }
     };
 
@@ -107,14 +107,13 @@ namespace compiler::back {
         }
     };
 
-    class GLOBAL:public INS{
+    class GLOBAL : public INS {
     public:
-        GLOBAL(string name,int value):INS(global)
-        {
-            fullIns=".data\n"
-                    ".global gv_"+name+"\n"
-                                       "gv_"+name+":\n"
-                    ".word "+to_string(value)+"\n";
+        GLOBAL(string name, int value) : INS(global) {
+            fullIns = ".data\n"
+                      ".global gv_" + name + "\n"
+                                             "gv_" + name + ":\n"
+                                                            ".word " + to_string(value) + "\n";
         }
     };
 
@@ -134,14 +133,15 @@ namespace compiler::back {
     public:
         STMDB() : INS(stmdb) {
             fullIns = "\tstmdb\tsp!,{fp, lr}\n"
-                      "\tadd\tfp,sp,#4\n";
+                      "\tadd\tfp, sp, #4\n";
         }
     };
 
     class LDMIA : public INS {
     public:
         LDMIA() : INS(ldmia) {
-            fullIns = "\tldmia\tsp!,{fp, lr}\n"
+            fullIns = "\tsub\tsp,\tfp,\t#4\n"
+                      "\tldmia\tsp!,{fp, lr}\n"
                       "\tbx\tlr\n";
         }
     };
@@ -149,38 +149,46 @@ namespace compiler::back {
     class MOV32 : public INS {
     public:
 
-        MOV32(int reg,string name) : INS(mov32) {
-            fullIns = "\tmov32 r"+to_string(reg)+", "+name+"\n";
+        MOV32(int reg, string name) : INS(mov32) {
+            fullIns = "\tmov32 r" + to_string(reg) + ", " + name + "\n";
         }
-        MOV32(int reg,int value) : INS(mov32) {
-            fullIns = "\tmov32 r"+to_string(reg)+", "+to_string(value)+"\n";
+
+        MOV32(int reg, int value) : INS(mov32) {
+            fullIns = "\tmov32 r" + to_string(reg) + ", " + to_string(value) + "\n";
         }
     };
 
     class MOV : public INS {
     public:
         MOV(int reg, int value) : INS(mov16) {
-            fullIns = "\tmov\tr" + to_string(reg) + ",#" + to_string(value) + "\n";
+            fullIns = "\tmov\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
         }
 
         MOV(int reg, int value, string type) : INS(mov16) {
             if (type == "reg2reg") {
-                fullIns = "\tmov\tr" + to_string(reg) + ",r" + to_string(value) + "\n";
+                fullIns = "\tmov\tr" + to_string(reg) + ", r" + to_string(value) + "\n";
             }
         }
     };
 
-    class STR:public INS{
+    class STR : public INS {
     public:
-        STR(int reg,address addr):INS(str){
-            fullIns = "\tstr r"+to_string(reg)+", "+addr.addr+"\n";
+        STR(int reg, address addr) : INS(str) {
+            fullIns = "\tstr r" + to_string(reg) + ", " + addr.addr + "\n";
         }
     };
 
-    class LDR:public INS{
+    class LDR : public INS {
     public:
-        LDR(int reg,address addr):INS(ldr){
-            fullIns = "\tldr r"+to_string(reg)+", "+addr.addr+"\n";
+        LDR(int reg, address addr) : INS(ldr) {
+            fullIns = "\tldr r" + to_string(reg) + ", " + addr.addr + "\n";
+        }
+    };
+
+    class OP : public INS {
+    public:
+        OP(string op, int rd, int rn, int rm) : INS(option) {
+            fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
         }
     };
 }

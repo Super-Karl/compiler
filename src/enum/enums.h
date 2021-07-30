@@ -116,6 +116,7 @@ enum INSType{
     mov32,
     mov16,
     str,
-    ldr
+    ldr,
+    option
 };
 #endif //COMPILER_ENUMS_H

@@ -67,7 +67,7 @@ namespace compiler {
 
       void print(int depth = 0, bool isEnd = false) override;
 
-      virtual int eval(RecordTable *record) const;
+      int eval(RecordTable *record) override;
 
       virtual OperatorName evalOp(IRList &ir, RecordTable *record) override;
 
@@ -100,6 +100,7 @@ namespace compiler {
       };
 
       OperatorName evalIndex(IRList &ir, RecordTable *record) override;
+      void storeRuntime(IRList &ir, RecordTable *record, OperatorName source);
     };
 
     class Stmt : public Expression {

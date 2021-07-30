@@ -2,7 +2,9 @@
 //
 #include "front/ast/AstNode.h"
 #include "parser.hpp"
+#include <assert.h>
 #include <iostream>
+
 using namespace compiler::mid::ir;
 namespace compiler::front::ast {
   void AST::genIR(IRList &ir, RecordTable *record) {
@@ -134,23 +136,27 @@ namespace compiler::front::ast {
   void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto var = record->searchVar(this->name->name);
     if (var->isArray) {
-      auto opName = name->evalOp(ir, record);
-      opName.name = record->getFarther() == nullptr ? "%" : "@" + to_string(record->getID());
+      auto source = rightExpr->evalOp(ir, record);
+
+      dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
 
       std::vector<int> index;
       for (auto i : name->getIndex())
         index.push_back(i->eval(record));
 
-      auto store = new StoreIR(name->evalOp(ir, record), rightExpr->eval(record), var->getArrayIndex(index));
-      ir.push_back(store);
       VarRedefChain varUse;
 
       try {
-        varUse = VarRedefChain(opName.name, this->name->eval(record), true);
+        varUse = VarRedefChain("", this->rightExpr->eval(record), true);
+        var->addVarUse(varUse, index);
       } catch (...) {
-        varUse = VarRedefChain(opName.name, INT32_MIN, false);
+        try {
+          varUse = VarRedefChain("", INT32_MIN, false);
+          var->addVarUse(varUse, index);
+        } catch (...) {
+        }
       }
-      var->addVarUse(varUse, index);
+
 
     } else {
       auto assign = new AssignIR();
@@ -318,11 +324,11 @@ namespace compiler::front::ast {
     return this->value;
   }
 
-  int Identifier::eval(RecordTable *record) const {
+  int Identifier::eval(RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
     if (varInfo->canAssign())
       return varInfo->getVal();
-    throw std::logic_error("it cannot assign");
+    throw std::runtime_error("it cannot assign");
   }
 
   int ArrayIdentifier::eval(RecordTable *record) {
@@ -332,7 +338,7 @@ namespace compiler::front::ast {
       index.push_back(i->eval(record));
     if (varInfo->isConst && varInfo->canAssign(index))
       return varInfo->getArrayVal(index);
-    throw std::logic_error("it cannot assign");
+    throw std::runtime_error("it cannot assign");
   }
 
   int BinaryExpression::eval(RecordTable *record) {
@@ -401,11 +407,11 @@ namespace compiler::front::ast {
       } else {
         ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLable));
       }
-    } catch (runtime_error e) {
+    } catch (...) {
       try {
         this->evalOp(ir, record);
         ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
-      } catch (runtime_error e) {
+      } catch (...) {
         if (trueJmp) {
           OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
           AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
@@ -444,12 +450,12 @@ namespace compiler::front::ast {
         } else {
           ir.emplace_back(new JmpIR(OperatorCode::Jmp, elLabel));
         }
-      } catch (runtime_error e) {
+      } catch (...) {
         try {
           this->evalOp(ir, record);
           ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
           ir.emplace_back(new JmpIR(OperatorCode::Jeq, elLabel));
-        } catch (runtime_error e) {
+        } catch (...) {
           if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
             AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
@@ -474,7 +480,7 @@ namespace compiler::front::ast {
 
 namespace compiler::front::ast {
   OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
-    return OperatorName(this->value, Type::Imm);
+    return {this->value, Type::Imm};
   }
 
   OperatorName UnaryExpression::evalOp(IRList &ir, RecordTable *record) {
@@ -703,5 +709,66 @@ namespace compiler::front::ast {
   }
 
   OperatorName ArrayIdentifier::evalIndex(IRList &ir, RecordTable *record) {
+  }
+
+  void ArrayIdentifier::storeRuntime(IRList &ir, RecordTable *record, OperatorName source) {
+    auto var = record->searchVar(this->name);
+    assert(this->index.size() == var->shape.size());
+    try {
+      int index = 0, temp = 1;
+      for (int i = this->index.size() - 1; i >= 0; --i) {
+        index += temp * this->index[i]->eval(record);
+        temp *= var->shape[i];
+      }
+      auto offset = OperatorName(index, Type::Imm);
+      auto dest = OperatorName(var->arrayName);
+      auto store = new StoreIR(dest, source, offset);
+      ir.push_back(store);
+    } catch (...) {
+      auto dest = OperatorName(var->arrayName);
+      if (this->index.size() == 1) {
+        auto store = new StoreIR(dest, source, this->index[0]->evalOp(ir, record));
+        ir.push_back(store);
+      } else {
+        //维度大于一的情况下,需要从最低维开始计算偏移量
+        auto tmpSize = OperatorName("%" + to_string(record->getID()));
+        //最低维的目标变量(ir)
+        auto indexContainer = OperatorName("%" + to_string(record->getID()));
+        //最低维的大小,是一个立即数
+        auto vSize = OperatorName("", Type::Imm);
+        vSize.value = var->shape[var->shape.size() - 1];
+        //把最后一个维度的值赋值给一个寄存器(mov
+        auto assign = new AssignIR(tmpSize, vSize);
+        ir.push_back(assign);
+
+        for (auto i = this->index.size() - 1; i >= 0; i--) {
+          if (i == this->index.size() - 1) {
+            auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
+            ir.push_back(mov);
+          } else {
+            auto tmp = OperatorName("%" + to_string(record->getID()));
+            auto tmp2 = OperatorName("%" + to_string(record->getID()));
+            auto t = new AssignIR(OperatorCode::Mul, tmp, tmpSize, this->index[i]->evalOp(ir, record));
+            ir.push_back(t);
+
+            auto add = new AssignIR(OperatorCode::Add, tmp2, indexContainer, tmp);
+            ir.push_back(add);
+            //已经处理的偏移量
+            indexContainer = tmp2;
+
+            //更新尺寸
+            if (i != 0) {
+              auto tmp = OperatorName("%" + to_string(record->getID()));
+              auto mul = new AssignIR(OperatorCode::Mul, tmp, tmpSize, this->index[i]->evalOp(ir, record));
+              ir.push_back(mul);
+              tmpSize = tmp;
+            }
+          }
+        }
+
+        auto store = new StoreIR(dest, source, indexContainer);
+        ir.push_back(store);
+      }
+    }
   }
 }// namespace compiler::front::ast

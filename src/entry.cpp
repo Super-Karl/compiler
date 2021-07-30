@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 
     ofstream outfile;
     string outputfile = argv[4];
-    outfile.open(outputfile.substr(1,outputfile.size()-1).c_str());
+    outfile.open(outputfile);
     for(auto i:backlist)
     {
         outfile<<i->getFullIns();

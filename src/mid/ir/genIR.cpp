@@ -28,27 +28,27 @@ namespace compiler::front::ast {
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
-    auto val = this->value->evalOp(ir, record);
+    auto source = this->value->evalOp(ir, record);
 
     VarRedefChain varUse;
     VarInfo *varInfo;
 
-    if (val.type == Type::Imm) {
-      varInfo = new VarInfo(token, val.value, true, false);
+    if (source.type == Type::Imm) {
+      varInfo = new VarInfo(source.name, source.value, true, false);
     } else {
-      varInfo = new VarInfo(token, INT32_MIN);
+      varInfo = new VarInfo(source.name, INT32_MIN);
     }
-
 
     record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
-    (new AssignStmt(this->name, value))->genIR(ir, record);
+    //    auto assign = new AssignIR(dest, source);
+    //    ir.push_back(assign);
   }
 
   void ConstDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
     int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token, val, true);
+    auto varInfo = new VarInfo(token, val, true, true);
     record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     (new AssignStmt(this->name, value))->genIR(ir, record);
@@ -97,7 +97,7 @@ namespace compiler::front::ast {
     ir.push_back(allocaIR);
 
     //更新符号表,插入数组的记录
-    auto varInfo = new VarInfo(token, shape, value, true);
+    auto varInfo = new VarInfo(token, shape, value, true, true);
     record->insertVar(arrayName->name, varInfo);
 
     //处理数组初始化元素
@@ -194,8 +194,7 @@ namespace compiler::front::ast {
       if (ident) {
         auto opName = OperatorName(".A" + i->name->name, Type::Var);
         funcdef->argList.push_back(opName);
-      }
-      else{
+      } else {
         auto opName = OperatorName(i->name->name, Type::Var);
         funcdef->argList.push_back(opName);
       }
@@ -208,7 +207,7 @@ namespace compiler::front::ast {
 
     RetIR *ret;
     if (this->retType == INT) {
-      ret = new RetIR(OperatorName(0, Type::Var));
+      ret = new RetIR(OperatorName(0, Type::Imm));
     } else
       ret = new RetIR(OperatorName(Type::Void));
     funcdef->funcBody.push_back(ret);
@@ -467,8 +466,8 @@ namespace compiler::front::ast {
         } catch (...) {
           if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
-            auto left = leftExpr->evalOp(ir,record);
-            auto right = rightExpr->evalOp(ir,record);
+            auto left = leftExpr->evalOp(ir, record);
+            auto right = rightExpr->evalOp(ir, record);
             AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
@@ -518,28 +517,27 @@ namespace compiler::front::ast {
       auto opName = OperatorName("", Type::Imm);
       opName.value = tmp;
       return opName;
-    }
-    catch (...) {
+    } catch (...) {
     }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
 
-    int RelOP[8] = {AND_OP,OR_OP,LT,LE,GE,GT,NE,EQ};
-    for (int i=0;i<8;i++){
+    int RelOP[8] = {AND_OP, OR_OP, LT, LE, GE, GT, NE, EQ};
+    for (int i = 0; i < 8; i++) {
       if (this->op == RelOP[i])
         throw runtime_error("rel op");
     }
     //排除所有的逻辑运算符
     try {
-      left = OperatorName(leftExpr->eval(record),Type::Imm);
+      left = OperatorName(leftExpr->eval(record), Type::Imm);
     } catch (...) {
       left = leftExpr->evalOp(ir, record);
     }
     try {
-      right = OperatorName(rightExpr->eval(record),Type::Imm);
+      right = OperatorName(rightExpr->eval(record), Type::Imm);
     } catch (...) {
       right = rightExpr->evalOp(ir, record);
     }
-      /*      left = OperatorName(leftExpr->evalOp(ir, record));
+    /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
 
     AssignIR *assign;

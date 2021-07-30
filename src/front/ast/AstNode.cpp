@@ -65,6 +65,7 @@ void ArrayDeclare::print(int depth, bool isEnd) {
     this->printPrefix(depth, isEnd);
     cout << this->nodetype << " " <<"ArrayDeclare: " << endl;
     this->name->print(depth + 1, false);
+    initVal->print(depth + 1, true);
 }
 
 void ConstArray::print(int depth, bool isEnd) {
@@ -251,7 +252,7 @@ ConstDeclare::~ConstDeclare(){
 }
 
 ArrayDeclare::~ArrayDeclare(){
-    
+    delete initVal;
 }
 
 ConstArray::~ConstArray(){

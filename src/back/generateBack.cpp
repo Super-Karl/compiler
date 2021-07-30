@@ -63,6 +63,9 @@ namespace compiler::back {
             } else if (block->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(block)->declareList) {
                     switch (subNode->nodetype) {
+                        case ArrayDeclareWithInitType:{
+                            break;
+                        }
                         case VarDeclareWithInitType: {
                             int value = 0;
                             string name = subNode->name->name;

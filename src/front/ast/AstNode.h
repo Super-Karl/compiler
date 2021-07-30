@@ -136,7 +136,9 @@ namespace compiler {
         class ArrayDeclare : public Declare {
         public:
 
-            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) {};
+            ArrayInitVal *initVal;
+
+            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal();};
 
             ~ArrayDeclare();
 

@@ -139,6 +139,10 @@ namespace compiler::astpassir {
             if (node->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
                     switch (subNode->nodetype) {
+                        case ArrayDeclareType:{
+                            FirstPassArray(subNode, constTbale);
+                            break;
+                        }
                         case ArrayDeclareWithInitType: {
                             FirstPassArray(subNode, constTbale);
                             break;
@@ -186,6 +190,10 @@ namespace compiler::astpassir {
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {
+                            case ArrayDeclareType:{
+                                FirstPassArray(subNode, constTbale);
+                                break;
+                            }
                             case ArrayDeclareWithInitType: {
                                 FirstPassArray(subNode, constTbale);
                                 break;
@@ -280,6 +288,10 @@ namespace compiler::astpassir {
                 for (auto subNode = static_cast<DeclareStatement *>(stmt)->declareList.begin();
                      subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
                     switch ((*subNode)->nodetype) {
+                        case ArrayDeclareType:{
+                            FirstPassArray(*subNode, constTbale);
+                            break;
+                        }
                         case ArrayDeclareWithInitType: {
                             FirstPassArray(*subNode, constTbale);
                             break;
@@ -381,7 +393,7 @@ namespace compiler::astpassir {
                 break;
             }
             case ArrayDeclareType: {
-                auto Id = static_cast<ArrayIdentifier *>(static_cast<ConstArray *>(array)->name);
+                auto Id = static_cast<ArrayIdentifier *>(static_cast<ArrayDeclare *>(array)->name);
                 for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
                     (*i) = FirstPassExpr((*i), constTbale);
                     int result;
@@ -392,6 +404,7 @@ namespace compiler::astpassir {
                         std::cout << "数组下标志不能计算";
                     }
                 }
+                static_cast<ArrayDeclare *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ArrayDeclare *>(array)->initVal->initValList);
                 break;
             }
         }

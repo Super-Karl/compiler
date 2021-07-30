@@ -17,9 +17,10 @@ namespace compiler::back {
     };
 
     //变量
+    std::unordered_map<string, VAR *> globalVartable;
     std::unordered_map<string, std::unordered_map<string, VAR *>> vartable;
 
-    std::unordered_map<string, int> tableIndex;
+    //std::unordered_map<string, int> tableIndex;
 
     string nowfunc;
 
@@ -40,7 +41,7 @@ namespace compiler::back {
             if (block->nodetype == FunctionDefineType) {
                 FunctionDefine *func = static_cast<FunctionDefine *>(block);
                 nowfunc = func->name->name;
-                tableIndex[nowfunc] = 0;
+                //tableIndex[nowfunc] = 0;
                 backlist.push_back(new FUNC(func->name->name));
                 backlist.push_back(new STMDB());
                 //生成函数back
@@ -55,17 +56,21 @@ namespace compiler::back {
                             if (static_cast<VarDeclareWithInit *>(subNode)->value->nodetype == NumberExpressionType) {
                                 value = static_cast<NumberExpression *>(static_cast<VarDeclareWithInit *>(subNode)->value)->value;
                             }
-                            int index = tableIndex["global"];
-                            vartable["global"][name] = new VAR(name, value, index);
-                            tableIndex["global"]++;
+                            int index = globalVartable.size();
+                            //int index = tableIndex["global"];
+                            globalVartable[name]=new VAR(name, value, index);
+                            //vartable["global"][name] = new VAR(name, value, index);
+                            //tableIndex["global"]++;
                             backlist.push_back(new GLOBAL(name, value));
                             break;
                         }
                         case VarDeclareType: {
                             string name = subNode->name->name;
-                            int index = tableIndex["global"];
-                            vartable["global"][name] = new VAR(name, 0, index);
-                            tableIndex["global"]++;
+                            int index = globalVartable.size();
+                            globalVartable[name]=new VAR(name, 0, index);
+                            //int index = tableIndex["global"];
+                            //vartable["global"][name] = new VAR(name, 0, index);
+                            //tableIndex["global"]++;
                             backlist.push_back(new GLOBAL(name, 0));
                             break;
                         }
@@ -84,9 +89,10 @@ namespace compiler::back {
                         switch (subNode->nodetype) {
                             case VarDeclareWithInitType: {
                                 string name = subNode->name->name;
-                                int index = tableIndex[nowfunc];
+                                //int index = tableIndex[nowfunc];
+                                int index = vartable[nowfunc].size();
                                 vartable[nowfunc][name] = new VAR(name, 0, index);
-                                tableIndex[nowfunc]++;
+                                //tableIndex[nowfunc]++;
                                 //把右值放到r2
                                 switch (static_cast<VarDeclareWithInit *>(subNode)->value->nodetype) {
                                     case NumberExpressionType: {
@@ -112,7 +118,7 @@ namespace compiler::back {
                                             backlist.push_back(new LDR(2, address("r4", 0)));
                                         } else {
                                             //读到r2
-                                            backlist.push_back(new LDR(2, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                                            backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                                         }
                                         break;
                                     }
@@ -123,14 +129,15 @@ namespace compiler::back {
                                     }
                                 }
                                 //存到内存中
-                                backlist.push_back(new STR(2, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                                 break;
                             }
                             case VarDeclareType: {
                                 string name = subNode->name->name;
-                                int index = tableIndex[nowfunc];
+                                int index = vartable[nowfunc].size();
+                                //int index = tableIndex[nowfunc];
                                 vartable[nowfunc][name] = new VAR(name, 0, index);
-                                tableIndex[nowfunc]++;
+                                //tableIndex[nowfunc]++;
                                 backlist.push_back(new STR(0, address("sp", -4, "!")));
                                 break;
                             }
@@ -164,7 +171,7 @@ namespace compiler::back {
                                 //读到r2
                                 backlist.push_back(new LDR(2, address("r4", 0)));
                             } else {
-                                backlist.push_back(new LDR(2, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                             }
                             break;
                         }
@@ -183,7 +190,7 @@ namespace compiler::back {
                         backlist.push_back(new MOV32(3, "gv_" + name));
                         backlist.push_back(new STR(2, address("r3", 0)));
                     } else {
-                        backlist.push_back(new STR(2, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                        backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                     }
                     break;
                 }
@@ -199,7 +206,7 @@ namespace compiler::back {
                                 //读到r3
                                 backlist.push_back(new LDR(0, address("r4", 0)));
                             } else {
-                                backlist.push_back(new LDR(0, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                                backlist.push_back(new LDR(0, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                             }
                             break;
                         }
@@ -265,7 +272,7 @@ namespace compiler::back {
                     //读到r2
                     backlist.push_back(new LDR(reg1, address("r4", 0)));
                 } else {
-                    backlist.push_back(new LDR(reg1, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                    backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                 }
                 break;
             }
@@ -300,7 +307,7 @@ namespace compiler::back {
                     //读到r3
                     backlist.push_back(new LDR(reg3, address("r4", 0)));
                 } else {
-                    backlist.push_back(new LDR(reg3, address("fp", -4 - 4 * vartable[nowfunc][name]->index)));
+                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[nowfunc][name]->index)));
                 }
                 break;
             }
@@ -328,13 +335,13 @@ namespace compiler::back {
                 backlist.push_back(new OP("sdiv",reg2,reg1,reg3));
                 break;
             }
-            case MOD: {
+            /*case MOD: {
                 backlist.push_back(new OP("aaa",reg2,reg1,reg3));
                 break;
             }
-            /*case EQ: {
-                result = left == right;
-                return true;
+            case EQ: {
+                backlist.push_back(new OP("mul",reg2,reg1,reg3));
+                break;
             }
             case NE: {
                 result = left != right;

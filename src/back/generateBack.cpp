@@ -243,7 +243,7 @@ namespace compiler::back {
                         }
                     }*/
                     generateExpression(vartable,backlist, static_cast<ReturnStatement*>((*item))->returnExp);
-                    backlist.push_back(new MOV(2,0,"reg2reg"));
+                    backlist.push_back(new MOV(0,2,"reg2reg"));
                     break;
                 }
             }
@@ -317,7 +317,7 @@ namespace compiler::back {
                             {
                                 generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index[i-1]);
                                 backlist.push_back(new MOV(3,globalVartable[name]->arrayIndex[i]*4));
-                                backlist.push_back(new MLA("r5","r5","r2","r3"));
+                                backlist.push_back(new MLA("r5","r2","r3","r5"));
                             }
                         }
                         if(offset*4<=65535)
@@ -379,7 +379,7 @@ namespace compiler::back {
                             {
                                 generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index[i-1]);
                                 backlist.push_back(new MOV(3,vartable[index].arrayIndex[i]*4));
-                                backlist.push_back(new MLA("r5","r5","r2","r3"));
+                                backlist.push_back(new MLA("r5","r2","r3","r5"));
                             }
                         }
                         if((2+offset+vartable[index].index)*4<=65535)
@@ -736,7 +736,7 @@ namespace compiler::back {
                     {
                         generateExpression(vartable,backlist, arrayIdentifier->index[i-1]);
                         backlist.push_back(new MOV(3,globalVartable[name]->arrayIndex[i]*4));
-                        backlist.push_back(new MLA("r5","r5","r2","r3"));
+                        backlist.push_back(new MLA("r5","r2","r3","r5"));
                     }
                 }
                 if(offset*4<=65535)
@@ -802,7 +802,7 @@ namespace compiler::back {
                     {
                         generateExpression(vartable,backlist, arrayIdentifier->index[i-1]);
                         backlist.push_back(new MOV(3,vartable[index].arrayIndex[i]*4));
-                        backlist.push_back(new MLA("r5","r5","r2","r3"));
+                        backlist.push_back(new MLA("r5","r2","r3","r5"));
                     }
                 }
                 if((2+offset+vartable[index].index)*4<=65535)

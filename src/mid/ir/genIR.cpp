@@ -249,6 +249,7 @@ namespace compiler::front::ast {
       }
     }
   }
+
   //fine
   void FunctionDefArg::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto varInfo = new VarInfo(name->name, INT32_MIN);
@@ -421,7 +422,7 @@ namespace compiler::front::ast {
       } catch (...) {
         if (trueJmp) {
           OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
-          AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+          auto *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
           ir.push_back(assign);
           ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
           ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), elLabel)));
@@ -442,12 +443,12 @@ namespace compiler::front::ast {
      * 当前的简单策略，将每一个表达式拆分成if else两种结果，根据表达式含义推断跳转的位置
     */
     if (this->op == AND_OP) {
-      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      auto *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir, record, innerLabel, elLabel, true);
       ir.push_back(innerLabel);
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
     } else if (this->op == OR_OP) {
-      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      auto *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir, record, ifLabel, innerLabel, true);
       ir.push_back(innerLabel);
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
@@ -468,7 +469,7 @@ namespace compiler::front::ast {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
             auto left = leftExpr->evalOp(ir, record);
             auto right = rightExpr->evalOp(ir, record);
-            AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+            auto *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getAntiRelOpCode(), elLabel)));

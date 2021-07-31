@@ -182,7 +182,7 @@ namespace compiler {
 
       ArrayInitVal *initVal;
 
-      ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal(); };
+      ArrayDeclare(ArrayIdentifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type), arrayName(name) { initVal = new ArrayInitVal(); };
 
       ~ArrayDeclare();
 

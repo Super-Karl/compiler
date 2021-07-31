@@ -192,7 +192,7 @@ namespace compiler::front::ast {
     for (auto i : args->args) {
       auto ident = dynamic_cast<ArrayIdentifier *>(i->name);
       if (ident) {
-        auto opName = OperatorName(".A" + i->name->name, Type::Var);
+        auto opName = OperatorName("&" + i->name->name, Type::Var);
         funcdef->argList.push_back(opName);
       } else {
         auto opName = OperatorName(i->name->name, Type::Var);
@@ -585,8 +585,20 @@ namespace compiler::front::ast {
     OperatorName dest = OperatorName("%" + std::to_string(record->getID()), tmpType);
     funCall->retOp = dest;
     for (auto i : args->args) {
-      auto val = i->evalOp(ir, record);
-      funCall->argList.push_back(val);
+      auto ident = dynamic_cast<Identifier *>(i);
+      if (ident) {
+        auto varInfo = record->searchVar(ident->name);
+        if (varInfo->isArray) {
+          auto opName = OperatorName(varInfo->arrayName);
+          funCall->argList.push_back(opName);
+        } else {
+          auto opName = ident->evalOp(ir, record);
+          funCall->argList.push_back(opName);
+        }
+      } else {
+        auto val = i->evalOp(ir, record);
+        funCall->argList.push_back(val);
+      }
     }
     ir.push_back(funCall);
     return dest;

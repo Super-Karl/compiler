@@ -11,135 +11,135 @@ namespace compiler::astpassir {
       case NumberExpressionType:
         result = static_cast<NumberExpression *>(exp)->value;
         return true;
-      case IdentifierType:
-        return false;
-      case BinaryExpressionType: {
-        auto exprTemp = static_cast<BinaryExpression *>(exp);
-        int left;
-        int right;
-        int leftCan = caluExpersion(exprTemp->leftExpr, left);
-        int rightCan = caluExpersion(exprTemp->rightExpr, right);
-        if (leftCan && rightCan) {
-          delete exprTemp->leftExpr;
-          exprTemp->leftExpr = NULL;
-          delete exprTemp->rightExpr;
-          exprTemp->rightExpr = NULL;
-          switch (exprTemp->op) {
-            case ADD: {
-              result = left + right;
+        case IdentifierType:
+          return false;
+          case BinaryExpressionType: {
+            auto exprTemp = static_cast<BinaryExpression *>(exp);
+            int left;
+            int right;
+            int leftCan = caluExpersion(exprTemp->leftExpr, left);
+            int rightCan = caluExpersion(exprTemp->rightExpr, right);
+            if (leftCan && rightCan) {
+              delete exprTemp->leftExpr;
+              exprTemp->leftExpr = NULL;
+              delete exprTemp->rightExpr;
+              exprTemp->rightExpr = NULL;
+              switch (exprTemp->op) {
+                case ADD: {
+                  result = left + right;
+                  return true;
+                }
+                case SUB: {
+                  result = left - right;
+                  return true;
+                }
+                case MUL: {
+                  result = left * right;
+                  return true;
+                }
+                case DIV: {
+                  result = left / right;
+                  return true;
+                }
+                case MOD: {
+                  result = left % right;
+                  return true;
+                }
+                case EQ: {
+                  result = left == right;
+                  return true;
+                }
+                case NE: {
+                  result = left != right;
+                  return true;
+                }
+                case LT: {
+                  result = left < right;
+                  return true;
+                }
+                case LE: {
+                  result = left <= right;
+                  return true;
+                }
+                case GT: {
+                  result = left > right;
+                  return true;
+                }
+                case GE: {
+                  result = left >= right;
+                  return true;
+                }
+                case AND_OP: {
+                  result = left && right;
+                  return true;
+                }
+                case OR_OP: {
+                  result = left || right;
+                  return true;
+                }
+                case NOT_EQUAL: {
+                  result = left != right;
+                  return true;
+                }
+              }
+            } else if (exprTemp->op == AND_OP && ((leftCan && left == 0) || (rightCan && right == 0))) {
+              delete exprTemp->leftExpr;
+              exprTemp->leftExpr = NULL;
+              delete exprTemp->rightExpr;
+              exprTemp->leftExpr = NULL;
+              result = 0;
               return true;
-            }
-            case SUB: {
-              result = left - right;
+            } else if (exprTemp->op == OR_OP && ((leftCan && left != 0) || (rightCan && right != 0))) {
+              delete exprTemp->leftExpr;
+              exprTemp->leftExpr = NULL;
+              delete exprTemp->rightExpr;
+              exprTemp->rightExpr = NULL;
+              result = 1;
               return true;
-            }
-            case MUL: {
-              result = left * right;
-              return true;
-            }
-            case DIV: {
-              result = left / right;
-              return true;
-            }
-            case MOD: {
-              result = left % right;
-              return true;
-            }
-            case EQ: {
-              result = left == right;
-              return true;
-            }
-            case NE: {
-              result = left != right;
-              return true;
-            }
-            case LT: {
-              result = left < right;
-              return true;
-            }
-            case LE: {
-              result = left <= right;
-              return true;
-            }
-            case GT: {
-              result = left > right;
-              return true;
-            }
-            case GE: {
-              result = left >= right;
-              return true;
-            }
-            case AND_OP: {
-              result = left && right;
-              return true;
-            }
-            case OR_OP: {
-              result = left || right;
-              return true;
-            }
-            case NOT_EQUAL: {
-              result = left != right;
-              return true;
+            } else {
+              return false;
             }
           }
-        } else if (exprTemp->op == AND_OP && ((leftCan && left == 0) || (rightCan && right == 0))) {
-          delete exprTemp->leftExpr;
-          exprTemp->leftExpr = NULL;
-          delete exprTemp->rightExpr;
-          exprTemp->leftExpr = NULL;
-          result = 0;
-          return true;
-        } else if (exprTemp->op == OR_OP && ((leftCan && left != 0) || (rightCan && right != 0))) {
-          delete exprTemp->leftExpr;
-          exprTemp->leftExpr = NULL;
-          delete exprTemp->rightExpr;
-          exprTemp->rightExpr = NULL;
-          result = 1;
-          return true;
-        } else {
-          return false;
-        }
-      }
-      case UnaryExpressionType: {
-        auto exprTemp = static_cast<UnaryExpression *>(exp);
-        int res;
-        int resCan = caluExpersion(exprTemp->right, res);
-        if (resCan) {
-          delete exprTemp->right;
-          exprTemp->right = NULL;
-          switch (exprTemp->op) {
-            case ADD: {
-              result = res;
+          case UnaryExpressionType: {
+            auto exprTemp = static_cast<UnaryExpression *>(exp);
+            int res;
+            int resCan = caluExpersion(exprTemp->right, res);
+            if (resCan) {
+              delete exprTemp->right;
+              exprTemp->right = NULL;
+              switch (exprTemp->op) {
+                case ADD: {
+                  result = res;
+                  return true;
+                }
+                case SUB: {
+                  result = -res;
+                  return true;
+                }
+                case NOT_EQUAL: {
+                  result = !res;
+                  return true;
+                }
+              }
               return true;
-            }
-            case SUB: {
-              result = -res;
-              return true;
-            }
-            case NOT_EQUAL: {
-              result = !res;
-              return true;
+            } else {
+              return false;
             }
           }
-          return true;
-        } else {
-          return false;
-        }
-      }
-      default: {
-        return false;
-      }
+          default: {
+            return false;
+          }
     }
   }
 
   void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
     std::cout << "开始优化ast" << std::endl;
     //遍历根节点中的Block,建立哈希表
-    for (auto node : root->codeBlock) {
+    for (auto node:root->codeBlock) {
       if (node->nodetype == DeclareStatementType) {
-        for (auto subNode : static_cast<DeclareStatement *>(node)->declareList) {
+        for (auto subNode:static_cast<DeclareStatement *>(node)->declareList) {
           switch (subNode->nodetype) {
-            case ArrayDeclareType: {
+            case ArrayDeclareType:{
               FirstPassArray(subNode, constTbale);
               break;
             }
@@ -188,9 +188,9 @@ namespace compiler::astpassir {
     for (auto item = node->blockItem.begin(); item != node->blockItem.end(); item++) {
       switch ((*item)->nodetype) {
         case DeclareStatementType: {
-          for (auto subNode : static_cast<DeclareStatement *>(*item)->declareList) {
+          for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
             switch (subNode->nodetype) {
-              case ArrayDeclareType: {
+              case ArrayDeclareType:{
                 FirstPassArray(subNode, constTbale);
                 break;
               }
@@ -259,7 +259,7 @@ namespace compiler::astpassir {
         }
         case FunctionCallType: {
           for (auto i = static_cast<FunctionCall *>(*item)->args->args.begin();
-               i != static_cast<FunctionCall *>(*item)->args->args.end(); i++) {
+          i != static_cast<FunctionCall *>(*item)->args->args.end(); i++) {
             *i = FirstPassExpr(*i, constTbale);
           }
           break;
@@ -286,9 +286,9 @@ namespace compiler::astpassir {
     switch (stmt->nodetype) {
       case DeclareStatementType: {
         for (auto subNode = static_cast<DeclareStatement *>(stmt)->declareList.begin();
-             subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
+        subNode != static_cast<DeclareStatement *>(stmt)->declareList.end(); subNode++) {
           switch ((*subNode)->nodetype) {
-            case ArrayDeclareType: {
+            case ArrayDeclareType:{
               FirstPassArray(*subNode, constTbale);
               break;
             }
@@ -370,7 +370,7 @@ namespace compiler::astpassir {
             delete (*i);
             (*i) = new NumberExpression(result);
           } else {
-            std::cout << "数组下标志不能计算" << std::endl;
+            std::cout << "数组下标志不能计算";
           }
         }
         //数组线性化
@@ -386,7 +386,7 @@ namespace compiler::astpassir {
             delete (*i);
             (*i) = new NumberExpression(result);
           } else {
-            std::cout << "数组下标志不能计算" << std::endl;
+            std::cout << "数组下标志不能计算";
           }
         }
         static_cast<ConstArray *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ConstArray *>(array)->initVal->initValList);
@@ -401,7 +401,7 @@ namespace compiler::astpassir {
             delete (*i);
             (*i) = new NumberExpression(result);
           } else {
-            std::cout << "数组下标志不能计算" << std::endl;
+            std::cout << "数组下标志不能计算";
           }
         }
         static_cast<ArrayDeclare *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ArrayDeclare *>(array)->initVal->initValList);
@@ -461,7 +461,7 @@ namespace compiler::astpassir {
             delete (*i);
             (*i) = new NumberExpression(result);
           } else {
-            std::cout << "数组下标志不能计算" << std::endl;
+            std::cout << "数组下标志不能计算";
           }
         }
         break;
@@ -498,4 +498,5 @@ namespace compiler::astpassir {
       return expr;
     }
   }
-}// namespace compiler::astpassir
+}
+

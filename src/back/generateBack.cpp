@@ -190,56 +190,32 @@ namespace compiler::back {
                     break;
                 }
                 case AssignStmtType: {
-                    string name = static_cast<AssignStmt *>(*item)->name->name;
-                    /*switch (static_cast<AssignStmt *>(*item)->rightExpr->nodetype) {
-                        //把右值放到r2
-                        case NumberExpressionType: {
-                            //右值为数字
-                            int value = 0;
-                            value = static_cast<NumberExpression *>(static_cast<AssignStmt *>(*item)->rightExpr)->value;
-                            if (value < 65535) {
-                                backlist.push_back(new MOV(2, value));
-                            } else {
-                                backlist.push_back(new MOV32(2, value));
-                            }
-                            break;
-                        }
-                        case IdentifierType: {
-                            //右值为单个字母
-                            string name = static_cast<Identifier *>(static_cast<AssignStmt *>(*item)->rightExpr)->name;
-                            int index = tableFind(vartable,name);
-                            if (index==-1) {
-                                //全局变量
-                                //取地址到r4
-                                backlist.push_back(new MOV32(4, name));
-                                //读到r2
-                                backlist.push_back(new LDR(2, address("r4", 0)));
-                            } else {
-                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
-                            }
-                            break;
-                        }
-                        case BinaryExpressionType: {
-                            //右值为BinaryExpression，计算后将计算后的值放在r2
-                            generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(static_cast<AssignStmt *>(*item)->rightExpr), 0);
-                            break;
-                        }
-                    }*/
-                    generateExpression(vartable,backlist, static_cast<AssignStmt*>(*item)->rightExpr);
-                    //判断全局变量还是局部变量
-                    int index = tableFind(vartable,name);
-                    if (index==-1) {
-                        //全局变量
-                        //取地址到r3
-                        backlist.push_back(new MOV32(3, name));
-                        backlist.push_back(new STR(2, address("r3", 0)));
-                    } else {
-                        backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[index].index)));
+                    if(static_cast<AssignStmt *>(*item)->name->nodetype==ArrayIdentifierType)
+                    {
+                        getArrayIdentAddress(vartable,backlist, static_cast<ArrayIdentifier*>(static_cast<AssignStmt *>(*item)->name));
+                        generateExpression(vartable,backlist, static_cast<AssignStmt*>(*item)->rightExpr);
+                        backlist.push_back(new STR(2, address("r6", 0)));
+                        break;
                     }
-                    break;
+                    else
+                    {
+                        string name = static_cast<AssignStmt *>(*item)->name->name;
+                        generateExpression(vartable,backlist, static_cast<AssignStmt*>(*item)->rightExpr);
+                        //判断全局变量还是局部变量
+                        int index = tableFind(vartable,name);
+                        if (index==-1) {
+                            //全局变量
+                            //取地址到r3
+                            backlist.push_back(new MOV32(3, name));
+                            backlist.push_back(new STR(2, address("r3", 0)));
+                        } else {
+                            backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[index].index)));
+                        }
+                        break;
+                    }
                 }
                 case ReturnStatementType: {
-                    switch (static_cast<ReturnStatement *>((*item))->returnExp->nodetype) {
+                    /*switch (static_cast<ReturnStatement *>((*item))->returnExp->nodetype) {
                         case IdentifierType: {
                             string name = static_cast<Identifier *>(static_cast<ReturnStatement *>((*item))->returnExp)->name;
                             int index = tableFind(vartable,name);
@@ -265,7 +241,9 @@ namespace compiler::back {
                             backlist.push_back(new MOV(0,2,"reg2reg"));
                             break;
                         }
-                    }
+                    }*/
+                    generateExpression(vartable,backlist, static_cast<ReturnStatement*>((*item))->returnExp);
+                    backlist.push_back(new MOV(2,0,"reg2reg"));
                     break;
                 }
             }
@@ -284,6 +262,137 @@ namespace compiler::back {
                     backlist.push_back(new MOV(2, value));
                 } else {
                     backlist.push_back(new MOV32(2, value));
+                }
+                break;
+            }
+            case ArrayDeclareType:
+            case ArrayIdentifierType:{
+                string name = static_cast<ArrayIdentifier *>(expression)->name;
+                int index = tableFind(vartable,name);
+                if(index==-1)
+                {
+                    int offset=0;
+                    int allNum=1;
+                    for(int i=1; i<globalVartable[name]->arrayIndex.size();i++)
+                    {
+                        if(static_cast<ArrayIdentifier *>(expression)->index[i-1]->nodetype==NumberExpressionType)
+                        {
+                            offset+=globalVartable[name]->arrayIndex[i]*
+                                    static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index[i-1])->value;
+                        }
+                        else
+                        {
+                            allNum=0;
+                        }
+                    }
+                    if(static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype!=NumberExpressionType)
+                    {
+                        allNum=0;
+                    }
+                    //处理最后一个下标
+                    if(static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype==NumberExpressionType)
+                    {
+                        if(allNum)
+                            offset+=static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
+                        else
+                            backlist.push_back(new MOV(5,static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index.back())->value*4));
+                    }
+                    else
+                    {
+                        generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
+                        backlist.push_back(new OP("lsl",2,2,"#2"));
+                        backlist.push_back(new MOV(5,2));
+                    }
+                    if(allNum)
+                    {
+                        //取地址到r4
+                        backlist.push_back(new MOV32(4, name));
+                        backlist.push_back(new LDR(2,address("r4", - 4 * offset)));
+                    }
+                    else
+                    {
+                        for(int i=1; i<globalVartable[name]->arrayIndex.size();i++)
+                        {
+                            if(static_cast<ArrayIdentifier *>(expression)->index[i-1]->nodetype!=NumberExpressionType)
+                            {
+                                generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index[i-1]);
+                                backlist.push_back(new MOV(3,globalVartable[name]->arrayIndex[i]*4));
+                                backlist.push_back(new MLA("r5","r5","r2","r3"));
+                            }
+                        }
+                        if(offset*4<=65535)
+                        {
+                            backlist.push_back(new OP("add",5,5,"#"+to_string(offset*4)));
+                        }
+                        else
+                        {
+                            backlist.push_back(new MOV32(4,offset*4));
+                            backlist.push_back(new OP("add",5,5,4));
+                        }
+                        backlist.push_back(new MOV32(4, name));
+                        backlist.push_back(new LDR(2,address("r4","-r5")));
+                    }
+                }
+                else
+                {
+                    int offset=0;
+                    int allNum=1;
+                    for(int i=1; i<vartable[index].arrayIndex.size();i++)
+                    {
+                        if(static_cast<ArrayIdentifier *>(expression)->index[i-1]->nodetype==NumberExpressionType)
+                        {
+                            offset+=vartable[index].arrayIndex[i]*
+                                    static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index[i-1])->value;
+                        }
+                        else
+                        {
+                            allNum=0;
+                        }
+                    }
+                    if(static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype!=NumberExpressionType)
+                    {
+                        allNum=0;
+                    }
+                    //处理最后一个下标
+                    if(static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype==NumberExpressionType)
+                    {
+                        if(allNum)
+                            offset+=static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
+                        else
+                            backlist.push_back(new MOV(5,static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(expression)->index.back())->value*4));
+                    }
+                    else
+                    {
+                        generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
+                        backlist.push_back(new OP("lsl",2,2,"#2"));
+                        backlist.push_back(new MOV(5,2));
+                    }
+                    if(allNum)
+                    {
+                        backlist.push_back(new LDR(2,address("fp", -8 - 4 * (vartable[index].index + offset))));
+                    }
+                    else
+                    {
+                        for(int i=1; i<vartable[index].arrayIndex.size();i++)
+                        {
+                            if(static_cast<ArrayIdentifier *>(expression)->index[i-1]->nodetype!=NumberExpressionType)
+                            {
+                                generateExpression(vartable,backlist, static_cast<ArrayIdentifier *>(expression)->index[i-1]);
+                                backlist.push_back(new MOV(3,vartable[index].arrayIndex[i]*4));
+                                backlist.push_back(new MLA("r5","r5","r2","r3"));
+                            }
+                        }
+                        if((2+offset+vartable[index].index)*4<=65535)
+                        {
+                            backlist.push_back(new OP("add",5,5,"#"+to_string((2+offset+vartable[index].index)*4)));
+                        }
+                        else
+                        {
+                            backlist.push_back(new MOV32(4,(2+offset+vartable[index].index)*4));
+                            backlist.push_back(new OP("add",5,5,4));
+                        }
+                        backlist.push_back(new LDR(2,address("fp","-r5")));
+                    }
                 }
                 break;
             }
@@ -570,6 +679,144 @@ namespace compiler::back {
                 }
                 vartable.push_back(temp);
                 break;
+            }
+        }
+    }
+    //获得地址到r6
+    void getArrayIdentAddress(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::ArrayIdentifier* arrayIdentifier){
+        string name = arrayIdentifier->name;
+        int index = tableFind(vartable,name);
+        if(index==-1)
+        {
+            int offset=0;
+            int allNum=1;
+            for(int i=1; i<globalVartable[name]->arrayIndex.size();i++)
+            {
+                if(arrayIdentifier->index[i-1]->nodetype==NumberExpressionType)
+                {
+                    offset+=globalVartable[name]->arrayIndex[i]*
+                            static_cast<NumberExpression*>(arrayIdentifier->index[i-1])->value;
+                }
+                else
+                {
+                    allNum=0;
+                }
+            }
+            if(arrayIdentifier->index.back()->nodetype!=NumberExpressionType)
+            {
+                allNum=0;
+            }
+            //处理最后一个下标
+            if(arrayIdentifier->index.back()->nodetype==NumberExpressionType)
+            {
+                if(allNum)
+                    offset+=static_cast<NumberExpression*>(arrayIdentifier->index.back())->value;
+                else
+                    backlist.push_back(new MOV(5,static_cast<NumberExpression*>(arrayIdentifier->index.back())->value*4));
+            }
+            else
+            {
+                generateExpression(vartable,backlist, arrayIdentifier->index.back());
+                backlist.push_back(new OP("lsl",2,2,"#2"));
+                backlist.push_back(new MOV(5,2));
+            }
+            if(allNum)
+            {
+                //取地址到r4
+                backlist.push_back(new MOV32(4, name));
+                //获得地址
+                //backlist.push_back(new LDR(2,address("r4", - 4 * offset)));
+                backlist.push_back(new OP("sub",6,4,"#"+to_string(4 * offset)));
+            }
+            else
+            {
+                for(int i=1; i<globalVartable[name]->arrayIndex.size();i++)
+                {
+                    if(arrayIdentifier->index[i-1]->nodetype!=NumberExpressionType)
+                    {
+                        generateExpression(vartable,backlist, arrayIdentifier->index[i-1]);
+                        backlist.push_back(new MOV(3,globalVartable[name]->arrayIndex[i]*4));
+                        backlist.push_back(new MLA("r5","r5","r2","r3"));
+                    }
+                }
+                if(offset*4<=65535)
+                {
+                    backlist.push_back(new OP("add",5,5,"#"+to_string(offset*4)));
+                }
+                else
+                {
+                    backlist.push_back(new MOV32(4,offset*4));
+                    backlist.push_back(new OP("add",5,5,4));
+                }
+                backlist.push_back(new MOV32(4, name));
+                //backlist.push_back(new LDR(2,address("r4","-r5")));
+                //获得地址
+                backlist.push_back(new OP("sub",6,4,5));
+            }
+        }
+        else
+        {
+            int offset=0;
+            int allNum=1;
+            for(int i=1; i<vartable[index].arrayIndex.size();i++)
+            {
+                if(arrayIdentifier->index[i-1]->nodetype==NumberExpressionType)
+                {
+                    offset+=vartable[index].arrayIndex[i]*
+                            static_cast<NumberExpression*>(arrayIdentifier->index[i-1])->value;
+                }
+                else
+                {
+                    allNum=0;
+                }
+            }
+            if(arrayIdentifier->index.back()->nodetype!=NumberExpressionType)
+            {
+                allNum=0;
+            }
+            //处理最后一个下标
+            if(arrayIdentifier->index.back()->nodetype==NumberExpressionType)
+            {
+                if(allNum)
+                    offset+=static_cast<NumberExpression*>(arrayIdentifier->index.back())->value;
+                else
+                    backlist.push_back(new MOV(5,static_cast<NumberExpression*>(arrayIdentifier->index.back())->value*4));
+            }
+            else
+            {
+                generateExpression(vartable,backlist, arrayIdentifier->index.back());
+                backlist.push_back(new OP("lsl",2,2,"#2"));
+                backlist.push_back(new MOV(5,2));
+            }
+            if(allNum)
+            {
+                //获得地址
+                //backlist.push_back(new LDR(2,address("fp", -8 - 4 * (vartable[index].index + offset))));
+                backlist.push_back(new OP("sub",6,"fp","#"+ to_string(8+4 * (vartable[index].index + offset))));
+            }
+            else
+            {
+                for(int i=1; i<vartable[index].arrayIndex.size();i++)
+                {
+                    if(arrayIdentifier->index[i-1]->nodetype!=NumberExpressionType)
+                    {
+                        generateExpression(vartable,backlist, arrayIdentifier->index[i-1]);
+                        backlist.push_back(new MOV(3,vartable[index].arrayIndex[i]*4));
+                        backlist.push_back(new MLA("r5","r5","r2","r3"));
+                    }
+                }
+                if((2+offset+vartable[index].index)*4<=65535)
+                {
+                    backlist.push_back(new OP("add",5,5,"#"+to_string((2+offset+vartable[index].index)*4)));
+                }
+                else
+                {
+                    backlist.push_back(new MOV32(4,(2+offset+vartable[index].index)*4));
+                    backlist.push_back(new OP("add",5,5,4));
+                }
+                //backlist.push_back(new LDR(2,address("fp","-r5")));
+                //获得地址
+                backlist.push_back(new OP("sub",6,"fp","r5"));
             }
         }
     }

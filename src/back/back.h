@@ -65,6 +65,10 @@ namespace compiler::back {
         address(string reg) {
             addr = reg;
         }
+
+        address(string reg ,string reg2) {
+            addr = "[" + reg + "," + reg2 + "]";
+        }
     };
 
     //指令
@@ -206,10 +210,23 @@ namespace compiler::back {
         }
     };
 
+    class MLA:public INS{
+    public:
+        MLA(string rd,string rm,string rs,string rn):INS(mla){
+            fullIns="\tmla\t"+rd+",\t"+rm+",\t"+rs+",\t"+rn+"\n";
+        }
+    };
+
     class OP : public INS {
     public:
         OP(string op, int rd, int rn, int rm) : INS(option) {
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
+        }
+        OP(string op, int rd, int rn, string op2) : INS(option) {
+            fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
+        }
+        OP(string op, int rd, string rn, string op2) : INS(option) {
+            fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", " + op2 + "\n";
         }
     };
 }

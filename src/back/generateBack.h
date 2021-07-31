@@ -27,5 +27,7 @@ namespace compiler::back {
     void generateBinaryExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression,int pos);
 
     void generateBackArray(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::Declare *array);
+    //获得数组标识符的地址放到r6
+    void getArrayIdentAddress(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::ArrayIdentifier* arrayIdentifier);
 }
 #endif //COMPILER_GENERATEBACK_H

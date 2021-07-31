@@ -180,7 +180,9 @@ namespace compiler {
     public:
       ArrayIdentifier *arrayName;
 
-      ArrayDeclare(ArrayIdentifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type), arrayName(name){};
+      ArrayInitVal *initVal;
+
+      ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal(); };
 
       ~ArrayDeclare();
 

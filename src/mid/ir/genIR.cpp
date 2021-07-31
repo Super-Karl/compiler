@@ -55,24 +55,27 @@ namespace compiler::front::ast {
   }
 
   void ArrayDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
 
-    vector<int> shape;
-    int size = 1;
-    for (auto i : arrayName->index) {
-      shape.push_back(i->eval(record));
-      size *= i->eval(record);
-    };
-
-    //数组声明时的内存分配
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    vector<int> value;
-    value.resize(size, INT32_MIN);
-    auto varInfo = new VarInfo(token, shape, value);
-    record->insertVar(arrayName->name, varInfo);
+    auto array = new ArrayDeclareWithInit(this->arrayName, this->initVal);
+    array->genIR(ir, record);
+//    string token = record->getFarther() == nullptr ? "@" : "%";
+//    token = token + std::to_string(record->getID());
+//
+//    vector<int> shape;
+//    int size = 1;
+//    for (auto i : arrayName->index) {
+//      shape.push_back(i->eval(record));
+//      size *= i->eval(record);
+//    };
+//
+//    //数组声明时的内存分配
+//    auto allocaIR = new AllocaIR(token, size);
+//    ir.push_back(allocaIR);
+//
+//    vector<int> value;
+//    value.resize(size, INT32_MIN);
+//    auto varInfo = new VarInfo(token, shape, value);
+//    record->insertVar(arrayName->name, varInfo);
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {

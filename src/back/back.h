@@ -157,6 +157,9 @@ namespace compiler::back {
             fullIns = "\tstmdb\tsp!,{fp, lr}\n"
                       "\tadd\tfp, sp, #4\n";
         }
+        STMDB(string func) : INS(stmdb) {
+            fullIns = "\tstmdb\tsp!,{r1-r6}\n";
+        }
     };
 
     class LDMIA : public INS {
@@ -165,6 +168,16 @@ namespace compiler::back {
             fullIns = "\tsub\tsp,\tfp,\t#4\n"
                       "\tldmia\tsp!,{fp, lr}\n"
                       "\tbx\tlr\n";
+        }
+        LDMIA(string func) : INS(ldmia) {
+                fullIns = "\tldmia\tsp!,{r1-r6}\n";
+        }
+    };
+
+    class BL:public INS{
+    public:
+        BL(string name):INS(bl){
+            fullIns="\tbl\t"+name+"\n";
         }
     };
 

@@ -194,7 +194,7 @@ namespace compiler {
 
         class FunctionDefArgList : public Expression {
         public:
-            list<FunctionDefArg *> args;
+            vector<FunctionDefArg *> args;
 
             FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type) {};
 
@@ -229,7 +229,7 @@ namespace compiler {
          */
         class FunctionCallArgList : public Expression {
         public:
-            list<Expression *> args;
+            vector<Expression *> args;
 
             FunctionCallArgList(AstNodeType type = FunctionCallArgListType) : Expression(type) {};
 

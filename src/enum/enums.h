@@ -119,6 +119,7 @@ enum INSType{
     str,
     ldr,
     option,
-    mla
+    mla,
+    bl
 };
 #endif //COMPILER_ENUMS_H

@@ -6,6 +6,7 @@
 #define COMPILER_BACK_H
 
 #include <iostream>
+#include <vector>
 #include "../enum/enums.h"
 
 using namespace std;
@@ -111,12 +112,29 @@ namespace compiler::back {
     public:
         GLOBAL(string name, int value) : INS(global) {
             fullIns = ".data\n"
-                      ".global gv_" + name + "\n"
-                                             "gv_" + name + ":\n"
-                                                            ".word " + to_string(value) + "\n";
+                      ".global " + name + "\n"
+                      + name + ":\n"
+                               ".word " + to_string(value) + "\n";
         }
     };
 
+    class GLOBALARRAY:public INS{
+    public:
+        GLOBALARRAY(string name,vector<int>value): INS(globalarray){
+            fullIns="\n.data\n"
+                    ".global "+name+"\n"
+                    + name + ":\n";
+            int totalSize = value.size()*4;
+            int j;
+            for(j=value.size()-1;j>=0&&value[j]==0;j--){}
+            for(int i=0;i<=j;i++)
+            {
+                fullIns=fullIns+".word "+to_string(value[i])+"\n";
+            }
+            fullIns=fullIns+".space "+to_string(totalSize)+"\n";
+        }
+    };
+    
     class FUNC : public INS {
     public:
         string name;
@@ -175,6 +193,9 @@ namespace compiler::back {
     public:
         STR(int reg, address addr) : INS(str) {
             fullIns = "\tstr r" + to_string(reg) + ", " + addr.addr + "\n";
+        }
+        STR(int reg):INS(str){
+            fullIns = "\tstr r" + to_string(reg) + ", [sp,#-4]!\n";
         }
     };
 

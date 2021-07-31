@@ -21,7 +21,11 @@ namespace compiler::back {
     list<compiler::back::INS *> generateBack(compiler::front::ast::AST *root);
 
     void generateBackFunction(vector<VAR>vartable, list<INS *> &backlist, compiler::front::ast::FunctionDefine *func);
+    //计算表达式
+    void generateExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::Expression *expression);
     //pos表示是计算当前是上一级的左表达式（-1），右表达式（1），最高表达式（0）
     void generateBinaryExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression,int pos);
+
+    void generateBackArray(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::Declare *array);
 }
 #endif //COMPILER_GENERATEBACK_H

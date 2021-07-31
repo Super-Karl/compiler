@@ -110,6 +110,7 @@ enum INSType{
     macroType,
     INSlableType,
     global,
+    globalarray,
     funcLable,
     stmdb,
     ldmia,

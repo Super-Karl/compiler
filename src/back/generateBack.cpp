@@ -64,6 +64,7 @@ namespace compiler::back {
             } else if (block->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(block)->declareList) {
                     switch (subNode->nodetype) {
+                        case ConstArrayType:
                         case ArrayDeclareType:{
                             string name = subNode->name->name;
                             int index = globalVartable.size();
@@ -127,10 +128,8 @@ namespace compiler::back {
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {
-                            case ArrayDeclareType: {
-                                generateBackArray(vartable,backlist,subNode);
-                                break;
-                            }
+                            case ConstArrayType:
+                            case ArrayDeclareType:
                             case ArrayDeclareWithInitType:{
                                 generateBackArray(vartable,backlist,subNode);
                                 break;
@@ -265,6 +264,7 @@ namespace compiler::back {
                 }
                 break;
             }
+            case ConstArrayType:
             case ArrayDeclareType:
             case ArrayIdentifierType:{
                 string name = static_cast<ArrayIdentifier *>(expression)->name;
@@ -583,6 +583,7 @@ namespace compiler::back {
     void generateBackArray(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::Declare *array){
         switch(array->nodetype)
         {
+            case ConstArrayType:
             case ArrayDeclareType:{
                 string name = array->name->name;
                 VAR temp =VAR(name, 0, tableIndex);
@@ -592,40 +593,6 @@ namespace compiler::back {
                 }
                 for(auto value:static_cast<ArrayDeclare*>(array)->initVal->initValList)
                 {
-                    /*switch(value->nodetype)
-                    {
-                        case NumberExpressionType:{
-                            int v = static_cast<NumberExpression*>(value)->value;
-                            if (v < 65535) {
-                                backlist.push_back(new MOV(2, v));
-                            } else {
-                                backlist.push_back(new MOV32(2, v));
-                            }
-                            temp.arrayValue.push_back(v);
-                            break;
-                        }
-                        case IdentifierType: {
-                            //右值为单个字母
-                            string name = static_cast<Identifier *>(value)->name;
-                            int index = tableFind(vartable,name);
-                            if (index==-1) {
-                                //全局变量
-                                //取地址到r4
-                                backlist.push_back(new MOV32(4, name));
-                                //读到r2
-                                backlist.push_back(new LDR(2, address("r4", 0)));
-                            } else {
-                                //读到r2
-                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
-                            }
-                            break;
-                        }
-                        case BinaryExpressionType: {
-                            //右值为BinaryExpression，计算后将计算后的值放在r2
-                            generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(value), 0);
-                            break;
-                        }
-                    }*/
                     generateExpression(vartable,backlist, value);
                     //存到内存中
                     backlist.push_back(new STR(2));
@@ -643,40 +610,6 @@ namespace compiler::back {
                 }
                 for(auto value:static_cast<ArrayDeclareWithInit*>(array)->initVal->initValList)
                 {
-                    /*switch(value->nodetype)
-                    {
-                        case NumberExpressionType:{
-                            int v = static_cast<NumberExpression*>(value)->value;
-                            if (v < 65535) {
-                                backlist.push_back(new MOV(2, v));
-                            } else {
-                                backlist.push_back(new MOV32(2, v));
-                            }
-                            temp.arrayValue.push_back(v);
-                            break;
-                        }
-                        case IdentifierType: {
-                            //右值为单个字母
-                            string name = static_cast<Identifier *>(value)->name;
-                            int index = tableFind(vartable,name);
-                            if (index==-1) {
-                                //全局变量
-                                //取地址到r4
-                                backlist.push_back(new MOV32(4, name));
-                                //读到r2
-                                backlist.push_back(new LDR(2, address("r4", 0)));
-                            } else {
-                                //读到r2
-                                backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
-                            }
-                            break;
-                        }
-                        case BinaryExpressionType: {
-                            //右值为BinaryExpression，计算后将计算后的值放在r2
-                            generateBinaryExpression(vartable,backlist, static_cast<BinaryExpression *>(value), 0);
-                            break;
-                        }
-                    }*/
                     generateExpression(vartable,backlist, value);
                     //存到内存中
                     backlist.push_back(new STR(2));

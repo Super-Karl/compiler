@@ -277,11 +277,13 @@ if __name__ == "__main__":
             pass
     print("""
 #include <stdio.h>
-void putint(int c){
+int putint(int c){
     printf("%d",c);
+    return 0;
 }
-void putch(int c){
+int putch(int c){
     printf("%c",c);
+    return 0;
 }
 int getint(){
     int tmp;

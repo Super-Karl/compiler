@@ -453,8 +453,8 @@ namespace compiler::back {
                 break;
             }
             case ArrayIdentifierType:{
-                string name = static_cast<ArrayIdentifier *>(expression->leftExpr)->name;
-
+                getArrayIdentAddress(vartable,backlist, static_cast<ArrayIdentifier*>(expression->leftExpr));
+                backlist.push_back(new LDR(reg1, address("r6", 0)));
                 break;
             }
             case IdentifierType:
@@ -490,6 +490,11 @@ namespace compiler::back {
                 } else {
                     backlist.push_back(new MOV32(reg3, value));
                 }
+                break;
+            }
+            case ArrayIdentifierType:{
+                getArrayIdentAddress(vartable,backlist, static_cast<ArrayIdentifier*>(expression->rightExpr));
+                backlist.push_back(new LDR(reg3, address("r6", 0)));
                 break;
             }
             case IdentifierType:

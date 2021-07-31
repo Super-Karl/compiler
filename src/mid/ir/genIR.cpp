@@ -58,24 +58,24 @@ namespace compiler::front::ast {
 
     auto array = new ArrayDeclareWithInit(this->arrayName, this->initVal);
     array->genIR(ir, record);
-//    string token = record->getFarther() == nullptr ? "@" : "%";
-//    token = token + std::to_string(record->getID());
-//
-//    vector<int> shape;
-//    int size = 1;
-//    for (auto i : arrayName->index) {
-//      shape.push_back(i->eval(record));
-//      size *= i->eval(record);
-//    };
-//
-//    //数组声明时的内存分配
-//    auto allocaIR = new AllocaIR(token, size);
-//    ir.push_back(allocaIR);
-//
-//    vector<int> value;
-//    value.resize(size, INT32_MIN);
-//    auto varInfo = new VarInfo(token, shape, value);
-//    record->insertVar(arrayName->name, varInfo);
+    //    string token = record->getFarther() == nullptr ? "@" : "%";
+    //    token = token + std::to_string(record->getID());
+    //
+    //    vector<int> shape;
+    //    int size = 1;
+    //    for (auto i : arrayName->index) {
+    //      shape.push_back(i->eval(record));
+    //      size *= i->eval(record);
+    //    };
+    //
+    //    //数组声明时的内存分配
+    //    auto allocaIR = new AllocaIR(token, size);
+    //    ir.push_back(allocaIR);
+    //
+    //    vector<int> value;
+    //    value.resize(size, INT32_MIN);
+    //    auto varInfo = new VarInfo(token, shape, value);
+    //    record->insertVar(arrayName->name, varInfo);
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {
@@ -355,11 +355,11 @@ namespace compiler::front::ast {
   int BinaryExpression::eval(RecordTable *record) {
     switch (this->op) {
       case ADD:
-        return rightExpr->eval(record) + leftExpr->eval(record);
+        return leftExpr->eval(record) + rightExpr->eval(record);
       case SUB:
-        return rightExpr->eval(record) + leftExpr->eval(record);
+        return leftExpr->eval(record) - rightExpr->eval(record);
       case MUL:
-        return rightExpr->eval(record) * leftExpr->eval(record);
+        return leftExpr->eval(record) * rightExpr->eval(record);
       case DIV:
         return leftExpr->eval(record) / rightExpr->eval(record);
       case MOD:
@@ -587,6 +587,7 @@ namespace compiler::front::ast {
     auto tmpType = retType == ElemType::INT ? Type::Var : Type::Void;
     OperatorName dest = OperatorName("%" + std::to_string(record->getID()), tmpType);
     funCall->retOp = dest;
+    int counter = 0;
     for (auto i : args->args) {
       auto ident = dynamic_cast<Identifier *>(i);
       if (ident) {
@@ -602,6 +603,9 @@ namespace compiler::front::ast {
         auto val = i->evalOp(ir, record);
         funCall->argList.push_back(val);
       }
+
+      //函数调用时,显式处理函数参数
+      //      auto arg = AssignIR(OperatorName("$" + to_string(counter++)), );
     }
     ir.push_back(funCall);
     return dest;

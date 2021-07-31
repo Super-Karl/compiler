@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   compiler::astpassir::FirstPassRoot(root, constTbale);
 
   auto ir = compiler::controller::generator::genIR(root);
-  freopen("gen.ir","w",stdout);
+//  freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
   return 0;
 }

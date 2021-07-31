@@ -289,7 +289,7 @@ int getint(){
     return tmp;
 }
 int getch(){
-    int tmp;
+    char tmp;
     scanf("%c",&tmp);
     return tmp;
 }    

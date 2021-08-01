@@ -120,6 +120,9 @@ enum INSType{
     ldr,
     option,
     mla,
-    bl
+    b,
+    bl,
+    cmpbeq,
+    cmp
 };
 #endif //COMPILER_ENUMS_H

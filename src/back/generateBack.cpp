@@ -20,13 +20,12 @@ namespace compiler::back {
 
     //变量
     std::unordered_map<string, VAR *> globalVartable;
-    //std::unordered_map<string, std::unordered_map<string, VAR *>> vartable;
-
-    //std::unordered_map<string, int> tableIndex;
 
     int tableIndex = 0;//一个函数的参数个数，用于编号
 
     string nowfunc;
+
+    int ifStatCount = 0;
 
     int tableFind(vector<VAR> &vartable, string name) {
         for (int i = vartable.size() - 1; i >= 0; i--) {
@@ -58,6 +57,7 @@ namespace compiler::back {
                 backlist.push_back(new STMDB());
                 //生成函数back
                 vector<VAR> vartable;//记录当前代码块的变量
+                ifStatCount=0;
                 generateBackFunction(vartable, backlist, func);
                 backlist.push_back(new LDMIA());
             } else if (block->nodetype == DeclareStatementType) {
@@ -131,6 +131,29 @@ namespace compiler::back {
         //处理函数体
         for (auto item = func->body->blockItem.begin(); item != func->body->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
+                case IfStatementType:{
+                    int id = ifStatCount++;
+                    backlist.push_back(new Lable("if_con_"+to_string(id)));
+                    generateExpression(vartable,backlist, static_cast<IfStatement*>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
+                    backlist.push_back(new Lable("if_true_"+to_string(id)));
+                    //iftrue体
+                    if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
+                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->trueBlock));
+                    } else {
+                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->trueBlock);
+                    }
+                    backlist.push_back(new B("if_end_"+ to_string(id)));
+                    backlist.push_back(new Lable("if_else_"+to_string(id)));
+                    //ifelse体
+                    if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
+                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->elseBlock));
+                    } else if(static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
+                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->elseBlock);
+                    }
+                    backlist.push_back(new Lable("if_end_"+to_string(id)));
+                    break;
+                }
                 case FunctionCallType:{
                     generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((*item)));
                     break;
@@ -325,9 +348,14 @@ namespace compiler::back {
                 }
                 break;
             }
+            case UnaryExpressionType:{
+                //UnaryExpressionType，计算后将计算后的值放在r2
+                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression),2);
+                break;
+            }
             case BinaryExpressionType: {
                 //右值为BinaryExpression，计算后将计算后的值放在r2
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression), 0);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression), 2);
                 break;
             }
         }
@@ -337,17 +365,17 @@ namespace compiler::back {
         int reg1;
         int reg2;//最终结果
         int reg3;
-        if (pos == -1) {
+        if (pos == 1) {
             reg1 = 1;
             reg2 = 1;
             reg3 = 2;
         }
-        if (pos == 0) {
+        if (pos == 2) {
             reg1 = 1;
             reg2 = 2;
             reg3 = 3;
         }
-        if (pos == 1) {
+        if (pos == 3) {
             reg1 = 2;
             reg2 = 3;
             reg3 = 3;
@@ -385,7 +413,11 @@ namespace compiler::back {
                 break;
             }
             case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), -1);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), reg1);
+                break;
+            }
+            case UnaryExpressionType:{
+                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->rightExpr),reg1);
                 break;
             }
         }
@@ -422,7 +454,11 @@ namespace compiler::back {
                 break;
             }
             case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), 1);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), reg3);
+                break;
+            }
+            case UnaryExpressionType:{
+                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->rightExpr),reg3);
                 break;
             }
         }
@@ -483,6 +519,77 @@ namespace compiler::back {
                     result = left != right;
                     return true;
                 }*/
+        }
+    }
+
+    void generateUnaryExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression,int pos){
+        int reg1;
+        int reg2;//最终结果
+        if(pos==2)
+        {
+            reg1=1;
+            reg2=2;
+        }
+        if(pos==1){
+            reg1=2;
+            reg2=1;
+        }
+        if(pos==3){
+            reg1=2;
+            reg2=3;
+        }
+        switch (expression->right->nodetype) {
+            case NumberExpressionType: {
+                int value = static_cast<NumberExpression *>(expression->right)->value;
+                //TODO 小于0的情况没有考虑
+                if (value < 65535) {
+                    backlist.push_back(new MOV(reg2, value));
+                } else {
+                    backlist.push_back(new MOV32(reg2, value));
+                }
+                break;
+            }
+            case ArrayIdentifierType: {
+                getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression->right));
+                backlist.push_back(new LDR(reg2, address("r6", 0)));
+                break;
+            }
+            case IdentifierType: {
+                //右值为单个字母
+                string name = static_cast<Identifier *>(expression->right)->name;
+                int index = tableFind(vartable, name);
+                if (index == -1) {
+                    //全局变量
+                    //取地址到r4
+                    backlist.push_back(new MOV32(4, name));
+                    //读到r3
+                    backlist.push_back(new LDR(reg2, address("r4", 0)));
+                } else {
+                    backlist.push_back(new LDR(reg2, address("fp", -8 - 4 * vartable[index].index)));
+                }
+                break;
+            }
+            case BinaryExpressionType: {
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->right), reg2);
+                break;
+            }
+            case UnaryExpressionType:{
+                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->right),reg2);
+                break;
+            }
+        }
+        switch (expression->op) {
+            case SUB:{
+                backlist.push_back(new MOV(reg1,0));
+                backlist.push_back(new OP("sub",reg2,reg1,reg2));
+                break;
+            }
+            case NOT_EQUAL:{
+                backlist.push_back(new CMP(reg2,"#0"));
+                backlist.push_back(new MOV("eq",reg2,1));
+                backlist.push_back(new MOV("ne",reg2,0));
+                break;
+            }
         }
     }
 
@@ -677,6 +784,182 @@ namespace compiler::back {
         backlist.push_back(new BL(functionCall->name->name));
         //回复现场
         //backlist.push_back(new LDMIA("func"));
+    }
+    //处理if_while的block
+    void generateBlock(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Block* block){
+        for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
+            switch ((*item)->nodetype) {
+                case IfStatementType:{
+                    int id = ifStatCount++;
+                    backlist.push_back(new Lable("if_con_"+to_string(id)));
+                    generateExpression(vartable,backlist, static_cast<IfStatement*>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
+                    backlist.push_back(new Lable("if_true_"+to_string(id)));
+                    //iftrue体
+                    if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
+                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->trueBlock));
+                    } else {
+                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->trueBlock);
+                    }
+                    backlist.push_back(new B("if_end_"+ to_string(id)));
+                    backlist.push_back(new Lable("if_else_"+to_string(id)));
+                    //ifelse体
+                    if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
+                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->elseBlock));
+                    } else if(static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
+                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->elseBlock);
+                    }
+                    backlist.push_back(new Lable("if_end_"+to_string(id)));
+                    break;
+                }
+                case FunctionCallType:{
+                    generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((*item)));
+                    break;
+                }
+                case DeclareStatementType: {
+                    for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
+                        switch (subNode->nodetype) {
+                            case ConstArrayType:
+                            case ArrayDeclareType:
+                            case ArrayDeclareWithInitType: {
+                                generateBackArray(vartable, backlist, subNode);
+                                break;
+                            }
+                            case VarDeclareWithInitType: {
+                                //把右值放到r2
+                                generateExpression(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
+                                string name = subNode->name->name;
+                                vartable.push_back(VAR(name, 0, tableIndex++));
+                                //存到内存中
+                                backlist.push_back(new STR(2));
+                                break;
+                            }
+                            case VarDeclareType: {
+                                string name = subNode->name->name;
+                                vartable.push_back(VAR(name, 0, tableIndex++));
+                                backlist.push_back(new STR(0));
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case AssignStmtType: {
+                    if (static_cast<AssignStmt *>(*item)->name->nodetype == ArrayIdentifierType) {
+                        getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
+                        generateExpression(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
+                        backlist.push_back(new STR(2, address("r6", 0)));
+                        break;
+                    } else {
+                        string name = static_cast<AssignStmt *>(*item)->name->name;
+                        generateExpression(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
+                        //判断全局变量还是局部变量
+                        int index = tableFind(vartable, name);
+                        if (index == -1) {
+                            //全局变量
+                            //取地址到r3
+                            backlist.push_back(new MOV32(3, name));
+                            backlist.push_back(new STR(2, address("r3", 0)));
+                        } else {
+                            backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[index].index)));
+                        }
+                        break;
+                    }
+                }
+                case ReturnStatementType: {
+                    generateExpression(vartable, backlist, static_cast<ReturnStatement *>((*item))->returnExp);
+                    backlist.push_back(new MOV(0, 2, "reg2reg"));
+                    break;
+                }
+            }
+        }
+    }
+    //处理if_while的单条语句
+    void generateStmt(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Node* stmt){
+        switch ((stmt)->nodetype) {
+            case IfStatementType:{
+                int id = ifStatCount++;
+                backlist.push_back(new Lable("if_con_"+to_string(id)));
+                generateExpression(vartable,backlist, static_cast<IfStatement*>((stmt))->cond);//计算条件到r2
+                backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
+                backlist.push_back(new Lable("if_true_"+to_string(id)));
+                //iftrue体
+                if (static_cast<IfStatement *>(stmt)->trueBlock->nodetype == BlockType) {
+                    generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(stmt)->trueBlock));
+                } else {
+                    generateStmt(vartable,backlist,static_cast<IfStatement *>(stmt)->trueBlock);
+                }
+                backlist.push_back(new B("if_end_"+ to_string(id)));
+                backlist.push_back(new Lable("if_else_"+to_string(id)));
+                //ifelse体
+                if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype == BlockType) {
+                    generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(stmt)->elseBlock));
+                } else if(static_cast<IfStatement *>(stmt)->elseBlock->nodetype != VoidStatementType) {
+                    generateStmt(vartable,backlist,static_cast<IfStatement *>(stmt)->elseBlock);
+                }
+                backlist.push_back(new Lable("if_end_"+to_string(id)));
+                break;
+            }
+            case FunctionCallType:{
+                generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((stmt)));
+                break;
+            }
+            case DeclareStatementType: {
+                for (auto subNode:static_cast<DeclareStatement *>(stmt)->declareList) {
+                    switch (subNode->nodetype) {
+                        case ConstArrayType:
+                        case ArrayDeclareType:
+                        case ArrayDeclareWithInitType: {
+                            generateBackArray(vartable, backlist, subNode);
+                            break;
+                        }
+                        case VarDeclareWithInitType: {
+                            //把右值放到r2
+                            generateExpression(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
+                            string name = subNode->name->name;
+                            vartable.push_back(VAR(name, 0, tableIndex++));
+                            //存到内存中
+                            backlist.push_back(new STR(2));
+                            break;
+                        }
+                        case VarDeclareType: {
+                            string name = subNode->name->name;
+                            vartable.push_back(VAR(name, 0, tableIndex++));
+                            backlist.push_back(new STR(0));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case AssignStmtType: {
+                if (static_cast<AssignStmt *>(stmt)->name->nodetype == ArrayIdentifierType) {
+                    getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
+                    generateExpression(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
+                    backlist.push_back(new STR(2, address("r6", 0)));
+                    break;
+                } else {
+                    string name = static_cast<AssignStmt *>(stmt)->name->name;
+                    generateExpression(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
+                    //判断全局变量还是局部变量
+                    int index = tableFind(vartable, name);
+                    if (index == -1) {
+                        //全局变量
+                        //取地址到r3
+                        backlist.push_back(new MOV32(3, name));
+                        backlist.push_back(new STR(2, address("r3", 0)));
+                    } else {
+                        backlist.push_back(new STR(2, address("fp", -8 - 4 * vartable[index].index)));
+                    }
+                    break;
+                }
+            }
+            case ReturnStatementType: {
+                generateExpression(vartable, backlist, static_cast<ReturnStatement *>((stmt))->returnExp);
+                backlist.push_back(new MOV(0, 2, "reg2reg"));
+                break;
+            }
+        }
     }
 }
 

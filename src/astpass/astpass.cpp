@@ -247,11 +247,9 @@ namespace compiler::astpassir {
                     break;
                 }
                 case WhileStatementType: {
-                    static_cast<WhileStatement *>(*item)->cond = FirstPassExpr(static_cast<IfStatement *>(*item)->cond,
-                                                                               constTbale);
+                    static_cast<WhileStatement *>(*item)->cond = FirstPassExpr(static_cast<IfStatement *>(*item)->cond,constTbale);
                     if (static_cast<WhileStatement *>(*item)->nodetype == BlockType) {
-                        FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock),
-                                      constTbale);
+                        FirstPassNode(static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock),constTbale);
                     } else {
                         FirstPassStmt(static_cast<Stmt *>(static_cast<WhileStatement *>(*item)->loopBlock), constTbale);
                     }

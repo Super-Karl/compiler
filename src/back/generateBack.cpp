@@ -25,6 +25,8 @@ namespace compiler::back {
 
     string nowfunc;
 
+    int whileCount = 0;
+
     int ifStatCount = 0;
 
     int tableFind(vector<VAR> &vartable, string name) {
@@ -58,6 +60,7 @@ namespace compiler::back {
                 //生成函数back
                 vector<VAR> vartable;//记录当前代码块的变量
                 ifStatCount = 0;
+                whileCount = 0;
                 generateBackFunction(vartable, backlist, func);
                 backlist.push_back(new LDMIA());
             } else if (block->nodetype == DeclareStatementType) {
@@ -131,6 +134,22 @@ namespace compiler::back {
         //处理函数体
         for (auto item = func->body->blockItem.begin(); item != func->body->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
+                case WhileStatementType:{
+                    int id = whileCount++;
+                    backlist.push_back(new Lable("while_con_" + to_string(id)));
+                    generateExpression(vartable, backlist, static_cast<WhileStatement *>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2", "#0", "while_end_" + to_string(id)));
+                    backlist.push_back(new Lable("while_body_" + to_string(id)));
+                    //while体
+                    if (static_cast<WhileStatement *>(*item)->loopBlock->nodetype == BlockType) {
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock),id);
+                    } else {
+                        generateStmt(vartable, backlist, static_cast<WhileStatement *>(*item)->loopBlock,id);
+                    }
+                    backlist.push_back(new B("while_con_" + to_string(id)));
+                    backlist.push_back(new Lable("while_end_" + to_string(id)));
+                    break;
+                }
                 case IfStatementType: {
                     int id = ifStatCount++;
                     backlist.push_back(new Lable("if_con_" + to_string(id)));
@@ -139,17 +158,17 @@ namespace compiler::back {
                     backlist.push_back(new Lable("if_true_" + to_string(id)));
                     //iftrue体
                     if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
-                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock),-1);
                     } else {
-                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock,-1);
                     }
                     backlist.push_back(new B("if_end_" + to_string(id)));
                     backlist.push_back(new Lable("if_else_" + to_string(id)));
                     //ifelse体
                     if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
-                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock),-1);
                     } else if (static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
-                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock,-1);
                     }
                     backlist.push_back(new Lable("if_end_" + to_string(id)));
                     break;
@@ -787,9 +806,33 @@ namespace compiler::back {
     }
 
     //处理if_while的block
-    void generateBlock(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Block *block) {
+    void generateBlock(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Block *block,int nowWhileId) {
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
+                case BreakStatemetType:{
+                    backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
+                    break;
+                }
+                case ContinueStatementType:{
+                    backlist.push_back(new B("while_con_" + to_string(nowWhileId)));
+                    break;
+                }
+                case WhileStatementType:{
+                    int id = whileCount++;
+                    backlist.push_back(new Lable("while_con_" + to_string(id)));
+                    generateExpression(vartable, backlist, static_cast<WhileStatement *>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2", "#0", "while_end_" + to_string(id)));
+                    backlist.push_back(new Lable("while_body_" + to_string(id)));
+                    //while体
+                    if (static_cast<WhileStatement *>(*item)->loopBlock->nodetype == BlockType) {
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock),id);
+                    } else {
+                        generateStmt(vartable, backlist, static_cast<WhileStatement *>(*item)->loopBlock,id);
+                    }
+                    backlist.push_back(new B("while_con_" + to_string(id)));
+                    backlist.push_back(new Lable("while_end_" + to_string(id)));
+                    break;
+                }
                 case IfStatementType: {
                     int id = ifStatCount++;
                     backlist.push_back(new Lable("if_con_" + to_string(id)));
@@ -798,17 +841,17 @@ namespace compiler::back {
                     backlist.push_back(new Lable("if_true_" + to_string(id)));
                     //iftrue体
                     if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
-                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock),nowWhileId);
                     } else {
-                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock,nowWhileId);
                     }
                     backlist.push_back(new B("if_end_" + to_string(id)));
                     backlist.push_back(new Lable("if_else_" + to_string(id)));
                     //ifelse体
                     if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
-                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock),nowWhileId);
                     } else if (static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
-                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock,nowWhileId);
                     }
                     backlist.push_back(new Lable("if_end_" + to_string(id)));
                     break;
@@ -877,8 +920,32 @@ namespace compiler::back {
     }
 
     //处理if_while的单条语句
-    void generateStmt(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Node *stmt) {
+    void generateStmt(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Node *stmt,int nowWhileId) {
         switch ((stmt)->nodetype) {
+            case BreakStatemetType:{
+                backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
+                break;
+            }
+            case ContinueStatementType:{
+                backlist.push_back(new B("while_con_" + to_string(nowWhileId)));
+                break;
+            }
+            case WhileStatementType:{
+                int id = whileCount++;
+                backlist.push_back(new Lable("while_con_" + to_string(id)));
+                generateExpression(vartable, backlist, static_cast<WhileStatement *>((stmt))->cond);//计算条件到r2
+                backlist.push_back(new CMPBEQ("r2", "#0", "while_end_" + to_string(id)));
+                backlist.push_back(new Lable("while_body_" + to_string(id)));
+                //while体
+                if (static_cast<WhileStatement *>(stmt)->loopBlock->nodetype == BlockType) {
+                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock),id);
+                } else {
+                    generateStmt(vartable, backlist, static_cast<WhileStatement *>(stmt)->loopBlock,id);
+                }
+                backlist.push_back(new B("while_con_" + to_string(id)));
+                backlist.push_back(new Lable("while_end_" + to_string(id)));
+                break;
+            }
             case IfStatementType: {
                 int id = ifStatCount++;
                 backlist.push_back(new Lable("if_con_" + to_string(id)));
@@ -887,17 +954,17 @@ namespace compiler::back {
                 backlist.push_back(new Lable("if_true_" + to_string(id)));
                 //iftrue体
                 if (static_cast<IfStatement *>(stmt)->trueBlock->nodetype == BlockType) {
-                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->trueBlock));
+                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->trueBlock),nowWhileId);
                 } else {
-                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->trueBlock);
+                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->trueBlock,nowWhileId);
                 }
                 backlist.push_back(new B("if_end_" + to_string(id)));
                 backlist.push_back(new Lable("if_else_" + to_string(id)));
                 //ifelse体
                 if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype == BlockType) {
-                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->elseBlock));
+                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->elseBlock),nowWhileId);
                 } else if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype != VoidStatementType) {
-                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->elseBlock);
+                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->elseBlock,nowWhileId);
                 }
                 backlist.push_back(new Lable("if_end_" + to_string(id)));
                 break;

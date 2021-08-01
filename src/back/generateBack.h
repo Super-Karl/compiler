@@ -34,8 +34,8 @@ namespace compiler::back {
     //处理函数调用
     void generateFuncCall(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::FunctionCall* functionCall);
     //处理if_while的block
-    void generateBlock(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Block* block);
+    void generateBlock(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Block* block,int nowWhileId);
     //处理if_while的单条语句
-    void generateStmt(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Node* stmt);
+    void generateStmt(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Node* stmt,int nowWhileId);
 }
 #endif //COMPILER_GENERATEBACK_H

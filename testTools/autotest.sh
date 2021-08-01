@@ -85,8 +85,12 @@ then
     done
 elif test $1 == "-a"
     then
+
+    let "i=0"
+    let "sum=0"
     for file in ../testcase/*.sy
     do 
+    
         touch testcase.sy
         rm testcase.sy
         touch this.out
@@ -121,6 +125,7 @@ elif test $1 == "-a"
         #echo -e "\033[31m C excuted failed\33[0m" 
         #fi
         echo $? >> this.out
+        let "i++"
         #echo "filename ${file##*/%.*}"
         if test $2="-t" 
         then
@@ -134,6 +139,7 @@ elif test $1 == "-a"
                 echo -e "\033[31m test $file failed \033[0m"
             else
                 echo -e "\033[32m test $file passed \033[0m"
+                let "sum++"
             fi
         else
             diff -b -q this.out  ${file%.sy}.out
@@ -142,7 +148,7 @@ elif test $1 == "-a"
             then
                 touch std.out
                 rm std.out
-                touch ../build/test.sy
+                touch test.sy
                 rm ../build/test.sy
                 cp ${file%.sy}.out std.out
                 cp ${file%.sy}.sy ../build/test.sy
@@ -153,6 +159,7 @@ elif test $1 == "-a"
             fi
         fi
     done
+    echo $sum / $i "passed"
 elif test $1 = "-s"
     then
     #echo "into -s $2 $3 cond"
@@ -214,6 +221,7 @@ elif test $1 = "-s"
             rm ../build/test.sy
             cp ${file%.sy}.out std.out
             cp ${file%.sy}.sy ../build/test.sy
+            echo "//$file failed" >> ../build/test.sy
             echo -e "\033[31m test $file failed\033[0m"
         else
             echo -e "\033[32m test $file passed\033[0m"

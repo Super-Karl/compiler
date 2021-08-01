@@ -432,11 +432,11 @@ namespace compiler::back {
                 break;
             }
             case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), reg1);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), 1);
                 break;
             }
             case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), reg1);
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), 1);
                 break;
             }
         }
@@ -473,11 +473,11 @@ namespace compiler::back {
                 break;
             }
             case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), reg3);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), 3);
                 break;
             }
             case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), reg3);
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), 3);
                 break;
             }
         }
@@ -558,32 +558,36 @@ namespace compiler::back {
     void generateUnaryExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression, int pos) {
         int reg1;
         int reg2;//最终结果
+        int reg3;
+        if (pos == 1) {
+            reg1 = 1;
+            reg2 = 1;
+            reg3 = 2;
+        }
         if (pos == 2) {
             reg1 = 1;
             reg2 = 2;
-        }
-        if (pos == 1) {
-            reg1 = 2;
-            reg2 = 1;
+            reg3 = 3;
         }
         if (pos == 3) {
             reg1 = 2;
             reg2 = 3;
+            reg3 = 3;
         }
         switch (expression->right->nodetype) {
             case NumberExpressionType: {
                 int value = static_cast<NumberExpression *>(expression->right)->value;
                 //TODO 小于0的情况没有考虑
                 if (value < 65535) {
-                    backlist.push_back(new MOV(reg2, value));
+                    backlist.push_back(new MOV(reg3, value));
                 } else {
-                    backlist.push_back(new MOV32(reg2, value));
+                    backlist.push_back(new MOV32(reg3, value));
                 }
                 break;
             }
             case ArrayIdentifierType: {
                 getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression->right));
-                backlist.push_back(new LDR(reg2, address("r6", 0)));
+                backlist.push_back(new LDR(reg3, address("r6", 0)));
                 break;
             }
             case IdentifierType: {
@@ -595,25 +599,29 @@ namespace compiler::back {
                     //取地址到r4
                     backlist.push_back(new MOV32(4, name));
                     //读到r3
-                    backlist.push_back(new LDR(reg2, address("r4", 0)));
+                    backlist.push_back(new LDR(reg3, address("r4", 0)));
                 } else {
-                    backlist.push_back(new LDR(reg2, address("fp", -8 - 4 * vartable[index].index)));
+                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[index].index)));
                 }
                 break;
             }
             case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->right), reg2);
+                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->right), 3);
                 break;
             }
             case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->right), reg2);
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->right), 3);
                 break;
             }
         }
         switch (expression->op) {
+            case ADD:{
+                backlist.push_back(new MOV(reg2, reg3,"reg2reg"));
+                break;
+            }
             case SUB: {
                 backlist.push_back(new MOV(reg1, 0));
-                backlist.push_back(new OP("sub", reg2, reg1, reg2));
+                backlist.push_back(new OP("sub", reg2, reg1, reg3));
                 break;
             }
             case NOT_EQUAL: {

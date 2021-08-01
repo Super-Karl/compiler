@@ -279,6 +279,10 @@ namespace compiler::back {
         OP(string op, int rd, string rn, string op2) : INS(option) {
             fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", " + op2 + "\n";
         }
+
+        OP(string op, string rd, string rn, string op2) : INS(option) {
+            fullIns = "\t" + op + " " + rd + ", " + rn + ", " + op2 + "\n";
+        }
     };
 }
 #endif //COMPILER_BACK_H

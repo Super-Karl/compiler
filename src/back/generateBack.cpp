@@ -803,6 +803,8 @@ namespace compiler::back {
         backlist.push_back(new BL(functionCall->name->name));
         //回复现场
         //backlist.push_back(new LDMIA("func"));
+        //清除临时数据,维护堆栈
+        backlist.push_back(new OP("add","sp","sp","#"+ to_string(functionCall->args->args.size()*4)));
     }
 
     //处理if_while的block

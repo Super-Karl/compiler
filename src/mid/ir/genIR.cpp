@@ -18,8 +18,10 @@ namespace compiler::front::ast {
 
   void VarDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (record->getFarther() == nullptr) {
-      auto varInfo = new VarInfo("@" + std::to_string(record->getID()), INT32_MIN);
+      auto varInfo = new VarInfo("@" + this->name->name, 0, true);
       record->insertVar(name->name, varInfo);
+      auto globalData = new GlobalData("@" + this->name->name, 0);
+      ir.push_back(globalData);
     } else {
       auto varInfo = new VarInfo("%" + std::to_string(record->getID()), INT32_MIN);
       record->insertVar(name->name, varInfo);
@@ -27,37 +29,70 @@ namespace compiler::front::ast {
   }
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
-    auto source = this->value->evalOp(ir, record);
-
-    VarRedefChain varUse;
-    VarInfo *varInfo;
-
-    if (source.type == Type::Imm) {
-      varInfo = new VarInfo(source.name, source.value, true, false);
+    if (record->getFarther() == nullptr) {
+      string token = "@" + this->name->name;
+      try {
+        auto global = new GlobalData(token, this->value->eval(record));
+        auto varInfo = new VarInfo(token, this->value->eval(record), true);
+        record->insertVar(this->name->name, varInfo);
+        ir.push_back(global);
+      } catch (...) {
+      };
     } else {
-      varInfo = new VarInfo(source.name, INT32_MIN);
+      string token = "%" + to_string(record->getID());
+      auto source = this->value->evalOp(ir, record);
+      if (source.type == Type::Imm) {
+        auto varInfo = new VarInfo(token, source.value, true);
+        record->insertVar(this->name->name, varInfo);
+      } else {
+        auto varInfo = new VarInfo(token, 0);
+        record->insertVar(this->name->name, varInfo);
+      }
     }
 
-    record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
     //    auto assign = new AssignIR(dest, source);
     //    ir.push_back(assign);
   }
 
   void ConstDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
-    int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token, val, true, true);
-    record->insertVar(name->name, varInfo);
-    //初始化过程在ir中显式表示
-    (new AssignStmt(this->name, value))->genIR(ir, record);
+    if (record->getFarther() == nullptr) {
+      string token = "@" + this->name->name;
+      auto global = new GlobalData(token, this->value->eval(record));
+      auto varInfo = new VarInfo(token, this->value->eval(record), true, true);
+      ir.push_back(global);
+      record->insertVar(this->name->name, varInfo);
+    } else {
+      auto token = "%" + to_string(record->getID());
+      auto source = this->value->evalOp(ir, record);
+      if (source.type == Type::Imm) {
+        auto varInfo = new VarInfo(token, source.value, true, false);
+        record->insertVar(this->name->name, varInfo);
+      } else {
+        auto varInfo = new VarInfo(token, 0, false, true);
+        record->insertVar(this->name->name, varInfo);
+      }
+    }
   }
 
   void ArrayDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-
-    auto array = new ArrayDeclareWithInit(this->arrayName, this->initVal);
-    array->genIR(ir, record);
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->name->name;
+      vector<int> val, shape;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        shape.push_back(i->eval(record));
+        size *= i->eval(record);
+      };
+      val.resize(size, 0);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      auto varInfo = new VarInfo(token, shape, val, true);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      auto array = new ArrayDeclareWithInit(this->arrayName, this->initVal);
+      array->genIR(ir, record);
+    };
     //    string token = record->getFarther() == nullptr ? "@" : "%";
     //    token = token + std::to_string(record->getID());
     //
@@ -79,56 +114,82 @@ namespace compiler::front::ast {
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
-    vector<int> shape;
-    int size = 1;
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->arrayName->name;
+      vector<int> shape, val;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        size *= i->eval(record);
+        shape.push_back(i->eval(record));
+      }
+      for (auto i : this->initVal->initValList)
+        val.push_back(i->eval(record));
+      auto varInfo = new VarInfo(token, shape, val, true, false);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      string token = "%" + std::to_string(record->getID());
+      vector<int> shape;
+      int size = 1;
 
-    //计算数组的维度和每维的大小
-    for (auto i : arrayName->index) {
-      int tmp = i->eval(record);
-      shape.push_back(tmp);
-      size *= tmp;
+      //计算数组的维度和每维的大小
+      for (auto i : arrayName->index) {
+        int tmp = i->eval(record);
+        shape.push_back(tmp);
+        size *= tmp;
+      }
+      vector<int> value;
+      value.resize(size);
+
+      auto allocaIR = new AllocaIR(token, size);
+      ir.push_back(allocaIR);
+
+      auto varInfo = new VarInfo(token, shape, value, true, true);
+      record->insertVar(arrayName->name, varInfo);
+
+      initVal->storeArray(this->arrayName, ir, record);
     }
-
-    //resize到数组大小
-    vector<int> value;
-    value.resize(size);
-
-    //分配内存空间
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    //更新符号表,插入数组的记录
-    auto varInfo = new VarInfo(token, shape, value, true, true);
-    record->insertVar(arrayName->name, varInfo);
-
-    //处理数组初始化元素
-    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void ArrayDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
-    vector<int> shape;
-    int size = 1;
 
-    //计算数组的维度和每维的大小
-    for (auto i : arrayName->index) {
-      int tmp = i->eval(record);
-      shape.push_back(tmp);
-      size *= tmp;
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->arrayName->name;
+      vector<int> shape, val;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        size *= i->eval(record);
+        shape.push_back(i->eval(record));
+      }
+      for (auto i : this->initVal->initValList)
+        val.push_back(i->eval(record));
+      auto varInfo = new VarInfo(token, shape, val);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      string token = "%" + std::to_string(record->getID());
+      vector<int> shape;
+      int size = 1;
+
+      //计算数组的维度和每维的大小
+      for (auto i : arrayName->index) {
+        int tmp = i->eval(record);
+        shape.push_back(tmp);
+        size *= tmp;
+      }
+      vector<int> value;
+      value.resize(size);
+
+      auto allocaIR = new AllocaIR(token, size);
+      ir.push_back(allocaIR);
+
+      auto varInfo = new VarInfo(token, shape, value);
+      record->insertVar(arrayName->name, varInfo);
+
+      initVal->storeArray(this->arrayName, ir, record);
     }
-    vector<int> value;
-    value.resize(size);
-
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    auto varInfo = new VarInfo(token, shape, value);
-    record->insertVar(arrayName->name, varInfo);
-
-    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void DeclareStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -355,11 +416,11 @@ namespace compiler::front::ast {
   int BinaryExpression::eval(RecordTable *record) {
     switch (this->op) {
       case ADD:
-        return leftExpr->eval(record) + rightExpr->eval(record);
+        return rightExpr->eval(record) + leftExpr->eval(record);
       case SUB:
-        return leftExpr->eval(record) - rightExpr->eval(record);
+        return rightExpr->eval(record) + leftExpr->eval(record);
       case MUL:
-        return leftExpr->eval(record) * rightExpr->eval(record);
+        return rightExpr->eval(record) * leftExpr->eval(record);
       case DIV:
         return leftExpr->eval(record) / rightExpr->eval(record);
       case MOD:
@@ -587,7 +648,6 @@ namespace compiler::front::ast {
     auto tmpType = retType == ElemType::INT ? Type::Var : Type::Void;
     OperatorName dest = OperatorName("%" + std::to_string(record->getID()), tmpType);
     funCall->retOp = dest;
-    int counter = 0;
     for (auto i : args->args) {
       auto ident = dynamic_cast<Identifier *>(i);
       if (ident) {

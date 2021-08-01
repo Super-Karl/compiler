@@ -85,6 +85,17 @@ namespace compiler::mid::ir {
     }
   };
 
+  class GlobalData : public IR {
+  public:
+    std::string name;
+    bool isArray;
+    std::vector<int> val;
+
+    GlobalData(std::string name, int val) : name(std::move(name)), isArray(false) { this->val.push_back(val); };
+
+    GlobalData(std::string name, std::vector<int> val) : name(std::move(name)), isArray(true), val(std::move(val)){};
+  };
+
   class FunCallIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
@@ -126,7 +137,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() {
-      std::cout <<"@"<< name << ':' << " ";
+      std::cout << "@" << name << ':' << " ";
       for (auto &i : argList) {
         printOpName(i, ' ');
       }
@@ -243,7 +254,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source,'\n',false);
+      printOpName(source, '\n', false);
     }
   };
 
@@ -264,7 +275,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source,'\n', false);
+      printOpName(source, '\n', false);
     }
   };
 }// namespace compiler::mid::ir

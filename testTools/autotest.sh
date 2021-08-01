@@ -1,5 +1,6 @@
 touch test.log
 rm  test.log
+
 if test $1 == "-h"
 then
     echo "-a [-t]: 全测试 -t:输出diff比较结果"
@@ -171,7 +172,7 @@ elif test $1 = "-s"
     cp ../testcase/${file##*/} testcase.sy 
     #echo "${file}"
     echo "testfile ${file##*/}:"
-    echo "testfile ${file##*/}" >> test.log
+    echo "testfile ${file##*/}" 
     ./../build/compiler -a -printIR ../testcase/${file##*/}
     if test $? -eq 1 
     then

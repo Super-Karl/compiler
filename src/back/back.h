@@ -110,9 +110,9 @@ namespace compiler::back {
                 }
             }
         }
-        Lable(string name):INS(INSlableType)
-        {
-            fullIns=name+":\n";
+
+        Lable(string name) : INS(INSlableType) {
+            fullIns = name + ":\n";
         }
     };
 
@@ -201,11 +201,14 @@ namespace compiler::back {
         }
     };
 
-    class CMP:public INS{
+    class CMP : public INS {
     public:
-        CMP(int reg,string b):INS(cmp)
-        {
+        CMP(int reg, string b) : INS(cmp) {
             fullIns = "\tcmp\tr" + to_string(reg) + ",\t" + b + "\n";
+        }
+
+        CMP(int reg1, int reg2) : INS(cmp) {
+            fullIns = "\tcmp\tr" + to_string(reg1) + ",\tr" + to_string(reg2) + "\n";
         }
     };
 
@@ -233,8 +236,8 @@ namespace compiler::back {
             }
         }
 
-        MOV(string s,int reg, int value) : INS(mov16) {
-            fullIns = "\tmov"+s+"\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
+        MOV(string s, int reg, int value) : INS(mov16) {
+            fullIns = "\tmov" + s + "\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
         }
     };
 

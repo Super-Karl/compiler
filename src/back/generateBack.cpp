@@ -57,7 +57,7 @@ namespace compiler::back {
                 backlist.push_back(new STMDB());
                 //生成函数back
                 vector<VAR> vartable;//记录当前代码块的变量
-                ifStatCount=0;
+                ifStatCount = 0;
                 generateBackFunction(vartable, backlist, func);
                 backlist.push_back(new LDMIA());
             } else if (block->nodetype == DeclareStatementType) {
@@ -131,31 +131,31 @@ namespace compiler::back {
         //处理函数体
         for (auto item = func->body->blockItem.begin(); item != func->body->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
-                case IfStatementType:{
+                case IfStatementType: {
                     int id = ifStatCount++;
-                    backlist.push_back(new Lable("if_con_"+to_string(id)));
-                    generateExpression(vartable,backlist, static_cast<IfStatement*>((*item))->cond);//计算条件到r2
-                    backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
-                    backlist.push_back(new Lable("if_true_"+to_string(id)));
+                    backlist.push_back(new Lable("if_con_" + to_string(id)));
+                    generateExpression(vartable, backlist, static_cast<IfStatement *>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2", "#0", "if_else_" + to_string(id)));
+                    backlist.push_back(new Lable("if_true_" + to_string(id)));
                     //iftrue体
                     if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
-                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->trueBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock));
                     } else {
-                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->trueBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock);
                     }
-                    backlist.push_back(new B("if_end_"+ to_string(id)));
-                    backlist.push_back(new Lable("if_else_"+to_string(id)));
+                    backlist.push_back(new B("if_end_" + to_string(id)));
+                    backlist.push_back(new Lable("if_else_" + to_string(id)));
                     //ifelse体
                     if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
-                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->elseBlock));
-                    } else if(static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
-                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->elseBlock);
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock));
+                    } else if (static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock);
                     }
-                    backlist.push_back(new Lable("if_end_"+to_string(id)));
+                    backlist.push_back(new Lable("if_end_" + to_string(id)));
                     break;
                 }
-                case FunctionCallType:{
-                    generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((*item)));
+                case FunctionCallType: {
+                    generateFuncCall(vartable, backlist, static_cast<FunctionCall *>((*item)));
                     break;
                 }
                 case DeclareStatementType: {
@@ -219,9 +219,9 @@ namespace compiler::back {
 
     void generateExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Expression *expression) {
         switch (expression->nodetype) {
-            case FunctionCallType:{
-                generateFuncCall(vartable,backlist, static_cast<FunctionCall*>(expression));
-                backlist.push_back(new MOV(2,0,"reg2reg"));
+            case FunctionCallType: {
+                generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(expression));
+                backlist.push_back(new MOV(2, 0, "reg2reg"));
                 break;
             }
             case NumberExpressionType: {
@@ -348,9 +348,9 @@ namespace compiler::back {
                 }
                 break;
             }
-            case UnaryExpressionType:{
+            case UnaryExpressionType: {
                 //UnaryExpressionType，计算后将计算后的值放在r2
-                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression),2);
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression), 2);
                 break;
             }
             case BinaryExpressionType: {
@@ -416,8 +416,8 @@ namespace compiler::back {
                 generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), reg1);
                 break;
             }
-            case UnaryExpressionType:{
-                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->rightExpr),reg1);
+            case UnaryExpressionType: {
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), reg1);
                 break;
             }
         }
@@ -457,8 +457,8 @@ namespace compiler::back {
                 generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), reg3);
                 break;
             }
-            case UnaryExpressionType:{
-                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->rightExpr),reg3);
+            case UnaryExpressionType: {
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), reg3);
                 break;
             }
         }
@@ -479,64 +479,77 @@ namespace compiler::back {
                 backlist.push_back(new OP("sdiv", reg2, reg1, reg3));
                 break;
             }
-                /*case MOD: {
-                    backlist.push_back(new OP("aaa",reg2,reg1,reg3));
-                    break;
-                }
-                case EQ: {
-                    backlist.push_back(new OP("mul",reg2,reg1,reg3));
-                    break;
-                }
-                case NE: {
-                    result = left != right;
-                    return true;
-                }
-                case LT: {
-                    result = left < right;
-                    return true;
-                }
-                case LE: {
-                    result = left <= right;
-                    return true;
-                }
-                case GT: {
-                    result = left > right;
-                    return true;
-                }
-                case GE: {
-                    result = left >= right;
-                    return true;
-                }
-                case AND_OP: {
-                    result = left && right;
-                    return true;
-                }
-                case OR_OP: {
-                    result = left || right;
-                    return true;
-                }
-                case NOT_EQUAL: {
-                    result = left != right;
-                    return true;
-                }*/
+            /*case MOD: {
+                backlist.push_back(new OP("aaa", reg2, reg1, reg3));
+                break;
+            }*/
+            case EQ: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("eq", reg2, 1));
+                backlist.push_back(new MOV("ne", reg2, 0));
+                break;
+            }
+            case NE: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("eq", reg2, 0));
+                backlist.push_back(new MOV("ne", reg2, 1));
+                break;
+            }
+            case LT: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("lt", reg2, 1));
+                backlist.push_back(new MOV("ge", reg2, 0));
+                break;
+            }
+            case LE: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("le", reg2, 1));
+                backlist.push_back(new MOV("gt", reg2, 0));
+                break;
+            }
+            case GT: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("le", reg2, 0));
+                backlist.push_back(new MOV("gt", reg2, 1));
+                break;
+            }
+            case GE: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("lt", reg2, 0));
+                backlist.push_back(new MOV("ge", reg2, 1));
+                break;
+            }
+            case AND_OP: {
+                backlist.push_back(new OP("and", reg2, reg1, reg3));
+                break;
+            }
+            case OR_OP: {
+                backlist.push_back(new OP("orr", reg2, reg1, reg3));
+                break;
+            }
+            case NOT_EQUAL: {
+                backlist.push_back(new CMP(reg1, reg3));
+                backlist.push_back(new MOV("eq", reg2, 0));
+                backlist.push_back(new MOV("ne", reg2, 1));
+                break;
+            }
         }
     }
 
-    void generateUnaryExpression(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression,int pos){
+    void generateUnaryExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression, int pos) {
         int reg1;
         int reg2;//最终结果
-        if(pos==2)
-        {
-            reg1=1;
-            reg2=2;
+        if (pos == 2) {
+            reg1 = 1;
+            reg2 = 2;
         }
-        if(pos==1){
-            reg1=2;
-            reg2=1;
+        if (pos == 1) {
+            reg1 = 2;
+            reg2 = 1;
         }
-        if(pos==3){
-            reg1=2;
-            reg2=3;
+        if (pos == 3) {
+            reg1 = 2;
+            reg2 = 3;
         }
         switch (expression->right->nodetype) {
             case NumberExpressionType: {
@@ -573,21 +586,21 @@ namespace compiler::back {
                 generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->right), reg2);
                 break;
             }
-            case UnaryExpressionType:{
-                generateUnaryExpression(vartable,backlist, static_cast<UnaryExpression*>(expression->right),reg2);
+            case UnaryExpressionType: {
+                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->right), reg2);
                 break;
             }
         }
         switch (expression->op) {
-            case SUB:{
-                backlist.push_back(new MOV(reg1,0));
-                backlist.push_back(new OP("sub",reg2,reg1,reg2));
+            case SUB: {
+                backlist.push_back(new MOV(reg1, 0));
+                backlist.push_back(new OP("sub", reg2, reg1, reg2));
                 break;
             }
-            case NOT_EQUAL:{
-                backlist.push_back(new CMP(reg2,"#0"));
-                backlist.push_back(new MOV("eq",reg2,1));
-                backlist.push_back(new MOV("ne",reg2,0));
+            case NOT_EQUAL: {
+                backlist.push_back(new CMP(reg2, "#0"));
+                backlist.push_back(new MOV("eq", reg2, 1));
+                backlist.push_back(new MOV("ne", reg2, 0));
                 break;
             }
         }
@@ -734,47 +747,34 @@ namespace compiler::back {
     }
 
     //处理函数调用
-    void generateFuncCall(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::FunctionCall* functionCall){
+    void generateFuncCall(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::FunctionCall *functionCall) {
         //处理参数
-        for(auto arg: functionCall->args->args)
-        {
-            if(arg->nodetype==IdentifierType)
-            {
-                string name = static_cast<Identifier*>(arg)->name;
+        for (auto arg: functionCall->args->args) {
+            if (arg->nodetype == IdentifierType) {
+                string name = static_cast<Identifier *>(arg)->name;
                 int index = tableFind(vartable, name);
-                if(index!=-1)
-                {
-                    if(vartable[index].arrayIndex.size()>0)
-                    {
+                if (index != -1) {
+                    if (vartable[index].arrayIndex.size() > 0) {
                         //数组
-                        backlist.push_back(new OP("sub",4,"fp", "#"+to_string(8+vartable[index].index*4)));
+                        backlist.push_back(new OP("sub", 4, "fp", "#" + to_string(8 + vartable[index].index * 4)));
                         backlist.push_back(new STR(4));
-                    }
-                    else
-                    {
+                    } else {
                         //数字
-                        backlist.push_back(new LDR(2,address("fp",-8 - 4 * (vartable[index].index))));
+                        backlist.push_back(new LDR(2, address("fp", -8 - 4 * (vartable[index].index))));
                         backlist.push_back(new STR(2));
                     }
-                }
-                else
-                {
-                    if(globalVartable[name]->arrayIndex.size()>0)
-                    {
+                } else {
+                    if (globalVartable[name]->arrayIndex.size() > 0) {
                         backlist.push_back(new MOV32(4, name));
                         backlist.push_back(new STR(4));
-                    }
-                    else
-                    {
+                    } else {
                         backlist.push_back(new MOV32(4, name));
                         backlist.push_back(new LDR(2, address("r4", 0)));
                         backlist.push_back(new STR(2));
                     }
                 }
-            }
-            else
-            {
-                generateExpression(vartable,backlist, arg);
+            } else {
+                generateExpression(vartable, backlist, arg);
                 backlist.push_back(new STR(2));
             }
         }
@@ -785,35 +785,36 @@ namespace compiler::back {
         //回复现场
         //backlist.push_back(new LDMIA("func"));
     }
+
     //处理if_while的block
-    void generateBlock(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Block* block){
+    void generateBlock(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Block *block) {
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
-                case IfStatementType:{
+                case IfStatementType: {
                     int id = ifStatCount++;
-                    backlist.push_back(new Lable("if_con_"+to_string(id)));
-                    generateExpression(vartable,backlist, static_cast<IfStatement*>((*item))->cond);//计算条件到r2
-                    backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
-                    backlist.push_back(new Lable("if_true_"+to_string(id)));
+                    backlist.push_back(new Lable("if_con_" + to_string(id)));
+                    generateExpression(vartable, backlist, static_cast<IfStatement *>((*item))->cond);//计算条件到r2
+                    backlist.push_back(new CMPBEQ("r2", "#0", "if_else_" + to_string(id)));
+                    backlist.push_back(new Lable("if_true_" + to_string(id)));
                     //iftrue体
                     if (static_cast<IfStatement *>(*item)->trueBlock->nodetype == BlockType) {
-                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->trueBlock));
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->trueBlock));
                     } else {
-                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->trueBlock);
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->trueBlock);
                     }
-                    backlist.push_back(new B("if_end_"+ to_string(id)));
-                    backlist.push_back(new Lable("if_else_"+to_string(id)));
+                    backlist.push_back(new B("if_end_" + to_string(id)));
+                    backlist.push_back(new Lable("if_else_" + to_string(id)));
                     //ifelse体
                     if (static_cast<IfStatement *>(*item)->elseBlock->nodetype == BlockType) {
-                        generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(*item)->elseBlock));
-                    } else if(static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
-                        generateStmt(vartable,backlist,static_cast<IfStatement *>(*item)->elseBlock);
+                        generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(*item)->elseBlock));
+                    } else if (static_cast<IfStatement *>(*item)->elseBlock->nodetype != VoidStatementType) {
+                        generateStmt(vartable, backlist, static_cast<IfStatement *>(*item)->elseBlock);
                     }
-                    backlist.push_back(new Lable("if_end_"+to_string(id)));
+                    backlist.push_back(new Lable("if_end_" + to_string(id)));
                     break;
                 }
-                case FunctionCallType:{
-                    generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((*item)));
+                case FunctionCallType: {
+                    generateFuncCall(vartable, backlist, static_cast<FunctionCall *>((*item)));
                     break;
                 }
                 case DeclareStatementType: {
@@ -874,34 +875,35 @@ namespace compiler::back {
             }
         }
     }
+
     //处理if_while的单条语句
-    void generateStmt(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::Node* stmt){
+    void generateStmt(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Node *stmt) {
         switch ((stmt)->nodetype) {
-            case IfStatementType:{
+            case IfStatementType: {
                 int id = ifStatCount++;
-                backlist.push_back(new Lable("if_con_"+to_string(id)));
-                generateExpression(vartable,backlist, static_cast<IfStatement*>((stmt))->cond);//计算条件到r2
-                backlist.push_back(new CMPBEQ("r2","#0","if_else_"+to_string(id)));
-                backlist.push_back(new Lable("if_true_"+to_string(id)));
+                backlist.push_back(new Lable("if_con_" + to_string(id)));
+                generateExpression(vartable, backlist, static_cast<IfStatement *>((stmt))->cond);//计算条件到r2
+                backlist.push_back(new CMPBEQ("r2", "#0", "if_else_" + to_string(id)));
+                backlist.push_back(new Lable("if_true_" + to_string(id)));
                 //iftrue体
                 if (static_cast<IfStatement *>(stmt)->trueBlock->nodetype == BlockType) {
-                    generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(stmt)->trueBlock));
+                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->trueBlock));
                 } else {
-                    generateStmt(vartable,backlist,static_cast<IfStatement *>(stmt)->trueBlock);
+                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->trueBlock);
                 }
-                backlist.push_back(new B("if_end_"+ to_string(id)));
-                backlist.push_back(new Lable("if_else_"+to_string(id)));
+                backlist.push_back(new B("if_end_" + to_string(id)));
+                backlist.push_back(new Lable("if_else_" + to_string(id)));
                 //ifelse体
                 if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype == BlockType) {
-                    generateBlock(vartable,backlist, static_cast<Block*>(static_cast<IfStatement *>(stmt)->elseBlock));
-                } else if(static_cast<IfStatement *>(stmt)->elseBlock->nodetype != VoidStatementType) {
-                    generateStmt(vartable,backlist,static_cast<IfStatement *>(stmt)->elseBlock);
+                    generateBlock(vartable, backlist, static_cast<Block *>(static_cast<IfStatement *>(stmt)->elseBlock));
+                } else if (static_cast<IfStatement *>(stmt)->elseBlock->nodetype != VoidStatementType) {
+                    generateStmt(vartable, backlist, static_cast<IfStatement *>(stmt)->elseBlock);
                 }
-                backlist.push_back(new Lable("if_end_"+to_string(id)));
+                backlist.push_back(new Lable("if_end_" + to_string(id)));
                 break;
             }
-            case FunctionCallType:{
-                generateFuncCall(vartable,backlist, static_cast<FunctionCall*>((stmt)));
+            case FunctionCallType: {
+                generateFuncCall(vartable, backlist, static_cast<FunctionCall *>((stmt)));
                 break;
             }
             case DeclareStatementType: {

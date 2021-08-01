@@ -73,7 +73,6 @@ namespace compiler::controller::generator {
     root->genIR(ir, record);
     return ir;
   }
-
   void printIR(compiler::mid::ir::IRList ir) {
     std::cout << "------------------------------\n\nIR:\n\n";
 

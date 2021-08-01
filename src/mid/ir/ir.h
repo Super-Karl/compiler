@@ -142,7 +142,7 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode;
     OperatorName dest;
     OperatorName source1, source2;
-
+    //mov 只有dest source1
     AssignIR() = default;
 
     AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(std::move(source1)), source2(std::move(source2)){};

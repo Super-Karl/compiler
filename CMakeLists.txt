@@ -19,4 +19,4 @@ add_executable(compiler
         ${srcs}
         ${BISON_Parser_OUTPUTS}
         ${FLEX_Scanner_OUTPUTS}
-        src/back/back.h src/back/back.cpp)
+        src/back/back.h src/back/back.cpp src/back/genBack.cpp)

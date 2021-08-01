@@ -64,6 +64,7 @@ namespace compiler::back{
         SUB,
         SWI,
         SWP,
+        SDIV,//说是除法(?)
         TEQ,
         TST,
         NOP,
@@ -169,6 +170,7 @@ namespace compiler::back{
         public:
             Instruction OffsetInstr;
             int OffsetNum;
+            OffsetOperate(){};
             OffsetOperate(Instruction instr,int num):OffsetInstr(instr),OffsetNum(num){};
     };
     //操作数类
@@ -189,8 +191,8 @@ namespace compiler::back{
         OffsetOperate offsetoperate;
         //TODO 完成这个类的构造,并不确定是否需要这个
         Direct_Reg(std::string name,Instruction instr,int num);
-        Direct_Reg(std::string name, Suffix suf);
-        Direct_Reg(std::string name);
+        Direct_Reg(std::string name, Suffix suf){};
+        Direct_Reg(std::string name):RegName(name){};
         Direct_Reg *getThis() override {
             return this;
         }
@@ -248,7 +250,7 @@ namespace compiler::back{
         OPERATION operation;
         OPERAND operand;
         LABEL b_label;//跳转的话是直接LABEL
-        //Instr_Sentence()=default;
+        Instr_Sentence()=default;
         Instr_Sentence(LABEL label1,OPERATION operation1,OPERAND operand1): label(label1), operation(operation1),operand(operand1){};
         Instr_Sentence(OPERATION operation1,OPERAND operand1): operation(operation1), operand(operand1){};
         Instr_Sentence(LABEL label1):label(label1){};

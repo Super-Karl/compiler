@@ -40,7 +40,10 @@ namespace compiler::front::ast {
       };
     } else {
       string token = "%" + to_string(record->getID());
+      auto dest = OperatorName(token);
       auto source = this->value->evalOp(ir, record);
+      auto mov = new AssignIR(dest, source);
+      ir.push_back(mov);
       if (source.type == Type::Imm) {
         auto varInfo = new VarInfo(token, source.value, true);
         record->insertVar(this->name->name, varInfo);
@@ -836,7 +839,6 @@ namespace compiler::front::ast {
       ir.push_back(add);
       return dest;
     } catch (...) {
-      
     }
   };
 

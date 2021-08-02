@@ -63,6 +63,7 @@ namespace compiler::mid::ir {
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
     RecordTable *father;
     static unsigned int id;
+    bool inLoop = false;
     std::unordered_map<std::string, ElemType> funDecl;
     static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
 
@@ -82,6 +83,8 @@ namespace compiler::mid::ir {
     void setFunRet(std::pair<std::string, ElemType> pair);
 
     bool canExprAssign(std::string op1, std::string op2, std::vector<int> index1 = {}, std::vector<int> index2 = {});
+
+    bool isInLoop() { return this->inLoop; };
   };
 }// namespace compiler::mid::ir
 

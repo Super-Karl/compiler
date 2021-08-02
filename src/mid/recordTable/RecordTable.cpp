@@ -78,7 +78,7 @@ namespace compiler::mid::ir {
   }
 
   int VarInfo::getArrayIndex(std::vector<int> index) {
-    assert(this->shape.size() == index.size());
+//    assert(this->shape.size() == index.size());
     int tmp = 1;
     int sum = 0;
     for (int i = index.size() - 1; i >= 0; i--) {

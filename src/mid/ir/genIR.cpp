@@ -655,8 +655,21 @@ namespace compiler::front::ast {
       if (ident) {
         auto varInfo = record->searchVar(ident->name);
         if (varInfo->isArray) {
-          auto opName = OperatorName(varInfo->arrayName);
-          funCall->argList.push_back(opName);
+          auto arrayIdent = dynamic_cast<ArrayIdentifier *>(ident);
+          if (arrayIdent) {
+            //传入的是数组的子数组
+            if (arrayIdent->index.size() < varInfo->shape.size()) {
+              auto subArray = arrayIdent->getSubArray(ir, record, varInfo->shape.size());
+              funCall->argList.push_back(subArray);
+            } else {
+              auto opName = arrayIdent->evalOp(ir, record);
+              funCall->argList.push_back(opName);
+            }
+          } else {
+            auto opName = OperatorName(varInfo->arrayName);
+            funCall->argList.push_back(opName);
+          }
+
         } else {
           auto opName = ident->evalOp(ir, record);
           funCall->argList.push_back(opName);
@@ -804,6 +817,28 @@ namespace compiler::front::ast {
     }
   }
 
+  OperatorName ArrayIdentifier::getSubArray(IRList &ir, RecordTable *record, int arraySize) {
+    auto varInfo = record->searchVar(this->name);
+
+    auto dest = OperatorName("&%" + to_string(record->getID()));
+    try {
+      vector<int> subOffset;
+      for (auto i : this->index)
+        subOffset.push_back(i->eval(record));
+      for (int i = this->index.size(); i < arraySize; ++i)
+        subOffset.push_back(0);
+
+      auto offset = OperatorName(varInfo->getArrayIndex(subOffset), Type::Imm);
+      auto array = OperatorName(varInfo->arrayName);
+
+      //计算subarray首地址相对于数组基址的偏移量
+      auto add = new AssignIR(OperatorCode::Add, dest, array, offset);
+      ir.push_back(add);
+      return dest;
+    } catch (...) {
+      
+    }
+  };
 
   void ArrayIdentifier::storeRuntime(IRList &ir, RecordTable *record, OperatorName source) {
     auto var = record->searchVar(this->name);

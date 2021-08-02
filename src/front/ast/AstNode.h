@@ -99,6 +99,8 @@ namespace compiler {
         return this->index;
       };
 
+      OperatorName getSubArray(IRList &ir, RecordTable *record, int arraySize);
+
       void storeRuntime(IRList &ir, RecordTable *record, OperatorName source);
     };
 

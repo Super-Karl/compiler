@@ -30,6 +30,7 @@ namespace compiler::mid::ir {
     Type type;
     std::string name;//ir中的name
     int value;
+    std::string defName;
 
     OperatorName(int val, Type type = Type::Var) : value(val), type(type), name(""){};
 

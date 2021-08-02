@@ -418,7 +418,7 @@ namespace compiler::front::ast {
       case ADD:
         return rightExpr->eval(record) + leftExpr->eval(record);
       case SUB:
-        return rightExpr->eval(record) + leftExpr->eval(record);
+        return leftExpr->eval(record) - rightExpr->eval(record);
       case MUL:
         return rightExpr->eval(record) * leftExpr->eval(record);
       case DIV:

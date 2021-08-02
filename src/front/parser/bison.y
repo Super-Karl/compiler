@@ -119,7 +119,7 @@ DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithI
 ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
     | ArrayIdent LSQARE RSQARE{$$->index.push_back(new front::ast::NumberExpression());}
     | Ident LSQARE Exp RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back($3);}
-    | Ident LSQARE RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back(new front::ast::NumberExpression());}
+    | Ident LSQARE RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back(new front::ast::NumberExpression(1));}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}

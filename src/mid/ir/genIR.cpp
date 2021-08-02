@@ -252,7 +252,7 @@ namespace compiler::front::ast {
     auto funcdef = new FunDefIR(retType, name->name);
     auto newTable = new RecordTable(record);
 
-    //保存参数表
+    //保存参数表到fundefir
     for (auto i : args->args) {
       auto ident = dynamic_cast<ArrayIdentifier *>(i->name);
       if (ident) {
@@ -290,20 +290,21 @@ namespace compiler::front::ast {
           shape.push_back(i->eval(record));
           size *= i->eval(record);
         }
+
         auto token = "%" + to_string(record->getID());
         auto dest = OperatorName(token);
         auto source = OperatorName("$" + to_string(i));
         auto assign = new AssignIR(dest, source);
 
         vector<int> val;
-        val.resize(size, INT32_MIN);
+        val.resize(1, 0);
 
         auto var = new VarInfo(ident->name, shape, val, false);
 
         record->insertVar(ident->name, var);
         ir.push_back(assign);
       } else {
-        string token = "%" + to_string(record->getID());
+        auto token = "%" + to_string(record->getID());
         auto dest = OperatorName(token);
         auto source = OperatorName("$" + to_string(i));
         auto assign = new AssignIR(dest, source);
@@ -327,6 +328,7 @@ namespace compiler::front::ast {
     }
     record->insertVar(name->name, varInfo);
   }
+
   //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto newTable = new RecordTable(record);
@@ -677,19 +679,18 @@ namespace compiler::front::ast {
     return opName;
   }
 
-  //TODO 下标canAssign为false的情况
+
   OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
 
-    auto dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + std::to_string(record->getID()), Type::Var);
+    auto dest = OperatorName("%" + std::to_string(record->getID()), Type::Var);
     auto source = OperatorName(varInfo->arrayName);
     try {
-      OperatorName offset;
       std::vector<int> index;
       for (auto i : this->index)
         index.push_back(i->eval(record));
 
-      offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+      auto offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
       auto load = new LoadIR(dest, source, offset);
       ir.push_back(load);
       return dest;
@@ -711,7 +712,7 @@ namespace compiler::front::ast {
       auto assign = new AssignIR(tmpSize, vSize);
       ir.push_back(assign);
 
-      for (auto i = this->index.size() - 1; i >= 0; i--) {
+      for (int i = this->index.size() - 1; i >= 0; i--) {
         if (i == this->index.size() - 1) {
           auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
           ir.push_back(mov);
@@ -803,8 +804,6 @@ namespace compiler::front::ast {
     }
   }
 
-  OperatorName ArrayIdentifier::evalIndex(IRList &ir, RecordTable *record) {
-  }
 
   void ArrayIdentifier::storeRuntime(IRList &ir, RecordTable *record, OperatorName source) {
     auto var = record->searchVar(this->name);
@@ -820,6 +819,7 @@ namespace compiler::front::ast {
       auto store = new StoreIR(dest, source, offset);
       ir.push_back(store);
     } catch (...) {
+
       auto dest = OperatorName(var->arrayName);
       if (this->index.size() == 1) {
         auto store = new StoreIR(dest, source, this->index[0]->evalOp(ir, record));
@@ -836,7 +836,7 @@ namespace compiler::front::ast {
         auto assign = new AssignIR(tmpSize, vSize);
         ir.push_back(assign);
 
-        for (auto i = this->index.size() - 1; i >= 0; i--) {
+        for (int i = this->index.size() - 1; i >= 0; i--) {
           if (i == this->index.size() - 1) {
             auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
             ir.push_back(mov);

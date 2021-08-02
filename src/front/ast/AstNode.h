@@ -99,7 +99,6 @@ namespace compiler {
         return this->index;
       };
 
-      OperatorName evalIndex(IRList &ir, RecordTable *record) override;
       void storeRuntime(IRList &ir, RecordTable *record, OperatorName source);
     };
 

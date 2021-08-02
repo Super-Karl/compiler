@@ -335,7 +335,6 @@ namespace compiler::front::ast {
   //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto newTable = new RecordTable(record);
-    newTable->setInLoop(true);
     for (auto item : blockItem)
       item->genIR(ir, newTable);
   }

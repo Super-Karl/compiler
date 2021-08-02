@@ -335,7 +335,7 @@ namespace compiler::front::ast {
   //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto newTable = new RecordTable(record);
-
+    newTable->setInLoop(true);
     for (auto item : blockItem)
       item->genIR(ir, newTable);
   }
@@ -583,10 +583,12 @@ namespace compiler::front::ast {
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
     try {
-      int tmp = this->eval(record);
-      auto opName = OperatorName("", Type::Imm);
-      opName.value = tmp;
-      return opName;
+      if (!record->isInLoop()) {
+        int tmp = this->eval(record);
+        auto opName = OperatorName("", Type::Imm);
+        opName.value = tmp;
+        return opName;
+      }
     } catch (...) {
     }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;

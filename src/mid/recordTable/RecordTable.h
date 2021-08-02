@@ -85,6 +85,8 @@ namespace compiler::mid::ir {
     bool canExprAssign(std::string op1, std::string op2, std::vector<int> index1 = {}, std::vector<int> index2 = {});
 
     bool isInLoop() { return this->inLoop; };
+
+    void setInLoop(bool loop) { inLoop = loop; };
   };
 }// namespace compiler::mid::ir
 

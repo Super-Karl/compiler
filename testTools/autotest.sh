@@ -6,7 +6,14 @@ then
     echo "-a [-t]: 全测试 -t:输出diff比较结果"
     echo "-s [order] [-f]: 单样例测试 -f:将比较结果输出到文件"
     echo "-n [num] :测试前n个样例"
+    echo "-l 展示所有测试样例的名字"
     echo "-h 查看帮助"
+elif test $1 == "-l"
+then
+    for file in ../testcase/*.sy
+    do 
+        echo ${file##/}
+    done
 elif test $1 == "-n"
 then
     let "i=0"

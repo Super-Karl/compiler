@@ -31,6 +31,7 @@ namespace compiler::back{
         //指令集
         //虽然大写和小写都可以,但是转换的时候均以大写为主
         //虽然有些指令目前用不到,但是还是直接加进去了
+        NOP,
         ADC,
         ADD,
         AND,
@@ -66,11 +67,11 @@ namespace compiler::back{
         SWP,
         SDIV,//说是除法(?)
         TEQ,
-        TST,
-        NOP,
+        TST
     };//TODO 加上除法(没有除法?)
     enum class BarCode{
         //生成的条件码
+        NOP,
         EQ,
         NE,
         CS,
@@ -90,13 +91,14 @@ namespace compiler::back{
     };
     enum class Suffix{
         //指令的后缀,只有!和 S两种
+        SNOP,
         S,
-        e_mark,//指!
-        SNOP
+        e_mark//指!
     };
     //加点或符号会标错,所以用其他符号先代替
     enum class EQUKeywords{
         //定义伪操作
+       nop,
        byte,
        hword,
        Eshort,
@@ -136,15 +138,24 @@ namespace compiler::back{
        nolist,
        req,
        unreq,
-       pool,
-       nop
+       pool
     };
     //前面应该加上%
     enum class TYPE{
         object,
         function
     };
-
+    enum class stmType{
+        NOP,
+        IA,
+        IB,
+        DA,
+        DB,
+        FD,
+        ED,
+        FA,
+        EA
+    };
     //现在是标号域
     class LABEL{
     public:
@@ -159,8 +170,10 @@ namespace compiler::back{
     public:
         Instruction instruction;
         BarCode barcode;
+        stmType stmtype;
         OPERATION(Instruction instr,BarCode bcode):instruction(instr),barcode(bcode){};
         OPERATION(Instruction instr):instruction(instr){};
+        OPERATION(Instruction instruction1,stmType stmtype1):stmtype(stmtype1),instruction(instruction1){};
         OPERATION(){};
     };
 
@@ -223,6 +236,11 @@ namespace compiler::back{
         ConstNum *getThis() override{
             return this;
         }
+    };
+    class NumList:public OperateNum{
+    public:
+        std::vector<Direct_Reg> regs;
+        NumList(std::vector<Direct_Reg> regs1):regs(regs1){};
     };
 //操作数域
     class OPERAND{

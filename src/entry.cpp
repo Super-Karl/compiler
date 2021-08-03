@@ -6,15 +6,21 @@
 #include "front/ast/AstNode.h"
 #include "back/back.h"
 #include <iostream>
+#include <algorithm>
 #include <unordered_map>
+#include <map>
 
 using namespace std;
 
 using Hash = std::unordered_map<string, int>;
 
 vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir);
-string convert_num(string string_ir);
-compiler::back::OperateNum * convert_source(compiler::mid::ir::OperatorName source);
+string convert_num(string string_ir,map<string,string> &usedReg);
+compiler::back::OperateNum * convert_source(compiler::mid::ir::OperatorName source,map<string,string> usedReg);
+compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string> usedReg);
+string handleIrFunName(string irname);
+void create_stack(vector<compiler::back::Sentence *> &armList);
+string findFromRegs(string name,map<string,string> usedReg);
 int main(int argc, char **argv) {
   auto *argParser = new compiler::controller::ArgParser(argc, argv);
 
@@ -34,95 +40,173 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     vector<compiler::back::Sentence *> armList;
     for (auto val : ir)//ir的每一个块
     {
+        int mainFunFlag=0;
+        map<string,string> usedReg;
+        //构造开始时入栈的部分
         compiler::mid::ir::FunDefIR *funCallIr=dynamic_cast<compiler::mid::ir::FunDefIR *>(val);
         if(funCallIr!= nullptr){
-            compiler::back::LABEL *funNamelabel=new compiler::back::LABEL(funCallIr->name);
+            if(funCallIr->name=="main")
+                mainFunFlag=1;//如果说是主函数就设置一个flag
+            compiler::back::LABEL *funNamelabel=new compiler::back::LABEL(handleIrFunName(funCallIr->name));
             compiler::back::Sentence *funName=new compiler::back::Instr_Sentence(*funNamelabel);
             armList.push_back(funName);
+            create_stack(armList);
             for(auto funcBody:funCallIr->funcBody){
                 compiler::back::OPERATION *op=nullptr;
                 compiler::mid::ir::AssignIR *irInstr=dynamic_cast<compiler::mid::ir::AssignIR *>(funcBody);
-                if(irInstr != nullptr) {//对指令的部分进行分解
+                if(irInstr != nullptr) {
+                    //基本操作指令部分
                     switch (irInstr->operatorCode) {
                         case compiler::mid::ir::OperatorCode::Add: {
                             op = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
-                            string reg=convert_num(irInstr->dest.name);
+                            string reg=convert_num(irInstr->dest.name,usedReg);
                             compiler::back::OperateNum  *dest = new compiler::back::Direct_Reg(reg);
                             //转换source1
-                            auto arm_num1=convert_source(irInstr->source1);
-                            auto arm_num2=convert_source(irInstr->source2);
+                            auto arm_num1=convert_source(irInstr->source1,usedReg);
+                            auto arm_num2=convert_source(irInstr->source2,usedReg);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
-                            compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
+                            compiler::back::Sentence *sentence = new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
+                            break;
                         }
                         case compiler::mid::ir::OperatorCode::Mov: {
                             op=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
-                            string reg=convert_num(irInstr->dest.name);
+                            string reg=convert_num(irInstr->dest.name,usedReg);
                             compiler::back::OperateNum  *dest = new compiler::back::Direct_Reg(reg);
                             //转换source1
-                            auto arm_num1=convert_source(irInstr->source1);
+                            auto arm_num1=convert_source(irInstr->source1,usedReg);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1);
-                            compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
+                            compiler::back::Sentence *sentence = new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
+                            break;
                         }
                         case compiler::mid::ir::OperatorCode::Sub:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::SUB);
-                            string reg=convert_num(irInstr->dest.name);
+                            string reg=convert_num(irInstr->dest.name,usedReg);
                             compiler::back::OperateNum  *dest = new compiler::back::Direct_Reg(reg);
                             //转换source1
-                            auto arm_num1=convert_source(irInstr->source1);
-                            auto arm_num2=convert_source(irInstr->source2);
+                            auto arm_num1=convert_source(irInstr->source1,usedReg);
+                            auto arm_num2=convert_source(irInstr->source2,usedReg);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
+                            break;
                         }
                         case compiler::mid::ir::OperatorCode::Mul:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::MUL);
-                            string reg=convert_num(irInstr->dest.name);
+                            string reg=convert_num(irInstr->dest.name,usedReg);
                             compiler::back::OperateNum  *dest = new compiler::back::Direct_Reg(reg);
                             //转换source1
-                            auto arm_num1=convert_source(irInstr->source1);
-                            auto arm_num2=convert_source(irInstr->source2);
+                            auto arm_num1=convert_source(irInstr->source1,usedReg);
+                            auto arm_num2=convert_source(irInstr->source2,usedReg);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
+                            break;
                         }
                         case compiler::mid::ir::OperatorCode::Div:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::SDIV);
-                            string reg=convert_num(irInstr->dest.name);
+                            string reg=convert_num(irInstr->dest.name,usedReg);
                             compiler::back::OperateNum  *dest = new compiler::back::Direct_Reg(reg);
                             //转换source1
-                            auto arm_num1=convert_source(irInstr->source1);
-                            auto arm_num2=convert_source(irInstr->source2);
+                            auto arm_num1=convert_source(irInstr->source1,usedReg);
+                            auto arm_num2=convert_source(irInstr->source2,usedReg);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
+                            break;
                         }
+
                     }
+                }
+                //函数调用部分
+                compiler::mid::ir::FunCallIR *funcallInstr=dynamic_cast<compiler::mid::ir::FunCallIR *>(funcBody);
+                if(funcallInstr!=nullptr){
+                    op = new compiler::back::OPERATION(compiler::back::Instruction::BL);
+                    compiler::back::LABEL *jump_label=new compiler::back::LABEL(handleIrFunName(funcallInstr->funcName));
+                    compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*jump_label);
+                    int i=0;
+                    for(auto param:funcallInstr->argList){
+                        armList.push_back(paramToReg(param,i,usedReg));
+                        i++;
+                    }
+                    armList.push_back(sentence);
+                }
+                //函数返回部分
+                compiler::mid::ir::RetIR *retInstr=dynamic_cast<compiler::mid::ir::RetIR *>(funcBody);
+                if(funcallInstr!=nullptr){
+                    op = new compiler::back::OPERATION(compiler::back::Instruction::BL);
                 }
 
             }
-    }
+        }
     }
     return armList;
 }
-string convert_num(string string_ir)
+string convert_num(string stringIr,map<string,string> &usedReg)
 {
-    if(string_ir=="%1")return "R4";
-    if(string_ir=="%2")return "R5";
-    if(string_ir=="%3")return "R6";
-    if(string_ir=="%4")return "R7";
-    if(string_ir=="%5")return "R8";
-    if(string_ir=="%6")return "R9";
-    if(string_ir=="%7")return "R10";
-    if(string_ir=="%8")return "R11";
+    string regName;
+    int regNum;
+    if(stringIr.find("%")!=string::npos)
+        cout<<1;
+    if(stringIr.find("$")!=string::npos)
+        cout<<2;
+    usedReg.insert(pair<string, string>(stringIr, regName));
 }
-compiler::back::OperateNum * convert_source(compiler::mid::ir::OperatorName source)
+compiler::back::OperateNum * convert_source(compiler::mid::ir::OperatorName source,map<string,string> usedReg)
 {
+    //将一个操作数进行转换
     compiler::back::OperateNum *arm_Num=nullptr;
     if(source.type==compiler::mid::ir::Type::Imm)
         arm_Num=new compiler::back::ImmNum(source.value);
     if(source.type==compiler::mid::ir::Type::Var)
-        arm_Num=new compiler::back::Direct_Reg(convert_num(source.name));
+        arm_Num=new compiler::back::Direct_Reg(findFromRegs(source.name,usedReg));
     return arm_Num;
 }
+string findFromRegs(string name,map<string,string> usedReg)
+{
+    auto iter=usedReg.find(name);
+    if(iter != usedReg.end())
+        return iter->second;
+    else return "";
+}
+
+compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string>usedReg)
+{
+    compiler::back::OPERATION *operation=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+    compiler::back::OperateNum * dest=new compiler::back::Direct_Reg("R"+to_string(i));
+    compiler::back::OperateNum * operatenum=convert_source(arg,usedReg);
+    compiler::back::OPERAND * operand=new compiler::back::OPERAND(dest,operatenum);
+    compiler::back::Sentence * sentence=new compiler::back::Instr_Sentence(*operation,*operand);
+    return sentence;
+}
+string handleIrFunName(string irname)
+{
+    irname.erase(remove(irname.begin(), irname.end(), '@'), irname.end());
+    return irname;
+}
+void create_stack(vector<compiler::back::Sentence *> &armList)
+{
+    compiler::back::OPERATION *operation = new compiler::back::OPERATION(compiler::back::Instruction::STM,compiler::back::stmType::DB);
+    compiler::back::OperateNum *dest = new compiler::back::Direct_Reg("sp",compiler::back::Suffix::e_mark);
+    vector<compiler::back::Direct_Reg> regs;
+    regs.push_back(compiler::back::Direct_Reg("fp"));
+    regs.push_back(compiler::back::Direct_Reg("lr"));
+    compiler::back::OperateNum *regList=new compiler::back::NumList(regs);
+    compiler::back::OPERAND *operand1=new compiler::back::OPERAND(dest,regList);
+    compiler::back::Sentence *sentence1=new compiler::back::Instr_Sentence(*operation,*operand1);
+    armList.push_back(sentence1);
+    compiler::back::OPERATION *operation1 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+    compiler::back::OperateNum *dest1 = new compiler::back::Direct_Reg("fp");
+    compiler::back::OperateNum *source1 = new compiler::back::Direct_Reg("sp");
+    compiler::back::OperateNum *source2=new compiler::back::ImmNum(4);
+    compiler::back::OPERAND *operand2=new compiler::back::OPERAND(dest1,source1,source2);
+    compiler::back::Sentence *sentence2=new compiler::back::Instr_Sentence(*operation,*operand2);
+    armList.push_back(sentence2);
+}
+void stackPushBack(vector<compiler::back::Sentence *> &armList)
+{
+
+}
+
+

@@ -63,7 +63,7 @@ namespace compiler::back {
                 ifStatCount = 0;
                 whileCount = 0;
                 generateBackFunction(vartable, backlist, func);
-                backlist.push_back(new LDMIA());
+
             } else if (block->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(block)->declareList) {
                     switch (subNode->nodetype) {
@@ -136,403 +136,6 @@ namespace compiler::back {
         generateBlock(vartable, backlist, func->body, -1);
     }
 
-    void generateExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Expression *expression) {
-        switch (expression->nodetype) {
-            case FunctionCallType: {
-                generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(expression));
-                backlist.push_back(new MOV(2, 0, "reg2reg"));
-                break;
-            }
-            case NumberExpressionType: {
-                //右值为数字
-                int value = 0;
-                value = static_cast<NumberExpression *>(expression)->value;
-                if (value < 65535) {
-                    backlist.push_back(new MOV(2, value));
-                } else {
-                    backlist.push_back(new MOV32(2, value));
-                }
-                break;
-            }
-            case ConstArrayType:
-            case ArrayDeclareType:
-            case ArrayIdentifierType: {
-                string name = static_cast<ArrayIdentifier *>(expression)->name;
-                int index = tableFind(vartable, name);
-                if (index == -1) {
-                    int offset = 0;
-                    int allNum = 1;
-                    for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                        if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                            offset += globalVartable[name]->arrayIndex[i] *
-                                      static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                        } else {
-                            allNum = 0;
-                        }
-                    }
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
-                        allNum = 0;
-                    }
-                    //处理最后一个下标
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                        if (allNum)
-                            offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                        else
-                            backlist.push_back(new MOV(5, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                    } else {
-                        generateExpression(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                        backlist.push_back(new OP("lsl", 2, 2, "#2"));
-                        backlist.push_back(new MOV(5, 2));
-                    }
-                    if (allNum) {
-                        //取地址到r4
-                        backlist.push_back(new MOV32(4, name));
-                        backlist.push_back(new LDR(2, address("r4", -4 * offset)));
-                    } else {
-                        for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                            if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                                generateExpression(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                                backlist.push_back(new MOV(3, globalVartable[name]->arrayIndex[i] * 4));
-                                backlist.push_back(new MLA("r5", "r2", "r3", "r5"));
-                            }
-                        }
-                        if (offset * 4 <= 65535) {
-                            backlist.push_back(new OP("add", 5, 5, "#" + to_string(offset * 4)));
-                        } else {
-                            backlist.push_back(new MOV32(4, offset * 4));
-                            backlist.push_back(new OP("add", 5, 5, 4));
-                        }
-                        backlist.push_back(new MOV32(4, name));
-                        backlist.push_back(new LDR(2, address("r4", "-r5")));
-                    }
-                } else {
-                    int offset = 0;
-                    int allNum = 1;
-                    for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                        if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                            offset += vartable[index].arrayIndex[i] *
-                                      static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                        } else {
-                            allNum = 0;
-                        }
-                    }
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
-                        allNum = 0;
-                    }
-                    //处理最后一个下标
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                        if (allNum)
-                            offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                        else
-                            backlist.push_back(new MOV(5, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                    } else {
-                        generateExpression(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                        backlist.push_back(new OP("lsl", 2, 2, "#2"));
-                        backlist.push_back(new MOV(5, 2));
-                    }
-                    if (allNum) {
-                        backlist.push_back(new LDR(2, address("fp", -8 - 4 * (vartable[index].index + offset))));
-                    } else {
-                        for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                            if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                                generateExpression(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                                backlist.push_back(new MOV(3, vartable[index].arrayIndex[i] * 4));
-                                backlist.push_back(new MLA("r5", "r2", "r3", "r5"));
-                            }
-                        }
-                        if ((2 + offset + vartable[index].index) * 4 <= 65535) {
-                            backlist.push_back(new OP("add", 5, 5, "#" + to_string((2 + offset + vartable[index].index) * 4)));
-                        } else {
-                            backlist.push_back(new MOV32(4, (2 + offset + vartable[index].index) * 4));
-                            backlist.push_back(new OP("add", 5, 5, 4));
-                        }
-                        backlist.push_back(new LDR(2, address("fp", "-r5")));
-                    }
-                }
-                break;
-            }
-            case IdentifierType: {
-                //右值为单个字母
-                string name = static_cast<Identifier *>(expression)->name;
-                int index = tableFind(vartable, name);
-                if (index == -1) {
-                    //全局变量
-                    //取地址到r4
-                    backlist.push_back(new MOV32(4, name));
-                    //读到r2
-                    backlist.push_back(new LDR(2, address("r4", 0)));
-                } else {
-                    //读到r2
-                    backlist.push_back(new LDR(2, address("fp", -8 - 4 * vartable[index].index)));
-                }
-                break;
-            }
-            case UnaryExpressionType: {
-                //UnaryExpressionType，计算后将计算后的值放在r2
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression), 2);
-                break;
-            }
-            case BinaryExpressionType: {
-                //右值为BinaryExpression，计算后将计算后的值放在r2
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression), 2);
-                break;
-            }
-        }
-    }
-
-    void generateBinaryExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression, int pos) {
-        int reg1;
-        int reg2;//最终结果
-        int reg3;
-        if (pos == 1) {
-            reg1 = 1;
-            reg2 = 1;
-            reg3 = 2;
-        }
-        if (pos == 2) {
-            reg1 = 1;
-            reg2 = 2;
-            reg3 = 3;
-        }
-        if (pos == 3) {
-            reg1 = 2;
-            reg2 = 3;
-            reg3 = 3;
-        }
-        //处理左侧
-        switch (expression->leftExpr->nodetype) {
-            case NumberExpressionType: {
-                int value = static_cast<NumberExpression *>(expression->leftExpr)->value;
-                //TODO 小于0的情况没有考虑
-                if (value < 65535) {
-                    backlist.push_back(new MOV(reg1, value));
-                } else {
-                    backlist.push_back(new MOV32(reg1, value));
-                }
-                break;
-            }
-            case ArrayIdentifierType: {
-                getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression->leftExpr));
-                backlist.push_back(new LDR(reg1, address("r6", 0)));
-                break;
-            }
-            case IdentifierType: {
-                //右值为单个字母
-                string name = static_cast<Identifier *>(expression->leftExpr)->name;
-                int index = tableFind(vartable, name);
-                if (index == -1) {
-                    //全局变量
-                    //取地址到r4
-                    backlist.push_back(new MOV32(4, name));
-                    //读到r2
-                    backlist.push_back(new LDR(reg1, address("r4", 0)));
-                } else {
-                    backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
-                }
-                break;
-            }
-            case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->leftExpr), 1);
-                break;
-            }
-            case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), 1);
-                break;
-            }
-        }
-        //处理右侧
-        switch (expression->rightExpr->nodetype) {
-            case NumberExpressionType: {
-                int value = static_cast<NumberExpression *>(expression->rightExpr)->value;
-                //TODO 小于0的情况没有考虑
-                if (value < 65535) {
-                    backlist.push_back(new MOV(reg3, value));
-                } else {
-                    backlist.push_back(new MOV32(reg3, value));
-                }
-                break;
-            }
-            case ArrayIdentifierType: {
-                getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression->rightExpr));
-                backlist.push_back(new LDR(reg3, address("r6", 0)));
-                break;
-            }
-            case IdentifierType: {
-                //右值为单个字母
-                string name = static_cast<Identifier *>(expression->rightExpr)->name;
-                int index = tableFind(vartable, name);
-                if (index == -1) {
-                    //全局变量
-                    //取地址到r4
-                    backlist.push_back(new MOV32(4, name));
-                    //读到r3
-                    backlist.push_back(new LDR(reg3, address("r4", 0)));
-                } else {
-                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[index].index)));
-                }
-                break;
-            }
-            case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->rightExpr), 3);
-                break;
-            }
-            case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->rightExpr), 3);
-                break;
-            }
-        }
-        switch (expression->op) {
-            case ADD: {
-                backlist.push_back(new OP("add", reg2, reg1, reg3));
-                break;
-            }
-            case SUB: {
-                backlist.push_back(new OP("sub", reg2, reg1, reg3));
-                break;
-            }
-            case MUL: {
-                backlist.push_back(new OP("mul", reg2, reg1, reg3));
-                break;
-            }
-            case DIV: {
-                backlist.push_back(new OP("sdiv", reg2, reg1, reg3));
-                break;
-            }
-                /*case MOD: {
-                    backlist.push_back(new OP("aaa", reg2, reg1, reg3));
-                    break;
-                }*/
-            case EQ: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("eq", reg2, 1));
-                backlist.push_back(new MOV("ne", reg2, 0));
-                break;
-            }
-            case NE: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("eq", reg2, 0));
-                backlist.push_back(new MOV("ne", reg2, 1));
-                break;
-            }
-            case LT: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("lt", reg2, 1));
-                backlist.push_back(new MOV("ge", reg2, 0));
-                break;
-            }
-            case LE: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("le", reg2, 1));
-                backlist.push_back(new MOV("gt", reg2, 0));
-                break;
-            }
-            case GT: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("le", reg2, 0));
-                backlist.push_back(new MOV("gt", reg2, 1));
-                break;
-            }
-            case GE: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("lt", reg2, 0));
-                backlist.push_back(new MOV("ge", reg2, 1));
-                break;
-            }
-            case AND_OP: {
-                backlist.push_back(new OP("and", reg2, reg1, reg3));
-                break;
-            }
-            case OR_OP: {
-                backlist.push_back(new OP("orr", reg2, reg1, reg3));
-                break;
-            }
-            case NOT_EQUAL: {
-                backlist.push_back(new CMP(reg1, reg3));
-                backlist.push_back(new MOV("eq", reg2, 0));
-                backlist.push_back(new MOV("ne", reg2, 1));
-                break;
-            }
-        }
-    }
-
-    void generateUnaryExpression(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression, int pos) {
-        int reg1;
-        int reg2;//最终结果
-        int reg3;
-        if (pos == 1) {
-            reg1 = 1;
-            reg2 = 1;
-            reg3 = 2;
-        }
-        if (pos == 2) {
-            reg1 = 1;
-            reg2 = 2;
-            reg3 = 3;
-        }
-        if (pos == 3) {
-            reg1 = 2;
-            reg2 = 3;
-            reg3 = 3;
-        }
-        switch (expression->right->nodetype) {
-            case NumberExpressionType: {
-                int value = static_cast<NumberExpression *>(expression->right)->value;
-                //TODO 小于0的情况没有考虑
-                if (value < 65535) {
-                    backlist.push_back(new MOV(reg3, value));
-                } else {
-                    backlist.push_back(new MOV32(reg3, value));
-                }
-                break;
-            }
-            case ArrayIdentifierType: {
-                getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression->right));
-                backlist.push_back(new LDR(reg3, address("r6", 0)));
-                break;
-            }
-            case IdentifierType: {
-                //右值为单个字母
-                string name = static_cast<Identifier *>(expression->right)->name;
-                int index = tableFind(vartable, name);
-                if (index == -1) {
-                    //全局变量
-                    //取地址到r4
-                    backlist.push_back(new MOV32(4, name));
-                    //读到r3
-                    backlist.push_back(new LDR(reg3, address("r4", 0)));
-                } else {
-                    backlist.push_back(new LDR(reg3, address("fp", -8 - 4 * vartable[index].index)));
-                }
-                break;
-            }
-            case BinaryExpressionType: {
-                generateBinaryExpression(vartable, backlist, static_cast<BinaryExpression *>(expression->right), 3);
-                break;
-            }
-            case UnaryExpressionType: {
-                generateUnaryExpression(vartable, backlist, static_cast<UnaryExpression *>(expression->right), 3);
-                break;
-            }
-        }
-        switch (expression->op) {
-            case ADD: {
-                backlist.push_back(new MOV(reg2, reg3, "reg2reg"));
-                break;
-            }
-            case SUB: {
-                backlist.push_back(new MOV(reg1, 0));
-                backlist.push_back(new OP("sub", reg2, reg1, reg3));
-                break;
-            }
-            case NOT_EQUAL: {
-                backlist.push_back(new CMP(reg2, "#0"));
-                backlist.push_back(new MOV("eq", reg2, 1));
-                backlist.push_back(new MOV("ne", reg2, 0));
-                break;
-            }
-        }
-    }
-
     void generateBackArray(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Declare *array) {
         switch (array->nodetype) {
             case ArrayDeclareWithInitType:
@@ -593,7 +196,7 @@ namespace compiler::back {
                 backlist.push_back(new LDR(regtomul, name));
                 int reg = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg,4*offset));
-                backlist.push_back(new OP("sub",regtomul,regtomul,reg));
+                backlist.push_back(new OP("add",regtomul,regtomul,reg));
                 freeRegForCalExp(reg);
                 //backlist.push_back(new LDR(regtomul, address(regtomul, -4 * offset)));
             } else {
@@ -617,7 +220,7 @@ namespace compiler::back {
                 }
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, name));
-                backlist.push_back(new OP("sub",regtomul,reg1,regtomul));
+                backlist.push_back(new OP("add",regtomul,reg1,regtomul));
                 //backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "-r" + to_string(regtomul))));
                 freeRegForCalExp(reg1);
             }
@@ -818,6 +421,7 @@ namespace compiler::back {
                         backlist.push_back(new MOV(0, reg, "reg2reg"));
                         freeRegForCalExp(reg);
                     }
+                    backlist.push_back(new LDMIA());
                     break;
                 }
             }
@@ -945,6 +549,7 @@ namespace compiler::back {
                     backlist.push_back(new MOV(0, reg, "reg2reg"));
                     freeRegForCalExp(reg);
                 }
+                backlist.push_back(new LDMIA());
                 break;
             }
         }
@@ -1020,7 +625,7 @@ namespace compiler::back {
                         //取地址到regyomul
                         regtomul = getCanUseRegForCalExp();
                         backlist.push_back(new LDR(regtomul, name));
-                        backlist.push_back(new LDR(regtomul, address(regtomul, -4 * offset)));
+                        backlist.push_back(new LDR(regtomul, address(regtomul, 4 * offset)));
                     } else {
                         for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
                             if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
@@ -1042,7 +647,7 @@ namespace compiler::back {
                         }
                         int reg1 = getCanUseRegForCalExp();
                         backlist.push_back(new LDR(reg1, name));
-                        backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "-r" + to_string(regtomul))));
+                        backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "r" + to_string(regtomul))));
                         freeRegForCalExp(reg1);
                     }
                 } else {

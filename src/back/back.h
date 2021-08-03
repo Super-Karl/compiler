@@ -160,10 +160,6 @@ namespace compiler::back {
                       "\tldmia\tsp!,{fp, lr}\n"
                       "\tbx\tlr\n";
         }
-
-        LDMIA(string func) : INS(ldmia) {
-            fullIns = "\tldmia\tsp!,{r1-r6}\n";
-        }
     };
 
     class BL : public INS {

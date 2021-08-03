@@ -290,7 +290,14 @@ namespace compiler::back {
         //处理参数
         for (auto arg: functionCall->args->args) {
             int reg = generateExp(vartable, backlist, arg);
-            backlist.push_back(new STR(reg));
+            if(functionCall->name->name=="putint"||functionCall->name->name=="putch")
+            {
+                backlist.push_back(new MOV(0,reg,"reg2reg"));
+            }
+            else
+            {
+                backlist.push_back(new STR(reg));
+            }
             freeRegForCalExp(reg);
         }
         //跳转

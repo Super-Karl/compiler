@@ -348,10 +348,53 @@ namespace compiler::front::ast {
     auto endLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
     cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
-    trueBlock->genIR(ir, newTable);
+    BlockIR* trueIR = new BlockIR();
+    BlockIR* falseIR = new BlockIR();
+    trueBlock->genIR(trueIR->block, newTable);
+    elseBlock->genIR(falseIR->block,newTable);
+
+    std::unordered_map<std::string,std::string> phi;
+    for (auto it = falseIR->block.rbegin();it!=falseIR->block.rend();it++){
+      auto temp = *it;
+      auto pIR = dynamic_cast<AssignIR*>(*it);
+      if (pIR){
+          try {
+          auto tmp = record->searchVar(pIR->dest.defName);
+        }catch (...){
+          continue;
+        }
+          try{
+            auto tmp =phi.at(pIR->dest.defName);
+            phi[pIR->dest.defName] = pIR->dest.name;
+          }catch(out_of_range){
+          }
+      }
+    }
+    std::list<IR*>phiMov ;
+    for (auto it = trueIR->block.rbegin();it != trueIR->block.rend();it++){
+      auto temp = *it;
+      auto pIR = dynamic_cast<AssignIR*>(*it);
+      if (pIR) {
+        try {
+          auto tmp = phi.at(pIR->dest.defName);
+          phiMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
+
+        }
+        catch(out_of_range){
+        }
+      }
+    }
+    for (auto item:trueIR->block){
+      ir.push_back(item);
+    }
+    for (auto item:phiMov){
+      ir.push_back(item);
+    }
     ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    this->elseBlock->genIR(ir, newTable);
+    for (auto item:falseIR->block){
+      ir.push_back(item);
+    }
     ir.push_back(endLabel);
   }
 

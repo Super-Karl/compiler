@@ -279,6 +279,19 @@ namespace compiler::mid::ir {
       printOpName(source, '\n', false);
     }
   };
+  class BlockIR:public IR{
+  public:
+    IRList block;
+    BlockIR()=default;
+    BlockIR* getThis(){
+      return this;
+    }
+    void print() override{
+      for (auto i : block){
+        i->print();
+      }
+    }
+  };
 }// namespace compiler::mid::ir
 
 #endif//COMPILER_IR_H

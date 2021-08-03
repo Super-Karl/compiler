@@ -230,7 +230,7 @@ namespace compiler::front::ast {
       auto assign = new AssignIR();
       assign->source1 = rightExpr->evalOp(ir, record);
       assign->operatorCode = OperatorCode::Mov;
-      assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
+      assign->dest = OperatorName("%" + to_string(record->getID()));
       ir.push_back(assign);
 
       //更新符号表
@@ -334,21 +334,21 @@ namespace compiler::front::ast {
 
   //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto newTable = new RecordTable(record);
     for (auto item : blockItem)
-      item->genIR(ir, newTable);
+      item->genIR(ir, record);
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto ifLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto elseLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto endLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir, record, ifLabel, elseLabel, true);
+    auto newTable = new RecordTable(record);
+    auto ifLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto elseLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto endLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
-    trueBlock->genIR(ir, record);
+    trueBlock->genIR(ir, newTable);
     ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    this->elseBlock->genIR(ir, record);
+    this->elseBlock->genIR(ir, newTable);
     ir.push_back(endLabel);
   }
 
@@ -367,17 +367,22 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto loopLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto endLoopLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto testLabel = new LabelIR(".L"+ std::to_string(record->getID()));
+    auto newTable = new RecordTable(record);
+    newTable->setInLoop(true);
+
+    auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
-    ir.push_back(new JmpIR(OperatorCode::Jmp,testLabel));
+    ir.push_back(new JmpIR(OperatorCode::Jmp, testLabel));
     ir.push_back(loopLabel);
-    this->loopBlock->genIR(ir, record);
+    this->loopBlock->genIR(ir, newTable);
     ir.push_back(testLabel);
-    cond->ConditionAnalysis(ir, record, loopLabel, endLoopLabel, true);
+    cond->ConditionAnalysis(ir, newTable, loopLabel, endLoopLabel, true);
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
+
+    newTable->setInLoop(false);
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -602,15 +607,15 @@ namespace compiler::front::ast {
     }
     //排除所有的逻辑运算符
     try {
-      left = OperatorName(leftExpr->eval(record), Type::Imm);
+      if (!record->isInLoop()) { left = OperatorName(leftExpr->eval(record), Type::Imm); }
     } catch (...) {
-      left = leftExpr->evalOp(ir, record);
     }
+    left = leftExpr->evalOp(ir, record);
     try {
-      right = OperatorName(rightExpr->eval(record), Type::Imm);
+      if (!record->isInLoop()) { right = OperatorName(rightExpr->eval(record), Type::Imm); }
     } catch (...) {
-      right = rightExpr->evalOp(ir, record);
     }
+    right = rightExpr->evalOp(ir, record);
     /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
 
@@ -694,6 +699,13 @@ namespace compiler::front::ast {
   }
 
   OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
+    try {
+      if (!record->isInLoop()) {
+        auto opName = OperatorName(this->eval(record), Type::Imm);
+        return opName;
+      }
+    } catch (...) {
+    }
     auto varInfo = record->searchVar(this->name);
     auto opName = OperatorName(varInfo->getUseName(), Type::Var);
     return opName;

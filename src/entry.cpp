@@ -42,6 +42,7 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     {
         int mainFunFlag=0;
         map<string,string> usedReg;
+        vector<string> Regs;
         //构造开始时入栈的部分
         compiler::mid::ir::FunDefIR *funCallIr=dynamic_cast<compiler::mid::ir::FunDefIR *>(val);
         if(funCallIr!= nullptr){
@@ -125,6 +126,7 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         armList.push_back(paramToReg(param,i,usedReg));
                         i++;
                     }
+
                     armList.push_back(sentence);
                 }
                 //函数返回部分
@@ -135,6 +137,8 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
 
             }
         }
+        compiler::back::OPERATION * endBx=new compiler::back::OPERATION(compiler::back::Instruction::BX);
+        compiler::back::OperateNum * lrReg=new compiler::back::Direct_Reg("lr");
     }
     return armList;
 }

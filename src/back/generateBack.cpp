@@ -816,6 +816,7 @@ namespace compiler::back {
                     if(reg!=0)
                     {
                         backlist.push_back(new MOV(0, reg, "reg2reg"));
+                        freeRegForCalExp(reg);
                     }
                     break;
                 }
@@ -942,6 +943,7 @@ namespace compiler::back {
                 if(reg!=0)
                 {
                     backlist.push_back(new MOV(0, reg, "reg2reg"));
+                    freeRegForCalExp(reg);
                 }
                 break;
             }
@@ -962,6 +964,7 @@ namespace compiler::back {
                 pushregtable();
                 generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(expression));
                 popregtable();
+                backlist.push_back(new POP("r1-r8"));
                 int reg = getCanUseRegForCalExp();
                 backlist.push_back(new MOV(reg, 0, "reg2reg"));
                 return reg;

@@ -284,8 +284,8 @@ namespace compiler::back{
     //代码块类型声明
     class BlockDeclaration:public  Sentence{
     public:
-        BarCode barcode;
-        BlockDeclaration(BarCode bcode):barcode(bcode){};
+        EQUKeywords equkeywords;
+        BlockDeclaration(EQUKeywords equkeywords1):equkeywords(equkeywords){};
         BlockDeclaration *getThis() override{
             return this;
         }
@@ -302,10 +302,11 @@ namespace compiler::back{
     };
     class TypeDeclaration:public  Sentence{
     public:
-        BarCode barcode;//???
+        EQUKeywords equkeywords;
         LABEL label;
         TYPE type;
-        TypeDeclaration(BarCode bcode,LABEL label1,TYPE type1):barcode(bcode), label(label1),type(type1){};
+        TypeDeclaration(EQUKeywords equkeywords1,LABEL label1,TYPE type1):equkeywords(equkeywords1), label(label1),type(type1){};
+        TypeDeclaration(EQUKeywords equkeywords1,LABEL label1):equkeywords(equkeywords1),label(label1){};
         TypeDeclaration *getThis() override{
             return this;
         }

@@ -15,12 +15,13 @@ using namespace std;
 using Hash = std::unordered_map<string, int>;
 
 vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir);
-compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string> usedReg);
+compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string> usedReg,vector<string> Regs);
 string handleIrFunName(string irname);
-compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName source,map<string,string> &usedReg);
+compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName source,map<string,string> &usedReg,vector<string> Regs);
 void create_stack(vector<compiler::back::Sentence *> &armList);
 string findFromRegs(string name,map<string,string> usedReg);
 string allocReg(map<string,string> &usedReg);
+void beginFunc(string FuncName,vector<compiler::back::Sentence *> &armList);
 int main(int argc, char **argv) {
   auto *argParser = new compiler::controller::ArgParser(argc, argv);
 
@@ -41,13 +42,15 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     for (auto val : ir)//ir的每一个块
     {
         int mainFunFlag=0;
-        map<string,string> usedReg;
-        vector<string> Regs;
+        int sumOfValues=0;
+        map<string,string> usedReg;//变量和寄存器的映射关系
+        vector<string> Regs;//使用过的寄存器
         //构造开始时入栈的部分
         compiler::mid::ir::FunDefIR *funCallIr=dynamic_cast<compiler::mid::ir::FunDefIR *>(val);
         if(funCallIr!= nullptr){
             if(funCallIr->name=="main")
                 mainFunFlag=1;//如果说是主函数就设置一个flag
+            beginFunc(funCallIr->name,armList);
             compiler::back::LABEL *funNamelabel=new compiler::back::LABEL(handleIrFunName(funCallIr->name));
             compiler::back::Sentence *funName=new compiler::back::Instr_Sentence(*funNamelabel);
             armList.push_back(funName);
@@ -60,10 +63,10 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                     switch (irInstr->operatorCode) {
                         case compiler::mid::ir::OperatorCode::Add: {
                             op = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
-                            auto dest=convertVarToReg(irInstr->dest,usedReg);
+                            auto dest=convertVarToReg(irInstr->dest,usedReg,Regs);
                             //转换source1
-                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg);
-                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg);
+                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs);
+                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg,Regs);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence = new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
@@ -71,9 +74,9 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         }
                         case compiler::mid::ir::OperatorCode::Mov: {
                             op=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
-                            compiler::back::OperateNum  *dest =convertVarToReg(irInstr->dest,usedReg);
+                            compiler::back::OperateNum  *dest =convertVarToReg(irInstr->dest,usedReg,Regs);
                             //转换source1
-                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg);
+                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1);
                             compiler::back::Sentence *sentence = new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
@@ -81,10 +84,10 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         }
                         case compiler::mid::ir::OperatorCode::Sub:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::SUB);
-                            auto dest=convertVarToReg(irInstr->dest.name,usedReg);
+                            auto dest=convertVarToReg(irInstr->dest.name,usedReg,Regs);
                             //转换source1
-                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg);
-                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg);
+                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs);
+                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg,Regs);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
@@ -92,10 +95,10 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         }
                         case compiler::mid::ir::OperatorCode::Mul:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::MUL);
-                            auto dest=convertVarToReg(irInstr->dest.name,usedReg);
+                            auto dest=convertVarToReg(irInstr->dest.name,usedReg,Regs);
                             //转换source1
-                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg);
-                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg);
+                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs);
+                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg,Regs);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
@@ -103,10 +106,10 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         }
                         case compiler::mid::ir::OperatorCode::Div:{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::SDIV);
-                            auto dest=convertVarToReg(irInstr->dest.name,usedReg);
+                            auto dest=convertVarToReg(irInstr->dest.name,usedReg,Regs);
                             //转换source1
-                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg);
-                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg);
+                            auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs);
+                            auto arm_num2=convertVarToReg(irInstr->source2,usedReg,Regs);
                             compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1,arm_num2);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*operand);
                             armList.push_back(sentence);
@@ -123,7 +126,7 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                     compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*jump_label);
                     int i=0;
                     for(auto param:funcallInstr->argList){
-                        armList.push_back(paramToReg(param,i,usedReg));
+                        armList.push_back(paramToReg(param,i,usedReg,Regs));
                         i++;
                     }
 
@@ -137,12 +140,16 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
 
             }
         }
-        compiler::back::OPERATION * endBx=new compiler::back::OPERATION(compiler::back::Instruction::BX);
-        compiler::back::OperateNum * lrReg=new compiler::back::Direct_Reg("lr");
+        compiler::back::OPERATION * endMOV=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+        compiler::back::OperateNum * PCReg=new compiler::back::Direct_Reg("PC");
+        compiler::back::OperateNum * R14Reg=new compiler::back::Direct_Reg("R14");
+        compiler::back::OPERAND *endOPERAND=new compiler::back::OPERAND(PCReg,R14Reg);
+        compiler::back::Sentence *endSentence=new compiler::back::Instr_Sentence(*endMOV,*endOPERAND);
+        armList.push_back(endSentence);
     }
     return armList;
 }
-compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName source,map<string,string> &usedReg)
+compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName source,map<string,string> &usedReg,vector<string> Regs)
 {
     string regName;
     compiler::back::OperateNum *armNum=nullptr;
@@ -158,6 +165,7 @@ compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName so
                  //cout<<source.name<<"created"<<endl;
                  string regName=allocReg(usedReg);
                  //cout<<regName<<"regName"<<endl;
+                 Regs.push_back(regName);
                  armNum=new compiler::back::Direct_Reg(regName);
                  usedReg.insert(map<string, string>::value_type(source.name, regName));
             }
@@ -202,11 +210,11 @@ string findFromRegs(string name,map<string,string> usedReg)
     else return "";
 }
 
-compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string>usedReg)
+compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string>usedReg,vector<string> Regs)
 {
     compiler::back::OPERATION *operation=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
     compiler::back::OperateNum * dest=new compiler::back::Direct_Reg("R"+to_string(i));
-    compiler::back::OperateNum * operatenum=convertVarToReg(arg,usedReg);
+    compiler::back::OperateNum * operatenum=convertVarToReg(arg,usedReg,Regs);
     compiler::back::OPERAND * operand=new compiler::back::OPERAND(dest,operatenum);
     compiler::back::Sentence * sentence=new compiler::back::Instr_Sentence(*operation,*operand);
     return sentence;
@@ -239,5 +247,13 @@ void stackPushBack(vector<compiler::back::Sentence *> &armList)
 {
 
 }
-
-
+void beginFunc(string FuncName,vector<compiler::back::Sentence *> &armList)
+{
+    compiler::back::Sentence *blockdeclaration=new compiler::back::BlockDeclaration(compiler::back::EQUKeywords::text);
+    armList.push_back(blockdeclaration);
+    compiler::back::LABEL *funcName=new compiler::back::LABEL(FuncName);
+    compiler::back::Sentence *declare1=new compiler::back::TypeDeclaration(compiler::back::EQUKeywords::global,*funcName);
+    compiler::back::Sentence *declare2=new compiler::back::TypeDeclaration(compiler::back::EQUKeywords::type,*funcName,compiler::back::TYPE::function);
+    armList.push_back(declare1);
+    armList.push_back(declare2);
+}

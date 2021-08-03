@@ -13,7 +13,6 @@ using namespace std;
 
 namespace compiler::back {
 
-
     class Source {
     public:
         SourceType Type;
@@ -23,28 +22,6 @@ namespace compiler::back {
         explicit Source(SourceType type) : Type(type) {}
     };
 
-    class VarSource : public Source {
-    public:
-        static int count;
-        string name;
-
-        explicit VarSource(SourceType type = VarSourceType) : Source(type) {
-            name = "%" + to_string(count);
-            count++;
-        }
-
-        explicit VarSource(string realname, SourceType type = VarSourceType) : Source(type) {
-            name = "%" + realname + to_string(count);
-            count++;
-        }
-    };
-
-    class NumSource : public Source {
-    public:
-        int num;
-
-        explicit NumSource(int num, SourceType type = NumSourceType) : Source(type), num(num) {}
-    };
 
     class address : public Source {
     public:
@@ -56,6 +33,18 @@ namespace compiler::back {
             } else {
                 addr = "[" + reg + ",#" + to_string(offset) + "]";
             }
+        }
+
+        address(int reg, int offset) {
+            if (offset == 0) {
+                addr = "[r" + to_string(reg) + "]";
+            } else {
+                addr = "[r" + to_string(reg) + ",#" + to_string(offset) + "]";
+            }
+        }
+
+        address(int reg) {
+            addr = "[r" + to_string(reg) + "]";
         }
 
         address(string reg, int offset, string s) {
@@ -97,8 +86,6 @@ namespace compiler::back {
     class Lable : public INS {
     public :
         LableType lableType;
-        static int FunctionCount;
-        static int IfCount;
         string name;
 
         Lable(LableType lableType, string realName = "NULL") : lableType(lableType), INS(INSlableType) {
@@ -257,12 +244,23 @@ namespace compiler::back {
         LDR(int reg, address addr) : INS(ldr) {
             fullIns = "\tldr r" + to_string(reg) + ", " + addr.addr + "\n";
         }
+
+        LDR(int reg, int num) : INS(ldr) {
+            fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num)+"\n";
+        }
+
+        LDR(int reg, string name) : INS(ldr) {
+            fullIns = "\tldr r" + to_string(reg) + ",=" + name+"\n";
+        }
     };
 
     class MLA : public INS {
     public:
         MLA(string rd, string rm, string rs, string rn) : INS(mla) {
             fullIns = "\tmla\t" + rd + ",\t" + rm + ",\t" + rs + ",\t" + rn + "\n";
+        }
+        MLA(int rd, int rm, int rs, int rn) : INS(mla) {
+            fullIns = "\tmla\tr" + to_string(rd) + ",\tr" + to_string(rm) + ",\tr" + to_string(rs) + ",\tr" + to_string(rn) + "\n";
         }
     };
 
@@ -282,6 +280,36 @@ namespace compiler::back {
 
         OP(string op, string rd, string rn, string op2) : INS(option) {
             fullIns = "\t" + op + " " + rd + ", " + rn + ", " + op2 + "\n";
+        }
+    };
+
+    class PUSH : public INS {
+    public:
+        PUSH(initializer_list<int> list) : INS(push) {
+            fullIns = "\tpush {r" + to_string(*(list.begin()));
+            for (auto i = list.begin(); i != list.end(); i++) {
+                fullIns = fullIns + ",r" + to_string(*i);
+            }
+            fullIns = fullIns + "}\n";
+        }
+
+        PUSH(string list) : INS(push) {
+            fullIns = "\tpush {" + list + "}\n";
+        }
+    };
+
+    class POP : public INS {
+    public:
+        POP(initializer_list<int> list) : INS(pop) {
+            fullIns = "\tpop {r" + to_string(*(list.begin()));
+            for (auto i = list.begin(); i != list.end(); i++) {
+                fullIns = fullIns + ",r" + to_string(*i);
+            }
+            fullIns = fullIns + "}";
+        }
+
+        POP(string list) : INS(pop) {
+            fullIns = "\tpop {" + list + "}\n";
         }
     };
 }

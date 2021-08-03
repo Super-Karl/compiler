@@ -123,6 +123,8 @@ enum INSType{
     b,
     bl,
     cmpbeq,
-    cmp
+    cmp,
+    push,
+    pop
 };
 #endif //COMPILER_ENUMS_H

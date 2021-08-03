@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
     auto *root = compiler::controller::generator::generate(input);
     root->print();
     Hash constTbale;
-    compiler::astpassir::FirstPassRoot(root,constTbale);
-    root->print();
+    //compiler::astpassir::FirstPassRoot(root,constTbale);
+    //root->print();
 
     //生成后端
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);

@@ -221,7 +221,7 @@ namespace compiler::front::ast {
           varUse = VarRedefChain("", this->rightExpr->eval(record), true);
           var->addVarUse(varUse, index);
         } catch (...) {
-          varUse = VarRedefChain("", INT32_MIN, false);
+          varUse = VarRedefChain("", 0, false);
           var->addVarUse(varUse, index);
         }
       }
@@ -235,11 +235,14 @@ namespace compiler::front::ast {
 
       //更新符号表
       VarRedefChain varUse;
-      try {
-        varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-      } catch (...) {
-        varUse = VarRedefChain(assign->dest.name, INT32_MIN);
+      if (!record->isInLoop()) {
+        try {
+          varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+        } catch (...) {
+          varUse = VarRedefChain(assign->dest.name, 0);
+        }
       }
+      varUse = VarRedefChain(assign->dest.name, 0);
       var->addVarUse(varUse);
     }
   }

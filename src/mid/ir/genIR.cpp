@@ -369,10 +369,13 @@ namespace compiler::front::ast {
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto loopLabel = new LabelIR(".L" + std::to_string(record->getID()));
     auto endLoopLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir, record, loopLabel, endLoopLabel, true);
+    auto testLabel = new LabelIR(".L"+ std::to_string(record->getID()));
+    RecordTable::pushLabelPair(testLabel, endLoopLabel);
+    ir.push_back(new JmpIR(OperatorCode::Jmp,testLabel));
     ir.push_back(loopLabel);
-    RecordTable::pushLabelPair(loopLabel, endLoopLabel);
     this->loopBlock->genIR(ir, record);
+    ir.push_back(testLabel);
+    cond->ConditionAnalysis(ir, record, loopLabel, endLoopLabel, true);
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
   }

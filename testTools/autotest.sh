@@ -232,6 +232,10 @@ elif test $1 = "-s"
             echo "//$file failed" >> ../build/test.sy
             echo -e "\033[31m test $file failed\033[0m"
         else
+            rm std.out
+            rm ../build/test.sy
+            cp ${file%.sy}.out std.out
+            cp ${file%.sy}.sy ../build/test.sy
             echo -e "\033[32m test $file passed\033[0m"
         fi
     fi

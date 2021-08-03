@@ -231,6 +231,7 @@ namespace compiler::front::ast {
       assign->source1 = rightExpr->evalOp(ir, record);
       assign->operatorCode = OperatorCode::Mov;
       assign->dest = OperatorName("%" + to_string(record->getID()));
+      assign->dest.defName = this->name->name;
       ir.push_back(assign);
 
       //更新符号表

@@ -358,16 +358,16 @@ namespace compiler::front::ast {
       auto temp = *it;
       auto pIR = dynamic_cast<AssignIR*>(*it);
       if (pIR){
-          try {
+        try {
           auto tmp = record->searchVar(pIR->dest.defName);
         }catch (...){
           continue;
         }
-          try{
-            auto tmp =phi.at(pIR->dest.defName);
-            phi[pIR->dest.defName] = pIR->dest.name;
-          }catch(out_of_range){
-          }
+        try{
+          auto tmp =phi.at(pIR->dest.defName);
+          phi[pIR->dest.defName] = pIR->dest.name;
+        }catch(out_of_range){
+        }
       }
     }
     std::list<IR*>phiMov ;

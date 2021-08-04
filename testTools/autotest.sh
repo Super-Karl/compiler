@@ -126,7 +126,7 @@ elif test $1 == "-a"
         continue
         fi
         touch ${file%.sy}.in
-        ./Exe < ${file%.sy}.in > this.out
+        timeout 5 ./Exe < ${file%.sy}.in > this.out
         #res = $?
         #if test ${res} -eq 1 
         #then
@@ -183,17 +183,17 @@ elif test $1 = "-s"
     ./../build/compiler -a -printIR ../testcase/${file##*/}
     if test $? -eq 1 
     then
-    echo -e "\033[31m Ir generated failed \33[0m" 
+    echo -e "\033[31m Ir generated failed \033[0m" 
     fi
     python3 Cgen.py -a > test.c 
     if test $? -eq 1 
     then
-    echo -e "\033[31m C generated failed \33[0m" 
+    echo -e "\033[31m C generated failed \033[0m" 
     fi
     gcc -o Exe test.c -g
     if test $? -eq 1 
     then
-    echo -e "\033[31m C compile failed \33[0m" 
+    echo -e "\033[31m C compile failed \033[0m" 
     fi
     touch ${file%.sy}.in
     ./Exe < ${file%.sy}.in > this.out
@@ -238,5 +238,44 @@ elif test $1 = "-s"
             cp ${file%.sy}.sy ../build/test.sy
             echo -e "\033[32m test $file passed\033[0m"
         fi
+    fi
+elif test $1 = "-d"
+    then
+    file="testcase.sy"
+    touch this.out
+    rm this.out
+    echo "testfile $file:"
+    ./../build/compiler -a -printIR $file
+    cat $file
+    if test $? -eq 1 
+    then
+    echo -e "\033[31m Ir generated failed \033[0m" 
+    fi
+    python3 Cgen.py -a > test.c 
+    if test $? -eq 1 
+    then
+    echo -e "\033[31m C generated failed \033[0m" 
+    fi
+    gcc -o Exe test.c -g
+    if test $? -eq 1 
+    then
+    echo -e "\033[31m C compile failed \033[0m" 
+    fi
+    touch test.in
+    ./Exe < test.in 
+    echo $?
+    #echo "filename ${file##*/%.*}"
+    diff -b -q this.out  ${file%.sy}.out
+    if test $? -eq 1
+    then
+        rm ../build/test.sy
+        cp ${file%.sy}.sy ../build/test.sy
+        echo "//$file failed" >> ../build/test.sy
+        echo -e "\033[31m test $file failed\033[0m"
+    else
+        rm std.out
+        rm ../build/test.sy
+        cp ${file%.sy}.sy ../build/test.sy
+        echo -e "\033[32m test $file passed\033[0m"
     fi
 fi

@@ -455,13 +455,59 @@ namespace compiler::front::ast {
 
     auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
     auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    RecordTable::pushLabelPair(testLabel, endLoopLabel);
-    ir.push_back(new JmpIR(OperatorCode::Jmp, testLabel));
+    //auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    RecordTable::pushLabelPair(loopLabel, endLoopLabel);
+    IRList condIr,loopIR;
+    cond->ConditionAnalysis(condIr,newTable,loopLabel,endLoopLabel,true);
+    IRList phiLoopMov;
+    std::unordered_map<std::string,std::string> phiLoop;
+    loopBlock->genIR(loopIR,newTable);
+    for (auto it = loopIR.begin();it!=loopIR.end();it++){
+      auto pIR = dynamic_cast<AssignIR*>(*it);
+      VarInfo* tmp;
+      if (pIR) {
+        try {
+          tmp = record->searchVar(pIR->dest.defName);
+        }catch (...){
+          continue;
+        }
+        try {
+          phiLoop.at(pIR->dest.defName);
+        }catch (...){
+          auto & varDefNameList = tmp->varUse[0];
+          std::string name;
+          for (auto it = varDefNameList.begin();it!=varDefNameList.end();it++){
+            if (it->defName == pIR->dest.name){
+              it++;
+              if (it == varDefNameList.end()){
+                throw runtime_error("???");
+              }
+              name = it->defName;
+              break;
+            }
+          }
+          phiLoop[pIR->dest.defName] = name;
+          if (name != "")
+          {
+            phiLoopMov.push_back(new AssignIR(name,pIR->dest.name));
+          }
+        }
+      }
+    }
+    for (auto &item: condIr){
+      ir.push_back(item);
+    }
     ir.push_back(loopLabel);
-    this->loopBlock->genIR(ir, newTable);
-    ir.push_back(testLabel);
-    cond->ConditionAnalysis(ir, newTable, loopLabel, endLoopLabel, true);
+    //ir.push_back(testLabel);
+    for (auto &item: loopIR){
+      ir.push_back(item);
+    }
+    for (auto &item: phiLoopMov){
+      ir.push_back(item);
+    }
+    for (auto &item: condIr){
+      ir.push_back(item);
+    }
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
 

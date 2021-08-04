@@ -20,7 +20,7 @@ namespace compiler::back {
 
     list<compiler::back::INS *> generateBack(compiler::front::ast::AST *root);
 
-    void generateBackFunction(vector<VAR>vartable, list<INS *> &backlist, compiler::front::ast::FunctionDefine *func);
+    void generateBackFunction(list<INS *> &backlist, compiler::front::ast::FunctionDefine *func);
 
     void generateBackArray(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::Declare *array);
     //获得数组标识符的地址放到r6

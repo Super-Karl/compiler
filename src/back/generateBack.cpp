@@ -60,8 +60,8 @@ namespace compiler::back {
                 backlist.push_back(new FUNC(func->name->name));
                 backlist.push_back(new STMDB());
                 //生成函数back
-                vector<VAR> vartable;//记录当前代码块的变量
-                generateBackFunction(vartable, backlist, func);
+                tableIndex = 0;
+                generateBackFunction(backlist, func);
 
             } else if (block->nodetype == DeclareStatementType) {
                 for (auto subNode:static_cast<DeclareStatement *>(block)->declareList) {
@@ -120,7 +120,8 @@ namespace compiler::back {
         return backlist;
     }
 
-    void generateBackFunction(vector<VAR> vartable, list<INS *> &backlist, compiler::front::ast::FunctionDefine *func) {
+    void generateBackFunction(list<INS *> &backlist, compiler::front::ast::FunctionDefine *func) {
+        vector<VAR> vartable;//记录当前代码块的变量
         //处理函数参数
         int argsize = func->args->args.size();
         for (int i = 0; i < argsize; i++) {

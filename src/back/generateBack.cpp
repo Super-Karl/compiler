@@ -432,10 +432,12 @@ namespace compiler::back {
                     }
                 }
                 case ReturnStatementType: {
-                    int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((*item))->returnExp);
-                    if (reg != 0) {
-                        backlist.push_back(new MOV(0, reg, "reg2reg"));
-                        freeRegForCalExp(reg);
+                    if (static_cast<ReturnStatement *>((*item))->returnExp != nullptr) {
+                        int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((*item))->returnExp);
+                        if (reg != 0) {
+                            backlist.push_back(new MOV(0, reg, "reg2reg"));
+                            freeRegForCalExp(reg);
+                        }
                     }
                     backlist.push_back(new LDMIA());
                     break;
@@ -563,10 +565,13 @@ namespace compiler::back {
                 }
             }
             case ReturnStatementType: {
-                int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((stmt))->returnExp);
-                if (reg != 0) {
-                    backlist.push_back(new MOV(0, reg, "reg2reg"));
-                    freeRegForCalExp(reg);
+                if(static_cast<ReturnStatement *>((stmt))->returnExp!= nullptr)
+                {
+                    int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((stmt))->returnExp);
+                    if (reg != 0) {
+                        backlist.push_back(new MOV(0, reg, "reg2reg"));
+                        freeRegForCalExp(reg);
+                    }
                 }
                 backlist.push_back(new LDMIA());
                 break;
@@ -700,21 +705,21 @@ namespace compiler::back {
             case AND_OP: {
                 int id = andCount++;
                 backlist.push_back(new CMP(reg1, "#0"));
-                backlist.push_back(new MOV("eq",reg1,0));
-                backlist.push_back(new B("eq","and_"+to_string(id)));
+                backlist.push_back(new MOV("eq", reg1, 0));
+                backlist.push_back(new B("eq", "and_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new OP("and", reg1, reg1, reg2));
-                backlist.push_back(new Lable("and_"+to_string(id)));
+                backlist.push_back(new Lable("and_" + to_string(id)));
                 break;
             }
             case OR_OP: {
                 int id = orCount++;
                 backlist.push_back(new CMP(reg1, "#0"));
-                backlist.push_back(new MOV("ne",reg1,1));
-                backlist.push_back(new B("ne","orr_"+to_string(id)));
+                backlist.push_back(new MOV("ne", reg1, 1));
+                backlist.push_back(new B("ne", "orr_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new OP("orr", reg1, reg1, reg2));
-                backlist.push_back(new Lable("orr_"+to_string(id)));
+                backlist.push_back(new Lable("orr_" + to_string(id)));
                 break;
             }
             case NOT_EQUAL: {

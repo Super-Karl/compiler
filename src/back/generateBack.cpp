@@ -627,7 +627,6 @@ namespace compiler::back {
         int reg1 = generateExp(vartable, backlist, expression->leftExpr);
         int reg2 = generateExp(vartable, backlist, expression->rightExpr);
         switch (expression->op) {
-            //TODO mod的运算，div的运算
             case ADD: {
                 backlist.push_back(new OP("add", reg1, reg1, reg2));
                 break;
@@ -642,6 +641,14 @@ namespace compiler::back {
             }
             case DIV: {
                 backlist.push_back(new OP("sdiv", reg1, reg1, reg2));
+                break;
+            }
+            case MOD:{
+                int regm = getCanUseRegForCalExp();
+                backlist.push_back(new OP("sdiv", regm, reg1, reg2));
+                backlist.push_back(new OP("mul", regm, regm, reg2));
+                backlist.push_back(new OP("sub", reg1, reg1, regm));
+                freeRegForCalExp(regm);
                 break;
             }
             case EQ: {

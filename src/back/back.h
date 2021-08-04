@@ -80,7 +80,7 @@ namespace compiler::back {
                       "    movw\t\\reg,\t#:lower16:\\val\n"
                       "    movt\t\\reg,\t#:upper16:\\val\n"
                       ".endm\n";*/
-            fullIns = ".arch armv7-a\n";
+            fullIns = ".arch armv7ve\n";
         }
     };
 

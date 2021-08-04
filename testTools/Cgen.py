@@ -2,6 +2,7 @@
 
 import sys
 res = ""
+variableSet=set()
 firstFunction = 0
 variable = {}
 def putint(l):
@@ -41,7 +42,7 @@ def getch(l):
         if c == '\s':
             continue
         elif '-' in l:
-            retirm
+            return 
         else:
             return c
 
@@ -66,50 +67,79 @@ SpecCallMap = {
 
 
 def add(l):  
-    global res  
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])}+{CtypeName(l[2])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}+{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}+{CtypeName(l[2])};")
     res = CtypeName(l[0])
 
 
 
 def sub(l):
-    global res 
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])}-{CtypeName(l[2])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}-{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}-{CtypeName(l[2])};")
     res = CtypeName(l[0])
 
-
 def mul(l):
-    global res 
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])}*{CtypeName(l[2])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}*{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}*{CtypeName(l[2])};")
     res = CtypeName(l[0])
 
 
 def div(l):
-    global res 
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])}/{CtypeName(l[2])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}/{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+       
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}/{CtypeName(l[2])};")
     res = CtypeName(l[0])
 
 
 def mod(l):
-    global res 
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])}%{CtypeName(l[2])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}%{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}%{CtypeName(l[2])};")
     res = CtypeName(l[0])
-
 
 def assign(l):
-    global res 
-    print(f"int {CtypeName(l[0])}={CtypeName(l[1])};")
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])};")
     res = CtypeName(l[0])
-
 # call and return
 
 
 def call(List):
-    global res 
+    global res,variableSet
     name = List[0][1:]
     if "&" in List:
         args = List[1:-2]
-        print(f"int {CtypeName(List[-1][:-1])} =",end=' ')
+        if not CtypeName(List[-1][:-1]) in variableSet:
+            print(f"int {CtypeName(List[-1][:-1])} =",end=' ')
+            variableSet.add(CtypeName(List[-1][:-1]))
+        else:
+            print(f"int {CtypeName(List[-1][:-1])} =",end=' ')
         res = CtypeName(List[-1][:-1])
         print(f"{name}(",end=' ')
         if len(args) != 0:
@@ -278,11 +308,11 @@ if __name__ == "__main__":
     print("""
 #include <stdio.h>
 int putint(int c){
-    printf("%d",c);
+    printf("%d\\n",c);
     return 0;
 }
 int putch(int c){
-    printf("%c",c);
+    printf("%c\\n",c);
     return 0;
 }
 int getint(){

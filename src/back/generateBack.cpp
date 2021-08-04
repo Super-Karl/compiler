@@ -1,7 +1,7 @@
 //
 // Created by karl on 2021/7/29.
 //
-//TODO 改while和if的编号 处理除法 数组传递参数 运行时库 处理模运算
+//
 #include "generateBack.h"
 #include "regtable.h"
 

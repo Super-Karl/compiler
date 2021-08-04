@@ -175,6 +175,9 @@ namespace compiler::back {
         B(string name) : INS(b) {
             fullIns = "\tb\t" + name + "\n";
         }
+        B(string s,string name) : INS(b) {
+            fullIns = "\tb"+s+"\t" + name + "\n";
+        }
     };
 
     class CMPBEQ : public INS {

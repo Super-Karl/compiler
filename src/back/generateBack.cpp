@@ -35,6 +35,10 @@ namespace compiler::back {
 
     int ifStatCount = 0;
 
+    int andCount = 0;
+
+    int orCount = 0;
+
     int tableFind(vector<VAR> &vartable, string name) {
         for (int i = vartable.size() - 1; i >= 0; i--) {
             if (vartable[i].name == name) {
@@ -151,12 +155,12 @@ namespace compiler::back {
             case ArrayDeclareType: {
                 string name = array->name->name;
                 tableIndex = tableIndex + static_cast<ArrayDeclare *>(array)->initVal->initValList.size();
-                VAR temp = VAR(name, 0, tableIndex-1);
+                VAR temp = VAR(name, 0, tableIndex - 1);
                 temp.isarray = 1;
                 for (auto index:static_cast<ArrayIdentifier *>(array->name)->index) {
                     temp.arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                 }
-                for(int i=static_cast<ArrayDeclare *>(array)->initVal->initValList.size()-1; i>=0;i--){
+                for (int i = static_cast<ArrayDeclare *>(array)->initVal->initValList.size() - 1; i >= 0; i--) {
                     int reg = generateExp(vartable, backlist, static_cast<ArrayDeclare *>(array)->initVal->initValList[i]);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
@@ -302,7 +306,7 @@ namespace compiler::back {
         //跳转
         backlist.push_back(new BL(functionCall->name->name));
         //清除临时数据,维护堆栈
-        if (functionCall->name->name == "putint" || functionCall->name->name == "putch"){
+        if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
             return;
         }
         backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(functionCall->args->args.size() * 4)));
@@ -628,7 +632,10 @@ namespace compiler::back {
 
     int generateBinaryExp(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression) {
         int reg1 = generateExp(vartable, backlist, expression->leftExpr);
-        int reg2 = generateExp(vartable, backlist, expression->rightExpr);
+        int reg2;
+        if (expression->op != AND_OP && expression->op != OR_OP) {
+            reg2 = generateExp(vartable, backlist, expression->rightExpr);
+        }
         switch (expression->op) {
             case ADD: {
                 backlist.push_back(new OP("add", reg1, reg1, reg2));
@@ -646,7 +653,7 @@ namespace compiler::back {
                 backlist.push_back(new OP("sdiv", reg1, reg1, reg2));
                 break;
             }
-            case MOD:{
+            case MOD: {
                 int regm = getCanUseRegForCalExp();
                 backlist.push_back(new OP("sdiv", regm, reg1, reg2));
                 backlist.push_back(new OP("mul", regm, regm, reg2));
@@ -691,11 +698,23 @@ namespace compiler::back {
                 break;
             }
             case AND_OP: {
+                int id = andCount++;
+                backlist.push_back(new CMP(reg1, "#0"));
+                backlist.push_back(new MOV("eq",reg1,0));
+                backlist.push_back(new B("eq","and_"+to_string(id)));
+                reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new OP("and", reg1, reg1, reg2));
+                backlist.push_back(new Lable("and_"+to_string(id)));
                 break;
             }
             case OR_OP: {
+                int id = orCount++;
+                backlist.push_back(new CMP(reg1, "#0"));
+                backlist.push_back(new MOV("ne",reg1,1));
+                backlist.push_back(new B("ne","orr_"+to_string(id)));
+                reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new OP("orr", reg1, reg1, reg2));
+                backlist.push_back(new Lable("orr_"+to_string(id)));
                 break;
             }
             case NOT_EQUAL: {
@@ -730,10 +749,6 @@ namespace compiler::back {
             }
         }
         return reg;
-    }
-
-    int generateArrayArg(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Identifier *arg) {
-
     }
 }
 

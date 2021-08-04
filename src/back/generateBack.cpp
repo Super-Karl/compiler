@@ -12,12 +12,16 @@ namespace compiler::back {
     public:
         string name;
         int value;
-        int count;
+        int ispointer;
+        int isarray;
         int index;
         vector<int> arrayIndex;
         vector<int> arrayValue;
 
-        VAR(string name, int value, int index) : index(index), name(name), value(value) {}
+        VAR(string name, int value, int index) : index(index), name(name), value(value) {
+            isarray = 0;
+            ispointer = 0;
+        }
     };
 
     //变量
@@ -71,6 +75,7 @@ namespace compiler::back {
                             string name = subNode->name->name;
                             int index = globalVartable.size();
                             VAR *temp = new VAR(name, 0, index);
+                            temp->isarray = 1;
                             for (auto index:static_cast<ArrayIdentifier *>(subNode->name)->index) {
                                 temp->arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                             }
@@ -85,6 +90,7 @@ namespace compiler::back {
                             string name = subNode->name->name;
                             int index = globalVartable.size();
                             VAR *temp = new VAR(name, 0, index);
+                            temp->isarray = 1;
                             for (auto index:static_cast<ArrayIdentifier *>(subNode->name)->index) {
                                 temp->arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                             }
@@ -129,7 +135,9 @@ namespace compiler::back {
             if (arg->nodetype == IdentifierType) {
                 vartable.push_back(VAR(arg->name, 0, i - 2 - argsize));//value 0表示为数字
             } else if (arg->nodetype == ArrayIdentifierType) {
-                vartable.push_back(VAR(arg->name, -1, i - 2 - argsize));//value -1表示为指针
+                VAR temp = VAR(arg->name, 0, i - 2 - argsize);
+                temp.ispointer = 1;
+                vartable.push_back(temp);//value -1表示为指针
             }
         }
         //处理函数体
@@ -142,16 +150,16 @@ namespace compiler::back {
             case ConstArrayType:
             case ArrayDeclareType: {
                 string name = array->name->name;
-                VAR temp = VAR(name, 0, tableIndex);
+                tableIndex = tableIndex + static_cast<ArrayDeclare *>(array)->initVal->initValList.size();
+                VAR temp = VAR(name, 0, tableIndex-1);
+                temp.isarray = 1;
                 for (auto index:static_cast<ArrayIdentifier *>(array->name)->index) {
                     temp.arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                 }
-                for (auto value:static_cast<ArrayDeclare *>(array)->initVal->initValList) {
-                    int reg = generateExp(vartable, backlist, value);
-                    //存到内存中
+                for(int i=static_cast<ArrayDeclare *>(array)->initVal->initValList.size()-1; i>=0;i--){
+                    int reg = generateExp(vartable, backlist, static_cast<ArrayDeclare *>(array)->initVal->initValList[i]);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
-                    tableIndex++;
                 }
                 vartable.push_back(temp);
                 break;
@@ -159,128 +167,95 @@ namespace compiler::back {
         }
     }
 
-    //获得地址到r6
+    //获得地址
     int getArrayIdentAddress(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::ArrayIdentifier *expression) {
         string name = expression->name;
         int index = tableFind(vartable, name);
         int regtomul;
+        VAR *getvar;
         if (index == -1) {
-            int offset = 0;
-            int allNum = 1;
-            for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                    offset += globalVartable[name]->arrayIndex[i] *
-                              static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                } else {
-                    allNum = 0;
-                }
-            }
-            if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
+            getvar = globalVartable[name];
+        } else {
+            getvar = &(vartable[index]);
+        }
+
+        int offset = 0;
+        int allNum = 1;
+        //把能算出来的先算出来
+        for (int i = 1; i < getvar->arrayIndex.size(); i++) {
+            if (expression->index[i - 1]->nodetype == NumberExpressionType) {
+                offset += getvar->arrayIndex[i] * static_cast<NumberExpression *>(expression->index[i - 1])->value;
+            } else {
                 allNum = 0;
             }
-            //处理最后一个下标
-            if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                if (allNum)
-                    offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                else {
-                    regtomul = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                }
-            } else {
-                regtomul = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
-            }
-            if (allNum) {
-                //取地址到regyomul
+        }
+        if (expression->index.back()->nodetype != NumberExpressionType) {
+            allNum = 0;
+        }
+        //处理最后一个下标
+        if (expression->index.back()->nodetype == NumberExpressionType) {
+            if (allNum)
+                offset += static_cast<NumberExpression *>(expression->index.back())->value;
+            else {
                 regtomul = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(regtomul, name));
-                int reg = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg, 4 * offset));
-                backlist.push_back(new OP("add", regtomul, regtomul, reg));
-                freeRegForCalExp(reg);
-                //backlist.push_back(new LDR(regtomul, address(regtomul, -4 * offset)));
-            } else {
-                for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                    if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                        int reg1 = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                        int reg2 = getCanUseRegForCalExp();
-                        backlist.push_back(new LDR(2, globalVartable[name]->arrayIndex[i] * 4));
-                        backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
-                        freeRegForCalExp(reg1);
-                        freeRegForCalExp(reg2);
-                    }
-                }
-                if (offset * 4 <= 65535) {
-                    backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string(offset * 4)));
-                } else {
-                    int reg1 = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(reg1, offset * 4));
-                    backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                    freeRegForCalExp(reg1);
-                }
-                int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg1, name));
-                backlist.push_back(new OP("add", regtomul, reg1, regtomul));
-                //backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "-r" + to_string(regtomul))));
-                freeRegForCalExp(reg1);
+                backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(expression->index.back())->value * 4));
             }
         } else {
-            int offset = 0;
-            int allNum = 1;
-            for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                    offset += vartable[index].arrayIndex[i] *
-                              static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                } else {
-                    allNum = 0;
-                }
-            }
-            if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
-                allNum = 0;
-            }
-            //处理最后一个下标
-            if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                if (allNum)
-                    offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                else {
-                    regtomul = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                }
+            regtomul = generateExp(vartable, backlist, expression->index.back());
+            backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
+        }
+        //计算地址
+        if (allNum) {
+            //取地址到regyomul
+            regtomul = getCanUseRegForCalExp();
+            if (index != -1 && getvar->ispointer) {
+                backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * vartable[index].index)));
+            } else if (index == -1) {
+                backlist.push_back(new LDR(regtomul, name));
             } else {
-                regtomul = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
-            }
-            if (allNum) {
-                regtomul = getCanUseRegForCalExp();
-                int reg = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg, 8 + 4 * (vartable[index].index + offset)));
-                backlist.push_back(new OP("sub", regtomul, 11, reg));
-                freeRegForCalExp(reg);
-                //backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * (vartable[index].index + offset))));
-            } else {
-                for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                    if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                        int reg1 = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                        int reg2 = getCanUseRegForCalExp();
-                        backlist.push_back(new MOV(reg2, vartable[index].arrayIndex[i] * 4));
-                        backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
-                        freeRegForCalExp(reg1);
-                        freeRegForCalExp(reg2);
-                    }
-                }
-                if ((2 + offset + vartable[index].index) * 4 <= 65535) {
-                    backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string((2 + offset + vartable[index].index) * 4)));
-                } else {
-                    int reg1 = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(reg1, (2 + offset + vartable[index].index) * 4));
-                    backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                    freeRegForCalExp(reg1);
-                }
                 int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new OP("sub", regtomul, 11, regtomul));
-                //backlist.push_back(new LDR(regtomul, address("fp", "-r" + to_string(regtomul))));
+                backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
+                backlist.push_back(new OP("sub", regtomul, 11, reg1));
                 freeRegForCalExp(reg1);
             }
+            int reg = getCanUseRegForCalExp();
+            backlist.push_back(new LDR(reg, 4 * offset));
+            backlist.push_back(new OP("add", regtomul, regtomul, reg));
+            freeRegForCalExp(reg);
+        } else {
+            //计算地址偏移量到regtomul
+            for (int i = 1; i < getvar->arrayIndex.size(); i++) {
+                if (expression->index[i - 1]->nodetype != NumberExpressionType) {
+                    int reg1 = generateExp(vartable, backlist, expression->index[i - 1]);
+                    int reg2 = getCanUseRegForCalExp();
+                    backlist.push_back(new LDR(2, getvar->arrayIndex[i] * 4));
+                    backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
+                    freeRegForCalExp(reg1);
+                    freeRegForCalExp(reg2);
+                }
+            }
+            if (offset * 4 <= 65535) {
+                backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string(offset * 4)));
+            } else {
+                int reg1 = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(reg1, offset * 4));
+                backlist.push_back(new OP("add", regtomul, regtomul, reg1));
+                freeRegForCalExp(reg1);
+            }
+            int reg1 = getCanUseRegForCalExp();
+            //取到数组的开始地址
+            if (index != -1 && getvar->ispointer) {
+                backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
+            } else if (index == -1) {
+                backlist.push_back(new LDR(reg1, name));
+            } else {
+                int reg2 = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));
+                backlist.push_back(new OP("sub", reg1, 11, reg2));
+                freeRegForCalExp(reg2);
+            }
+            backlist.push_back(new OP("add", regtomul, reg1, regtomul));
+            freeRegForCalExp(reg1);
         }
         return regtomul;
     }
@@ -288,14 +263,41 @@ namespace compiler::back {
     //处理函数调用
     void generateFuncCall(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::FunctionCall *functionCall) {
         //处理参数
-        for (auto arg: functionCall->args->args) {
-            int reg = generateExp(vartable, backlist, arg);
-            if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
-                backlist.push_back(new MOV(0, reg, "reg2reg"));
-            } else {
-                backlist.push_back(new STR(reg));
-            }
+        if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
+            int reg = generateExp(vartable, backlist, functionCall->args->args[0]);
+            backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
+        } else {
+            for (auto arg: functionCall->args->args) {
+                int isarray = 0;
+                int index;
+                if (arg->nodetype == IdentifierType) {
+                    index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
+                    if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                        isarray = 1;
+                    }
+                    if (index != -1 && vartable[index].isarray) {
+                        isarray = 1;
+                    }
+                }
+                if (isarray) {
+                    int reg = getCanUseRegForCalExp();
+                    if (index == -1) {
+                        backlist.push_back(new LDR(reg, static_cast<Identifier *>(arg)->name));
+                    } else {
+                        int reg1 = getCanUseRegForCalExp();
+                        backlist.push_back(new LDR(reg1, 4 * vartable[index].index + 8));
+                        backlist.push_back(new OP("sub", reg, 11, reg1));
+                        freeRegForCalExp(reg1);
+                    }
+                    backlist.push_back(new STR(reg));
+                    freeRegForCalExp(reg);
+                } else {
+                    int reg = generateExp(vartable, backlist, arg);
+                    backlist.push_back(new STR(reg));
+                    freeRegForCalExp(reg);
+                }
+            }
         }
         //跳转
         backlist.push_back(new BL(functionCall->name->name));
@@ -359,7 +361,11 @@ namespace compiler::back {
                     break;
                 }
                 case FunctionCallType: {
-                    generateFuncCall(vartable, backlist, static_cast<FunctionCall *>((*item)));
+                    backlist.push_back(new PUSH("r1-r8"));
+                    pushregtable();
+                    generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(*item));
+                    popregtable();
+                    backlist.push_back(new POP("r1-r8"));
                     break;
                 }
                 case DeclareStatementType: {
@@ -486,7 +492,11 @@ namespace compiler::back {
                 break;
             }
             case FunctionCallType: {
-                generateFuncCall(vartable, backlist, static_cast<FunctionCall *>((stmt)));
+                backlist.push_back(new PUSH("r1-r8"));
+                pushregtable();
+                generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(stmt));
+                popregtable();
+                backlist.push_back(new POP("r1-r8"));
                 break;
             }
             case DeclareStatementType: {
@@ -594,116 +604,9 @@ namespace compiler::back {
                 return reg;
             }
             case ArrayIdentifierType: {
-                string name = static_cast<ArrayIdentifier *>(expression)->name;
-                int index = tableFind(vartable, name);
-                int regtomul;
-                if (index == -1) {
-                    int offset = 0;
-                    int allNum = 1;
-                    for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                        if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                            offset += globalVartable[name]->arrayIndex[i] *
-                                      static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                        } else {
-                            allNum = 0;
-                        }
-                    }
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
-                        allNum = 0;
-                    }
-                    //处理最后一个下标
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                        if (allNum)
-                            offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                        else {
-                            regtomul = getCanUseRegForCalExp();
-                            backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                        }
-                    } else {
-                        regtomul = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                        backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
-                    }
-                    if (allNum) {
-                        //取地址到regyomul
-                        regtomul = getCanUseRegForCalExp();
-                        backlist.push_back(new LDR(regtomul, name));
-                        backlist.push_back(new LDR(regtomul, address(regtomul, 4 * offset)));
-                    } else {
-                        for (int i = 1; i < globalVartable[name]->arrayIndex.size(); i++) {
-                            if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                                int reg1 = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                                int reg2 = getCanUseRegForCalExp();
-                                backlist.push_back(new LDR(2, globalVartable[name]->arrayIndex[i] * 4));
-                                backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
-                                freeRegForCalExp(reg1);
-                                freeRegForCalExp(reg2);
-                            }
-                        }
-                        if (offset * 4 <= 65535) {
-                            backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string(offset * 4)));
-                        } else {
-                            int reg1 = getCanUseRegForCalExp();
-                            backlist.push_back(new LDR(reg1, offset * 4));
-                            backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                            freeRegForCalExp(reg1);
-                        }
-                        int reg1 = getCanUseRegForCalExp();
-                        backlist.push_back(new LDR(reg1, name));
-                        backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "r" + to_string(regtomul))));
-                        freeRegForCalExp(reg1);
-                    }
-                } else {
-                    int offset = 0;
-                    int allNum = 1;
-                    for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                        if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype == NumberExpressionType) {
-                            offset += vartable[index].arrayIndex[i] *
-                                      static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index[i - 1])->value;
-                        } else {
-                            allNum = 0;
-                        }
-                    }
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype != NumberExpressionType) {
-                        allNum = 0;
-                    }
-                    //处理最后一个下标
-                    if (static_cast<ArrayIdentifier *>(expression)->index.back()->nodetype == NumberExpressionType) {
-                        if (allNum)
-                            offset += static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value;
-                        else {
-                            regtomul = getCanUseRegForCalExp();
-                            backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(expression)->index.back())->value * 4));
-                        }
-                    } else {
-                        regtomul = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index.back());
-                        backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
-                    }
-                    if (allNum) {
-                        regtomul = getCanUseRegForCalExp();
-                        backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * (vartable[index].index + offset))));
-                    } else {
-                        for (int i = 1; i < vartable[index].arrayIndex.size(); i++) {
-                            if (static_cast<ArrayIdentifier *>(expression)->index[i - 1]->nodetype != NumberExpressionType) {
-                                int reg1 = generateExp(vartable, backlist, static_cast<ArrayIdentifier *>(expression)->index[i - 1]);
-                                int reg2 = getCanUseRegForCalExp();
-                                backlist.push_back(new MOV(reg2, vartable[index].arrayIndex[i] * 4));
-                                backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
-                                freeRegForCalExp(reg1);
-                                freeRegForCalExp(reg2);
-                            }
-                        }
-                        if ((2 + offset + vartable[index].index) * 4 <= 65535) {
-                            backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string((2 + offset + vartable[index].index) * 4)));
-                        } else {
-                            int reg1 = getCanUseRegForCalExp();
-                            backlist.push_back(new LDR(reg1, (2 + offset + vartable[index].index) * 4));
-                            backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                            freeRegForCalExp(reg1);
-                        }
-                        backlist.push_back(new LDR(regtomul, address("fp", "-r" + to_string(regtomul))));
-                    }
-                }
-                return regtomul;
+                int reg = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression));
+                backlist.push_back(new LDR(reg, address(reg, 0)));
+                return reg;
             }
             case BinaryExpressionType: {
                 int reg = generateBinaryExp(vartable, backlist, static_cast<BinaryExpression *>(expression));
@@ -724,7 +627,7 @@ namespace compiler::back {
         int reg1 = generateExp(vartable, backlist, expression->leftExpr);
         int reg2 = generateExp(vartable, backlist, expression->rightExpr);
         switch (expression->op) {
-            //TODO mod的运算
+            //TODO mod的运算，div的运算
             case ADD: {
                 backlist.push_back(new OP("add", reg1, reg1, reg2));
                 break;
@@ -817,6 +720,10 @@ namespace compiler::back {
             }
         }
         return reg;
+    }
+
+    int generateArrayArg(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Identifier *arg) {
+
     }
 }
 

@@ -1,6 +1,7 @@
 //
 // Created by karl on 2021/7/29.
 //
+//TODO 改while和if的编号 处理除法 数组传递参数 运行时库 处理模运算
 #include "generateBack.h"
 #include "regtable.h"
 
@@ -60,8 +61,6 @@ namespace compiler::back {
                 backlist.push_back(new STMDB());
                 //生成函数back
                 vector<VAR> vartable;//记录当前代码块的变量
-                ifStatCount = 0;
-                whileCount = 0;
                 generateBackFunction(vartable, backlist, func);
 
             } else if (block->nodetype == DeclareStatementType) {
@@ -195,8 +194,8 @@ namespace compiler::back {
                 regtomul = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(regtomul, name));
                 int reg = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg,4*offset));
-                backlist.push_back(new OP("add",regtomul,regtomul,reg));
+                backlist.push_back(new LDR(reg, 4 * offset));
+                backlist.push_back(new OP("add", regtomul, regtomul, reg));
                 freeRegForCalExp(reg);
                 //backlist.push_back(new LDR(regtomul, address(regtomul, -4 * offset)));
             } else {
@@ -220,7 +219,7 @@ namespace compiler::back {
                 }
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, name));
-                backlist.push_back(new OP("add",regtomul,reg1,regtomul));
+                backlist.push_back(new OP("add", regtomul, reg1, regtomul));
                 //backlist.push_back(new LDR(regtomul, address("r" + to_string(reg1), "-r" + to_string(regtomul))));
                 freeRegForCalExp(reg1);
             }
@@ -253,8 +252,8 @@ namespace compiler::back {
             if (allNum) {
                 regtomul = getCanUseRegForCalExp();
                 int reg = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg,8 + 4 * (vartable[index].index + offset)));
-                backlist.push_back(new OP("sub",regtomul,11,reg));
+                backlist.push_back(new LDR(reg, 8 + 4 * (vartable[index].index + offset)));
+                backlist.push_back(new OP("sub", regtomul, 11, reg));
                 freeRegForCalExp(reg);
                 //backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * (vartable[index].index + offset))));
             } else {
@@ -277,7 +276,7 @@ namespace compiler::back {
                     freeRegForCalExp(reg1);
                 }
                 int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new OP("sub",regtomul,11,regtomul));
+                backlist.push_back(new OP("sub", regtomul, 11, regtomul));
                 //backlist.push_back(new LDR(regtomul, address("fp", "-r" + to_string(regtomul))));
                 freeRegForCalExp(reg1);
             }
@@ -290,12 +289,9 @@ namespace compiler::back {
         //处理参数
         for (auto arg: functionCall->args->args) {
             int reg = generateExp(vartable, backlist, arg);
-            if(functionCall->name->name=="putint"||functionCall->name->name=="putch")
-            {
-                backlist.push_back(new MOV(0,reg,"reg2reg"));
-            }
-            else
-            {
+            if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
+                backlist.push_back(new MOV(0, reg, "reg2reg"));
+            } else {
                 backlist.push_back(new STR(reg));
             }
             freeRegForCalExp(reg);
@@ -423,8 +419,7 @@ namespace compiler::back {
                 }
                 case ReturnStatementType: {
                     int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((*item))->returnExp);
-                    if(reg!=0)
-                    {
+                    if (reg != 0) {
                         backlist.push_back(new MOV(0, reg, "reg2reg"));
                         freeRegForCalExp(reg);
                     }
@@ -551,8 +546,7 @@ namespace compiler::back {
             }
             case ReturnStatementType: {
                 int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((stmt))->returnExp);
-                if(reg!=0)
-                {
+                if (reg != 0) {
                     backlist.push_back(new MOV(0, reg, "reg2reg"));
                     freeRegForCalExp(reg);
                 }

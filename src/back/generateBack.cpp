@@ -302,6 +302,9 @@ namespace compiler::back {
         //跳转
         backlist.push_back(new BL(functionCall->name->name));
         //清除临时数据,维护堆栈
+        if (functionCall->name->name == "putint" || functionCall->name->name == "putch"){
+            return;
+        }
         backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(functionCall->args->args.size() * 4)));
     }
 

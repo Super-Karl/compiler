@@ -228,7 +228,7 @@ namespace compiler::back {
                 if (expression->index[i - 1]->nodetype != NumberExpressionType) {
                     int reg1 = generateExp(vartable, backlist, expression->index[i - 1]);
                     int reg2 = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(2, getvar->arrayIndex[i] * 4));
+                    backlist.push_back(new LDR(reg2, getvar->arrayIndex[i] * 4));
                     backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
                     freeRegForCalExp(reg1);
                     freeRegForCalExp(reg2);

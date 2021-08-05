@@ -133,7 +133,7 @@ namespace compiler::astpassir {
     }
 
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
-        std::cout << "开始优化ast" << std::endl;
+//        std::cout << "开始优化ast" << std::endl;
         //遍历根节点中的Block,建立哈希表
         for (auto node:root->codeBlock) {
             if (node->nodetype == DeclareStatementType) {
@@ -351,7 +351,7 @@ namespace compiler::astpassir {
                 break;
             }
             default: {
-                std::cout << stmt->nodetype << " ";
+//                std::cout << stmt->nodetype << " ";
                 break;
             }
         }
@@ -368,7 +368,7 @@ namespace compiler::astpassir {
                         delete (*i);
                         (*i) = new NumberExpression(result);
                     } else {
-                        std::cout << "数组下标志不能计算";
+//                        std::cout << "数组下标志不能计算";
                     }
                 }
                 //数组线性化
@@ -384,7 +384,7 @@ namespace compiler::astpassir {
                         delete (*i);
                         (*i) = new NumberExpression(result);
                     } else {
-                        std::cout << "数组下标志不能计算";
+//                        std::cout << "数组下标志不能计算";
                     }
                 }
                 static_cast<ConstArray *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ConstArray *>(array)->initVal->initValList);
@@ -399,7 +399,7 @@ namespace compiler::astpassir {
                         delete (*i);
                         (*i) = new NumberExpression(result);
                     } else {
-                        std::cout << "数组下标志不能计算";
+//                        std::cout << "数组下标志不能计算";
                     }
                 }
                 static_cast<ArrayDeclare *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ArrayDeclare *>(array)->initVal->initValList);
@@ -459,7 +459,7 @@ namespace compiler::astpassir {
                         delete (*i);
                         (*i) = new NumberExpression(result);
                     } else {
-                        std::cout << "数组下标志不能计算";
+//                        std::cout << "数组下标志不能计算";
                     }
                 }
                 break;

@@ -94,7 +94,17 @@ namespace compiler::mid::ir {
 
     GlobalData(std::string name, int val) : name(std::move(name)), isArray(false) { this->val.push_back(val); };
 
-    GlobalData(std::string name, std::vector<int> val) : name(std::move(name)), isArray(true), val(std::move(val)){};
+    GlobalData(std::string name, std::vector<int> val) : name(std::move(name)), isArray(true), val(std::move(val)){}
+    void print() override {
+      std::cout<<".Global";
+      if (isArray)
+        std::cout<<"Array";
+      std::cout<<' '<<name;
+      for (auto &item:val){
+        std::cout<<' '<<item;
+      }
+      std::cout<<' '<<std::endl;
+    }
   };
 
   class FunCallIR : public IR {

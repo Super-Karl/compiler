@@ -3,11 +3,21 @@ rm  test.log
 
 if test $1 == "-h"
 then
-    echo "-a [-t]: 全测试 -t:输出diff比较结果"
-    echo "-s [order] [-f]: 单样例测试 -f:将比较结果输出到文件"
+    echo "-a : 全测试 仅输出diff比较结果"
+    echo "-s [order]: 单样例测试 输出完整信息"
     echo "-n [num] :测试前n个样例"
     echo "-l 展示所有测试样例的名字"
     echo "-h 查看帮助"
+    echo "-d 测试本目录下的testcase.sy文件"
+    echo "-b 编译项目"
+elif test $1 == "-b"
+then
+    cd ..
+    cd build
+    cmake ..
+    make
+    cd ..
+    cd testtools
 elif test $1 == "-l"
 then
     for file in ../testcase/*.sy
@@ -36,19 +46,19 @@ then
         ./../build/compiler -a -printIR ../testcase/${file##*/} >> test.log
         if test $? -eq 1 
         then
-        echo -e "\033[31m Ir generated failed \033[0m" 
+        echo -e "\033[31m test $file error: Ir generated failed \033[0m" 
         continue
         fi
         python3 Cgen.py -a > test.c 
         if test $? -eq 1 
         then
-        echo -e "\033[31m C generated failed \033[0m" 
+        echo -e "\033[31m test $file error: C generated failed \033[0m" 
         continue
         fi
         gcc -o Exe test.c -g 2>> test.log
         if test $? -eq 1 
         then
-        echo -e "\033[31m C compile failed \033[0m" 
+        echo -e "\033[31m test $file error: C compile failed \033[0m" 
         continue
         fi
         touch ${file%.sy}.in
@@ -60,7 +70,7 @@ then
         #fi
         echo $? >> this.out
         #echo "filename ${file##*/%.*}"
-        if test $3 = "-t" 
+        if test 1 -eq 1 
         then
             diff -b -q this.out  ${file%.sy}.out
             if test $? -eq 1
@@ -110,19 +120,19 @@ elif test $1 == "-a"
         ./../build/compiler -a -printIR ../testcase/${file##*/} > test.data 2>>test.log
         if test $? -eq 1 
         then
-        echo -e "\033[31m Ir generated failed \033[0m" 
+        echo -e "\033[31m test $file error:Ir generated failed \033[0m" 
         continue
         fi
         python3 Cgen.py -a > test.c 2> test.data
         if test $? -eq 1 
         then
-        echo -e "\033[31m C generated failed \033[0m" 
+        echo -e "\033[31m test $file error: generated failed \033[0m" 
         continue
         fi
         gcc -o Exe test.c -g 2> test.data
         if test $? -eq 1 
         then
-        echo -e "\033[31m C compile failed \033[0m" 
+        echo -e "\033[31m test $file error:C compile failed \033[0m" 
         continue
         fi
         touch ${file%.sy}.in
@@ -135,7 +145,7 @@ elif test $1 == "-a"
         echo $? >> this.out
         let "i++"
         #echo "filename ${file##*/%.*}"
-        if test $2="-t" 
+        if test 1 -eq 1 
         then
             diff -b -q this.out  ${file%.sy}.out
             if test $? -eq 1
@@ -183,17 +193,17 @@ elif test $1 = "-s"
     ./../build/compiler -a -printIR ../testcase/${file##*/}
     if test $? -eq 1 
     then
-    echo -e "\033[31m Ir generated failed \033[0m" 
+    echo -e "\033[31m test $file error:Ir generated failed \033[0m" 
     fi
     python3 Cgen.py -a > test.c 
     if test $? -eq 1 
     then
-    echo -e "\033[31m C generated failed \033[0m" 
+    echo -e "\033[31m test $file error:C generated failed \033[0m" 
     fi
     gcc -o Exe test.c -g
     if test $? -eq 1 
     then
-    echo -e "\033[31m C compile failed \033[0m" 
+    echo -e "\033[31m test $file error:C compile failed \033[0m" 
     fi
     touch ${file%.sy}.in
     ./Exe < ${file%.sy}.in > this.out
@@ -204,7 +214,7 @@ elif test $1 = "-s"
     #fi
     echo $? >> this.out
     #echo "filename ${file##*/%.*}"
-    if test $3 = "-f" 
+    if test 1 -eq 0 
     then
         diff -b -q this.out  ${file%.sy}.out
         diff -b this.out  ${file%.sy}.out  >> test.log
@@ -249,17 +259,17 @@ elif test $1 = "-d"
     cat $file
     if test $? -eq 1 
     then
-    echo -e "\033[31m Ir generated failed \033[0m" 
+    echo -e "\033[31m test $file error:Ir generated failed \033[0m" 
     fi
     python3 Cgen.py -a > test.c 
     if test $? -eq 1 
     then
-    echo -e "\033[31m C generated failed \033[0m" 
+    echo -e "\033[31m test $file error:C generated failed \033[0m" 
     fi
     gcc -o Exe test.c -g
     if test $? -eq 1 
     then
-    echo -e "\033[31m C compile failed \033[0m" 
+    echo -e "\033[31m test $file error:C compile failed \033[0m" 
     fi
     touch test.in
     ./Exe < test.in 

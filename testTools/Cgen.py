@@ -47,6 +47,8 @@ def getch(l):
             return c
 
 def CtypeName(i,ctr = True):
+    if '&' in i:
+        i = i[1:] 
     if '%' in i or '@' in i:
         return "Var"+i[1:]
     elif ctr:
@@ -225,6 +227,23 @@ def alloca(l):
     """alloca()"""
     print(f"int {CtypeName(l[0][:-1],ctr=False)}[{CtypeName(l[2][1:-1],ctr=False)}];")
     
+def GlobalArrayDef(l):
+    print(f"int {CtypeName(l[0])}[]=",end = '')
+    print("{",end='')
+    l = l[1:]
+    for i in l:
+        if i.isnumeric():
+            print(i,end=',')
+    print("};")
+
+def GlobalVarDef(l):
+    print(f"int {CtypeName(l[0])}",end='')
+    if len(l) > 2 :
+        print("=",l[1],end=';\n')
+    else:
+        print(";")
+    
+    
 
 
 opMap = {
@@ -248,7 +267,9 @@ opMap = {
     "Ret":ret,
     "Nop":nop,
     "Load": load,
-    "Store":store
+    "Store":store,
+    ".GlobalArray":GlobalArrayDef,
+    ".Global":GlobalVarDef,
 }
 def excute(line):
     global res,firstFunction

@@ -293,6 +293,9 @@ namespace compiler::back {
             int reg2 = getArrayArgAddress(vartable,backlist, static_cast<ArrayIdentifier*>(functionCall->args->args[1]));
             backlist.push_back(new MOV(1,reg2,"reg2reg"));
             freeRegForCalExp(reg2);
+            //跳转
+            backlist.push_back(new BL(functionCall->name->name));
+            return;
         } else {
             for (auto arg: functionCall->args->args) {
                 int isarray = 0;

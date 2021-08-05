@@ -146,6 +146,11 @@ namespace compiler::back {
         }
         //处理函数体
         generateBlock(vartable, backlist, func->body, -1);
+        //处理没有return的函数
+        if(func->retType==268)
+        {
+            backlist.push_back(new LDMIA());
+        }
     }
 
     void generateBackArray(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Declare *array) {

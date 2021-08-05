@@ -69,6 +69,7 @@ namespace compiler::back{
         TEQ,
         TST
     };//TODO 加上除法(没有除法?)
+    void printInstruction(Instruction instr);
     enum class BarCode{
         //生成的条件码
         NOP,
@@ -87,8 +88,8 @@ namespace compiler::back{
         GT,
         LE,
         AL,
-        BNOP
     };
+    void printBarcode(BarCode barCode);
     enum class Suffix{
         //指令的后缀,只有!和 S两种
         SNOP,
@@ -96,6 +97,7 @@ namespace compiler::back{
         e_mark//指!
     };
     //加点或符号会标错,所以用其他符号先代替
+    void printSuffix(Suffix suffix);
     enum class EQUKeywords{
         //定义伪操作
        nop,
@@ -140,11 +142,14 @@ namespace compiler::back{
        unreq,
        pool
     };
+    void printEQUKeywords(EQUKeywords equKeywords);
     //前面应该加上%
     enum class TYPE{
+        NOP,
         object,
         function
     };
+    void printType(TYPE type);
     enum class stmType{
         NOP,
         IA,
@@ -156,12 +161,16 @@ namespace compiler::back{
         FA,
         EA
     };
+    void printstmType(stmType stmtype);
     //现在是标号域
     class LABEL{
     public:
         std::string LabelName;
         LABEL(std::string name):LabelName(name){};
         LABEL(){};
+        void print(){
+            std::cout<<LabelName;
+        }
     };
 
     //操作助记符域
@@ -175,6 +184,11 @@ namespace compiler::back{
         OPERATION(Instruction instr):instruction(instr){};
         OPERATION(Instruction instruction1,stmType stmtype1):stmtype(stmtype1),instruction(instruction1){};
         OPERATION(){};
+        void print(){
+            printInstruction(instruction);
+            printBarcode(barcode);
+            printstmType(stmtype);
+        }
     };
 
     //操作数域
@@ -185,14 +199,20 @@ namespace compiler::back{
             int OffsetNum;
             OffsetOperate(){};
             OffsetOperate(Instruction instr,int num):OffsetInstr(instr),OffsetNum(num){};
+            void print(){
+                printInstruction(OffsetInstr);
+                if(OffsetNum!=0)
+                std::cout<<" #"<<OffsetNum;
+            }
     };
     //操作数类
     class OperateNum{
     public:
-     OperateNum() = default;
+    OperateNum(){};
      virtual OperateNum *getThis(){
          return this;
      }
+     virtual void print(){};
     };
     //定义操作数,包括变量,常量,寄存器,表达式
     //定义寄存器类(包括直接访问寄存器 R0,间接访问寄存器[R0])
@@ -209,15 +229,29 @@ namespace compiler::back{
         Direct_Reg *getThis() override {
             return this;
         }
+        void print(){
+            if(RegName!=""){
+                std::cout<<RegName;
+                printSuffix(suffix);
+                offsetoperate.print();
+            }
+        }
+
     };
     class Indirect_Reg:public OperateNum{
     public:
         std::string RegName;
         int RegNum;
-        int Offset;
+        int Offset=0;
         //TODO 完成这两个类的构造,并不确定是否需要这个
-        Indirect_Reg(std::string name,int Offset=0);
+        Indirect_Reg(std::string name,int Offset1=0):RegName(name),Offset(Offset){};
         Indirect_Reg(int num,int Offset=0);
+        void print(){
+            if(RegName!="")
+                std::cout<<"["<<RegName;
+                std::cout<<",#"<<Offset;
+            std::cout<<"]";
+        }
     };
 
     class ImmNum:public OperateNum{
@@ -227,6 +261,10 @@ namespace compiler::back{
         ImmNum *getThis() override{
             return this;
         }
+        void print(){
+            std::cout<<"#"<<value;
+        }
+
     };
 
     class ConstNum:public OperateNum{
@@ -236,11 +274,19 @@ namespace compiler::back{
         ConstNum *getThis() override{
             return this;
         }
+        void print(){
+            std::cout<<value;
+        }
     };
     class NumList:public OperateNum{
     public:
         std::vector<Direct_Reg> regs;
         NumList(std::vector<Direct_Reg> regs1):regs(regs1){};
+        void  print(){
+            for(auto val:regs){
+                val.print();
+            }
+        }
     };
 //操作数域
     class OPERAND{
@@ -251,15 +297,28 @@ namespace compiler::back{
         OperateNum *OPERAND3=nullptr;
         //OPERAND(){};
         OPERAND(OperateNum *operand1 = nullptr,OperateNum *operand2 = nullptr,OperateNum *operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3){};
+        void print(){
+            if(OPERAND1!= nullptr)
+                OPERAND1->print();
+            if(OPERAND2!= nullptr){
+                std::cout<<",";
+                OPERAND2->print();
+            }
+            if(OPERAND3!= nullptr){
+                std::cout<<",";
+                OPERAND3->print();
+            }
+        }
     };
 //三大部分构造完毕,注释域不用管
 //将三大部分整合成一个语句
     class Sentence{
     public:
-        Sentence() = default;
+        Sentence(){};
         virtual Sentence  *getThis(){
             return this;
         }
+        virtual void print(){};
     };
     //正常指令的类型
     class Instr_Sentence:public Sentence{
@@ -279,19 +338,35 @@ namespace compiler::back{
         Instr_Sentence *getThis() override{
             return this;
         }
+        void print(){
+            label.print();
+            if(label.LabelName!="")
+                std::cout<<": ";
+            operation.print();
+            std::cout<<" ";
+            operand.print();
+            std::cout<<" ";
+            b_label.print();
+            std::cout<<std::endl;
+        }
     };
     //伪指令类型(因为伪指令的形式比较多,想写在一起,也有合并的可能,但是目前先写开)
     //代码块类型声明
     class BlockDeclaration:public  Sentence{
     public:
         EQUKeywords equkeywords;
-        BlockDeclaration(EQUKeywords equkeywords1):equkeywords(equkeywords){};
+        BlockDeclaration(EQUKeywords equkeywords1):equkeywords(equkeywords1){};
         BlockDeclaration *getThis() override{
             return this;
+        }
+        void print(){
+            printEQUKeywords(equkeywords);
+            std::cout<<std::endl;
         }
     };
     //变量类型声明(全局/局部)
     class VarDeclaration:public Sentence{
+        //写的有问题存疑?
     public:
         BarCode barcode;
         LABEL label;
@@ -299,16 +374,28 @@ namespace compiler::back{
         VarDeclaration *getThis() override{
             return this;
         }
+        void print(){
+            printBarcode(barcode);
+            label.print();
+        }
     };
     class TypeDeclaration:public  Sentence{
     public:
         EQUKeywords equkeywords;
         LABEL label;
-        TYPE type;
+        TYPE type=TYPE::NOP;
         TypeDeclaration(EQUKeywords equkeywords1,LABEL label1,TYPE type1):equkeywords(equkeywords1), label(label1),type(type1){};
         TypeDeclaration(EQUKeywords equkeywords1,LABEL label1):equkeywords(equkeywords1),label(label1){};
         TypeDeclaration *getThis() override{
             return this;
+        }
+        void print(){
+            printEQUKeywords(equkeywords);
+            std::cout<<" ";
+            label.print();
+            std::cout<<" ";
+            printType(type);
+            std::cout<<std::endl;
         }
     };
 }

@@ -1,7 +1,7 @@
 //
 // Created by karl on 2021/7/29.
 //
-//
+//TODO 局部变量
 #include "generateBack.h"
 #include "regtable.h"
 
@@ -339,6 +339,8 @@ namespace compiler::back {
 
     //处理block
     void generateBlock(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Block *block, int nowWhileId) {
+        int localVarCount = 0;
+        int localVarSpace = 0;
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
                 case BreakStatemetType: {
@@ -406,10 +408,14 @@ namespace compiler::back {
                             case ConstArrayType:
                             case ArrayDeclareType:
                             case ArrayDeclareWithInitType: {
+                                localVarSpace = localVarSpace+ static_cast<ArrayDeclare*>(subNode)->initVal->initValList.size();
+                                localVarCount++;
                                 generateBackArray(vartable, backlist, subNode);
                                 break;
                             }
                             case VarDeclareWithInitType: {
+                                localVarSpace++;
+                                localVarCount++;
                                 //把右值放到r2
                                 int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                                 string name = subNode->name->name;
@@ -420,6 +426,8 @@ namespace compiler::back {
                                 break;
                             }
                             case VarDeclareType: {
+                                localVarSpace++;
+                                localVarCount++;
                                 string name = subNode->name->name;
                                 vartable.push_back(VAR(name, 0, tableIndex++));
                                 backlist.push_back(new STR(0));
@@ -473,6 +481,8 @@ namespace compiler::back {
 
     //处理if_while的单条语句
     void generateStmt(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Node *stmt, int nowWhileId) {
+        int localVarSpace = 0;
+        int localVarCount = 0;
         switch ((stmt)->nodetype) {
             case BreakStatemetType: {
                 backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
@@ -539,10 +549,14 @@ namespace compiler::back {
                         case ConstArrayType:
                         case ArrayDeclareType:
                         case ArrayDeclareWithInitType: {
+                            localVarSpace = localVarSpace+ static_cast<ArrayDeclare*>(subNode)->initVal->initValList.size();
+                            localVarCount++;
                             generateBackArray(vartable, backlist, subNode);
                             break;
                         }
                         case VarDeclareWithInitType: {
+                            localVarSpace++;
+                            localVarCount++;
                             //把右值放到r2
                             int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                             string name = subNode->name->name;
@@ -553,6 +567,8 @@ namespace compiler::back {
                             break;
                         }
                         case VarDeclareType: {
+                            localVarSpace++;
+                            localVarCount++;
                             string name = subNode->name->name;
                             vartable.push_back(VAR(name, 0, tableIndex++));
                             backlist.push_back(new STR(0));
@@ -601,6 +617,11 @@ namespace compiler::back {
                 break;
             }
         }
+        /*for(int i=0; i<localVarCount; i++)
+        {
+            vartable.pop_back();
+        }
+        backlist.push_back(new OP);*/
     }
 
     //计算函数，返回正数或0为结果存放的寄存器值，负数为栈地址相对fp的偏移量，初次调用，记录sp的内容放到r12中，清空寄存器，9,10寄存器保留给使用内存时运算

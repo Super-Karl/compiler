@@ -280,18 +280,18 @@ namespace compiler::back {
             backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
         } else if (functionCall->name->name == "getarray") {
-            int reg1 = getArrayArgAddress(vartable,backlist, static_cast<ArrayIdentifier*>(functionCall->args->args[0]));
-            backlist.push_back(new MOV(0,reg1,"reg2reg"));
+            int reg1 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[0]));
+            backlist.push_back(new MOV(0, reg1, "reg2reg"));
             freeRegForCalExp(reg1);
             //跳转
             backlist.push_back(new BL(functionCall->name->name));
             return;
         } else if (functionCall->name->name == "putarray") {
-            int reg1 = generateExp(vartable,backlist,functionCall->args->args[0]);
-            backlist.push_back(new MOV(0,reg1,"reg2reg"));
+            int reg1 = generateExp(vartable, backlist, functionCall->args->args[0]);
+            backlist.push_back(new MOV(0, reg1, "reg2reg"));
             freeRegForCalExp(reg1);
-            int reg2 = getArrayArgAddress(vartable,backlist, static_cast<ArrayIdentifier*>(functionCall->args->args[1]));
-            backlist.push_back(new MOV(1,reg2,"reg2reg"));
+            int reg2 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[1]));
+            backlist.push_back(new MOV(1, reg2, "reg2reg"));
             freeRegForCalExp(reg2);
             //跳转
             backlist.push_back(new BL(functionCall->name->name));
@@ -408,7 +408,7 @@ namespace compiler::back {
                             case ConstArrayType:
                             case ArrayDeclareType:
                             case ArrayDeclareWithInitType: {
-                                localVarSpace = localVarSpace+ static_cast<ArrayDeclare*>(subNode)->initVal->initValList.size();
+                                localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
                                 localVarCount++;
                                 generateBackArray(vartable, backlist, subNode);
                                 break;
@@ -472,10 +472,17 @@ namespace compiler::back {
                             freeRegForCalExp(reg);
                         }
                     }
+                    localVarSpace = 0;
                     backlist.push_back(new LDMIA());
                     break;
                 }
             }
+        }
+        for (int i = 0; i < localVarCount; i++) {
+            vartable.pop_back();
+        }
+        if (localVarSpace > 0) {
+            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
         }
     }
 
@@ -549,7 +556,7 @@ namespace compiler::back {
                         case ConstArrayType:
                         case ArrayDeclareType:
                         case ArrayDeclareWithInitType: {
-                            localVarSpace = localVarSpace+ static_cast<ArrayDeclare*>(subNode)->initVal->initValList.size();
+                            localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
                             localVarCount++;
                             generateBackArray(vartable, backlist, subNode);
                             break;
@@ -613,15 +620,17 @@ namespace compiler::back {
                         freeRegForCalExp(reg);
                     }
                 }
+                localVarSpace = 0;
                 backlist.push_back(new LDMIA());
                 break;
             }
         }
-        /*for(int i=0; i<localVarCount; i++)
-        {
+        for (int i = 0; i < localVarCount; i++) {
             vartable.pop_back();
         }
-        backlist.push_back(new OP);*/
+        if (localVarSpace > 0) {
+            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
+        }
     }
 
     //计算函数，返回正数或0为结果存放的寄存器值，负数为栈地址相对fp的偏移量，初次调用，记录sp的内容放到r12中，清空寄存器，9,10寄存器保留给使用内存时运算

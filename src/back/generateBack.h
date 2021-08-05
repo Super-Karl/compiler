@@ -39,5 +39,7 @@ namespace compiler::back {
     int generateBinaryExp(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression);
     //新单元表达式
     int generateUnaryExp(vector<VAR>&vartable,list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression);
+    //计算子数组的地址
+    int getArrayArgAddress(vector<VAR>&vartable,list<INS *> &backlist,compiler::front::ast::ArrayIdentifier* expression);
 }
 #endif //COMPILER_GENERATEBACK_H

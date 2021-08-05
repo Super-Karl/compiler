@@ -249,15 +249,14 @@ namespace compiler::front::ast {
       if (!record->isInLoop()) {
         try {
           varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-          var->addVarUse(varUse);
+          //          var->addVarUse(varUse);
         } catch (...) {
           varUse = VarRedefChain(assign->dest.name, 0);
-          var->addVarUse(varUse);
+          //          var->addVarUse(varUse);
         }
-      } else {
-        varUse = VarRedefChain(assign->dest.name, 0);
-        var->addVarUse(varUse);
       }
+      varUse = VarRedefChain(assign->dest.name, 0);
+      var->addVarUse(varUse);
     }
   }
 

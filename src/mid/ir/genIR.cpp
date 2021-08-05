@@ -239,12 +239,12 @@ namespace compiler::front::ast {
       if (!record->isInLoop()) {
         try {
           varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+          var->addVarUse(varUse);
         } catch (...) {
           varUse = VarRedefChain(assign->dest.name, 0);
+          var->addVarUse(varUse);
         }
       }
-      varUse = VarRedefChain(assign->dest.name, 0);
-      var->addVarUse(varUse);
     }
   }
 
@@ -361,7 +361,7 @@ namespace compiler::front::ast {
       if (pIR) {
         try {
           tmp = record->searchVar(pIR->dest.defName);
-        }catch (...){
+        } catch (...) {
           continue;
         }
         try {
@@ -391,11 +391,11 @@ namespace compiler::front::ast {
     std::unordered_map<std::string,std::string> phiUpdate;
     for (auto it = falseIR->block.rbegin();it!=falseIR->block.rend();it++){
       auto temp = *it;
-      auto pIR = dynamic_cast<AssignIR*>(*it);
-      if (pIR){
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      if (pIR) {
         try {
           auto tmp = record->searchVar(pIR->dest.defName);
-        }catch (...){
+        } catch (...) {
           continue;
         }
         try{
@@ -408,7 +408,7 @@ namespace compiler::front::ast {
     std::list<IR*> phiUpdateMov;
     for (auto it = trueIR->block.rbegin();it != trueIR->block.rend();it++){
       auto temp = *it;
-      auto pIR = dynamic_cast<AssignIR*>(*it);
+      auto pIR = dynamic_cast<AssignIR *>(*it);
       if (pIR) {
         try {
           auto tmp = phiUpdate.at(pIR->dest.defName);
@@ -425,7 +425,7 @@ namespace compiler::front::ast {
         }
       }
     }
-    for (auto item:trueIR->block){
+    for (auto item : trueIR->block) {
       ir.push_back(item);
     }
     for (auto item: phiUpdateMov){
@@ -436,7 +436,7 @@ namespace compiler::front::ast {
     for (auto item: phiRollBackMov){
       ir.push_back(item);
     }
-    for (auto item:falseIR->block){
+    for (auto item : falseIR->block) {
       ir.push_back(item);
     }
     ir.push_back(endLabel);

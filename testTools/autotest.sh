@@ -126,7 +126,7 @@ elif test $1 == "-a"
         continue
         fi
         touch ${file%.sy}.in
-        timeout 5 ./Exe < ${file%.sy}.in > this.out
+        timeout 8 ./Exe < ${file%.sy}.in > this.out
         #res = $?
         #if test ${res} -eq 1 
         #then

@@ -353,8 +353,8 @@ namespace compiler::front::ast {
     BlockIR* falseIR = new BlockIR();
     trueBlock->genIR(trueIR->block, newTable);
     elseBlock->genIR(falseIR->block,newTable);
-    std::unordered_map<std::string,std::string> phiThen;
-    IRList phiThenMov;
+    std::unordered_map<std::string,std::string> phiRollBack;
+    IRList phiRollBackMov;
     for (auto it = trueIR->block.begin();it!=trueIR->block.end();it++){
       auto pIR = dynamic_cast<AssignIR*>(*it);
       VarInfo* tmp;
@@ -365,7 +365,7 @@ namespace compiler::front::ast {
           continue;
         }
         try {
-          phiThen.at(pIR->dest.defName);
+          phiRollBack.at(pIR->dest.defName);
         }catch (...){
           auto & varDefNameList = tmp->varUse[0];
           std::string name;
@@ -379,15 +379,16 @@ namespace compiler::front::ast {
               break;
             }
           }
-          phiThen[pIR->dest.defName] = name;
-          if (name != "")
+          //找到在进入块前变量使用的最后一个defName
+          phiRollBack[pIR->dest.defName] = name;
+          /*if (name != "")
           {
-            phiThenMov.push_back(new AssignIR(pIR->dest.name,name));
-          }
+            phiRollBackMov.push_back(new AssignIR(pIR->dest.name,name));
+          }*/
         }
       }
     }
-    std::unordered_map<std::string,std::string> phiElse;
+    std::unordered_map<std::string,std::string> phiUpdate;
     for (auto it = falseIR->block.rbegin();it!=falseIR->block.rend();it++){
       auto temp = *it;
       auto pIR = dynamic_cast<AssignIR*>(*it);
@@ -398,35 +399,41 @@ namespace compiler::front::ast {
           continue;
         }
         try{
-          auto tmp = phiElse.at(pIR->dest.defName);
+          auto tmp = phiUpdate.at(pIR->dest.defName);
         }catch(out_of_range){
-          phiElse[pIR->dest.defName] = pIR->dest.name;
+          phiUpdate[pIR->dest.defName] = pIR->dest.name;
         }
       }
     }
-    std::list<IR*> phiElseMov;
+    std::list<IR*> phiUpdateMov;
     for (auto it = trueIR->block.rbegin();it != trueIR->block.rend();it++){
       auto temp = *it;
       auto pIR = dynamic_cast<AssignIR*>(*it);
       if (pIR) {
         try {
-          auto tmp = phiElse.at(pIR->dest.defName);
-          phiElseMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
-
+          auto tmp = phiUpdate.at(pIR->dest.defName);
+          phiUpdateMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
+          phiUpdate.erase(pIR->dest.defName);
         }
         catch(out_of_range){
+        }
+        try {
+          auto tmp = phiRollBack.at(pIR->dest.defName);
+          phiRollBackMov.emplace_back(new AssignIR(pIR->dest.name,tmp));
+          phiRollBack.erase(pIR->dest.defName);
+        }catch(out_of_range){
         }
       }
     }
     for (auto item:trueIR->block){
       ir.push_back(item);
     }
-    for (auto item: phiElseMov){
+    for (auto item: phiUpdateMov){
       ir.push_back(item);
     }
     ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    for (auto item:phiThenMov){
+    for (auto item: phiRollBackMov){
       ir.push_back(item);
     }
     for (auto item:falseIR->block){
@@ -455,13 +462,15 @@ namespace compiler::front::ast {
 
     auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
     auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    //auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    RecordTable::pushLabelPair(loopLabel, endLoopLabel);
+    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    RecordTable::pushLabelPair(testLabel, endLoopLabel);
     IRList condIr,loopIR;
-    cond->ConditionAnalysis(condIr,newTable,loopLabel,endLoopLabel,true);
-    IRList phiLoopMov;
-    std::unordered_map<std::string,std::string> phiLoop;
+    ir.push_back(new JmpIR(OperatorCode::Jmp,testLabel));
     loopBlock->genIR(loopIR,newTable);
+    cond->ConditionAnalysis(condIr,newTable,loopLabel,endLoopLabel,true);
+
+    IRList phiLoopMov,AntiPhiLoopMov;
+    std::unordered_map<std::string,std::string> phiLoop;
     for (auto it = loopIR.begin();it!=loopIR.end();it++){
       auto pIR = dynamic_cast<AssignIR*>(*it);
       VarInfo* tmp;
@@ -487,27 +496,37 @@ namespace compiler::front::ast {
             }
           }
           phiLoop[pIR->dest.defName] = name;
-          if (name != "")
-          {
-            phiLoopMov.push_back(new AssignIR(name,pIR->dest.name));
-          }
         }
       }
     }
-    for (auto &item: condIr){
-      ir.push_back(item);
+    for (auto it = loopIR.rbegin();it!=loopIR.rend();it++){
+      auto pIR = dynamic_cast<AssignIR*>(*it);
+      if (pIR){
+        try{
+          auto tmp = phiLoop.at(pIR->dest.defName);
+          phiLoopMov.emplace_back(new AssignIR(pIR->dest.name,tmp));
+          AntiPhiLoopMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
+          phiLoop.erase(pIR->dest.defName);
+        }catch(out_of_range){
+        }
+      }
     }
     ir.push_back(loopLabel);
     //ir.push_back(testLabel);
     for (auto &item: loopIR){
       ir.push_back(item);
     }
-    for (auto &item: phiLoopMov){
+    for (auto &item: AntiPhiLoopMov){
+      ir.push_back(item);
+    }
+    ir.push_back(testLabel);
+    for (auto &item:phiLoopMov){
       ir.push_back(item);
     }
     for (auto &item: condIr){
       ir.push_back(item);
     }
+
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
 

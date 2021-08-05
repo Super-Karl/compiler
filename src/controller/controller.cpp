@@ -74,7 +74,7 @@ namespace compiler::controller::generator {
     return ir;
   }
   void printIR(compiler::mid::ir::IRList ir) {
-    std::cout << "------------------------------\n\nIR:\n\n";
+    //std::cout << "------------------------------\n\nIR:\n\n";
 
     for (auto i : ir) {
       i->print();

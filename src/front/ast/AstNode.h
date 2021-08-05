@@ -99,7 +99,8 @@ namespace compiler {
         return this->index;
       };
 
-      OperatorName evalIndex(IRList &ir, RecordTable *record) override;
+      OperatorName getSubArray(IRList &ir, RecordTable *record, int arraySize);
+
       void storeRuntime(IRList &ir, RecordTable *record, OperatorName source);
     };
 
@@ -180,7 +181,9 @@ namespace compiler {
     public:
       ArrayIdentifier *arrayName;
 
-      ArrayDeclare(ArrayIdentifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type), arrayName(name){};
+      ArrayInitVal *initVal;
+
+      ArrayDeclare(ArrayIdentifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type), arrayName(name) { initVal = new ArrayInitVal(); };
 
       ~ArrayDeclare();
 

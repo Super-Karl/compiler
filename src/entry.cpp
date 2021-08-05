@@ -28,11 +28,12 @@ int main(int argc, char **argv) {
 
   auto *root = compiler::controller::generator::generate(argParser->input);
 
-  root->print();
+//  root->print();
   Hash constTbale;
   compiler::astpassir::FirstPassRoot(root, constTbale);
 
   auto ir = compiler::controller::generator::genIR(root);
+  if (argParser->printIR)freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
   auto arm = genBack(ir);
   for(auto var:arm){

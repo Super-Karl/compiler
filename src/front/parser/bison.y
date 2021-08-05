@@ -119,7 +119,7 @@ DefArray: ArrayIdent ASSIGN ArrayInitList{$$ = new front::ast::ArrayDeclareWithI
 ArrayIdent: ArrayIdent LSQARE Exp RSQARE {$$->index.push_back($3);}
     | ArrayIdent LSQARE RSQARE{$$->index.push_back(new front::ast::NumberExpression());}
     | Ident LSQARE Exp RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back($3);}
-    | Ident LSQARE RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back(new front::ast::NumberExpression());}
+    | Ident LSQARE RSQARE {$$ = new front::ast::ArrayIdentifier($1->name);$$->index.push_back(new front::ast::NumberExpression(1));}
     ;
 
 ArrayInitList:LBRACE ListExp RBRACE {$$ = $2;}
@@ -168,8 +168,8 @@ Stmt: Assignment SEMI {$$ = $1;}
     | Block
     | IfStmt
     | WhileStmt
-    | BreakStmt SEMI { $$ = $1;}
-    | ContinueStmt SEMI { $$ = $1;}
+    | BreakStmt { $$ = $1;}
+    | ContinueStmt { $$ = $1;}
     | ReturnStmt SEMI {$$ = $1;}
     | functStmt SEMI {$$ = $1;}
     | VoidStmt 

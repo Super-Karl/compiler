@@ -18,8 +18,10 @@ namespace compiler::front::ast {
 
   void VarDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
     if (record->getFarther() == nullptr) {
-      auto varInfo = new VarInfo("@" + std::to_string(record->getID()), INT32_MIN);
+      auto varInfo = new VarInfo("@" + this->name->name, 0, true);
       record->insertVar(name->name, varInfo);
+      auto globalData = new GlobalData("@" + this->name->name, 0);
+      ir.push_back(globalData);
     } else {
       auto varInfo = new VarInfo("%" + std::to_string(record->getID()), INT32_MIN);
       record->insertVar(name->name, varInfo);
@@ -27,105 +29,170 @@ namespace compiler::front::ast {
   }
 
   void VarDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" + to_string(record->getID()) : "%" + to_string(record->getID());
-    auto val = this->value->evalOp(ir, record);
-
-    VarRedefChain varUse;
-    VarInfo *varInfo;
-
-    if (val.type == Type::Imm) {
-      varInfo = new VarInfo(token, val.value, true, false);
+    if (record->getFarther() == nullptr) {
+      string token = "@" + this->name->name;
+      try {
+        auto global = new GlobalData(token, this->value->eval(record));
+        auto varInfo = new VarInfo(token, this->value->eval(record), true);
+        record->insertVar(this->name->name, varInfo);
+        ir.push_back(global);
+      } catch (...) {
+      };
     } else {
-      varInfo = new VarInfo(token, INT32_MIN);
+      string token = "%" + to_string(record->getID());
+      auto dest = OperatorName(token);
+      auto source = this->value->evalOp(ir, record);
+      auto mov = new AssignIR(dest, source);
+      ir.push_back(mov);
+      if (source.type == Type::Imm) {
+        auto varInfo = new VarInfo(token, source.value, true);
+        record->insertVar(this->name->name, varInfo);
+      } else {
+        auto varInfo = new VarInfo(token, 0);
+        record->insertVar(this->name->name, varInfo);
+      }
     }
 
-
-    record->insertVar(name->name, varInfo);
     //初始化过程在ir中显式表示
-    (new AssignStmt(this->name, value))->genIR(ir, record);
+    //    auto assign = new AssignIR(dest, source);
+    //    ir.push_back(assign);
   }
 
   void ConstDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" + this->name->name : "%" + to_string(record->getID());
-    int val = this->value->eval(record);
-    auto varInfo = new VarInfo(token, val, true);
-    record->insertVar(name->name, varInfo);
-    //初始化过程在ir中显式表示
-    (new AssignStmt(this->name, value))->genIR(ir, record);
+    if (record->getFarther() == nullptr) {
+      string token = "@" + this->name->name;
+      auto global = new GlobalData(token, this->value->eval(record));
+      auto varInfo = new VarInfo(token, this->value->eval(record), true, true);
+      ir.push_back(global);
+      record->insertVar(this->name->name, varInfo);
+    } else {
+      auto token = "%" + to_string(record->getID());
+      auto source = this->value->evalOp(ir, record);
+      if (source.type == Type::Imm) {
+        auto varInfo = new VarInfo(token, source.value, true, false);
+        record->insertVar(this->name->name, varInfo);
+      } else {
+        auto varInfo = new VarInfo(token, 0, false, true);
+        record->insertVar(this->name->name, varInfo);
+      }
+    }
   }
 
   void ArrayDeclare::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
-
-    vector<int> shape;
-    int size = 1;
-    for (auto i : arrayName->index) {
-      shape.push_back(i->eval(record));
-      size *= i->eval(record);
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->name->name;
+      vector<int> val, shape;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        shape.push_back(i->eval(record));
+        size *= i->eval(record);
+      };
+      val.resize(size, 0);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      auto varInfo = new VarInfo(token, shape, val, true);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      auto array = new ArrayDeclareWithInit(this->arrayName, this->initVal);
+      array->genIR(ir, record);
     };
-
-    //数组声明时的内存分配
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    vector<int> value;
-    value.resize(size, INT32_MIN);
-    auto varInfo = new VarInfo(token, shape, value);
-    record->insertVar(arrayName->name, varInfo);
+    //    string token = record->getFarther() == nullptr ? "@" : "%";
+    //    token = token + std::to_string(record->getID());
+    //
+    //    vector<int> shape;
+    //    int size = 1;
+    //    for (auto i : arrayName->index) {
+    //      shape.push_back(i->eval(record));
+    //      size *= i->eval(record);
+    //    };
+    //
+    //    //数组声明时的内存分配
+    //    auto allocaIR = new AllocaIR(token, size);
+    //    ir.push_back(allocaIR);
+    //
+    //    vector<int> value;
+    //    value.resize(size, INT32_MIN);
+    //    auto varInfo = new VarInfo(token, shape, value);
+    //    record->insertVar(arrayName->name, varInfo);
   }
 
   void ConstArray::genIR(IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
-    vector<int> shape;
-    int size = 1;
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->arrayName->name;
+      vector<int> shape, val;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        size *= i->eval(record);
+        shape.push_back(i->eval(record));
+      }
+      for (auto i : this->initVal->initValList)
+        val.push_back(i->eval(record));
+      auto varInfo = new VarInfo(token, shape, val, true, false);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      string token = "%" + std::to_string(record->getID());
+      vector<int> shape;
+      int size = 1;
 
-    //计算数组的维度和每维的大小
-    for (auto i : arrayName->index) {
-      int tmp = i->eval(record);
-      shape.push_back(tmp);
-      size *= tmp;
+      //计算数组的维度和每维的大小
+      for (auto i : arrayName->index) {
+        int tmp = i->eval(record);
+        shape.push_back(tmp);
+        size *= tmp;
+      }
+      vector<int> value;
+      value.resize(size);
+
+      auto allocaIR = new AllocaIR(token, size);
+      ir.push_back(allocaIR);
+
+      auto varInfo = new VarInfo(token, shape, value, true, true);
+      record->insertVar(arrayName->name, varInfo);
+
+      initVal->storeArray(this->arrayName, ir, record);
     }
-
-    //resize到数组大小
-    vector<int> value;
-    value.resize(size);
-
-    //分配内存空间
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    //更新符号表,插入数组的记录
-    auto varInfo = new VarInfo(token, shape, value, true);
-    record->insertVar(arrayName->name, varInfo);
-
-    //处理数组初始化元素
-    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void ArrayDeclareWithInit::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    string token = record->getFarther() == nullptr ? "@" : "%";
-    token = token + std::to_string(record->getID());
-    vector<int> shape;
-    int size = 1;
 
-    //计算数组的维度和每维的大小
-    for (auto i : arrayName->index) {
-      int tmp = i->eval(record);
-      shape.push_back(tmp);
-      size *= tmp;
+    if (record->getFarther() == nullptr) {
+      string token = "&@" + this->arrayName->name;
+      vector<int> shape, val;
+      int size = 1;
+      for (auto i : this->arrayName->index) {
+        size *= i->eval(record);
+        shape.push_back(i->eval(record));
+      }
+      for (auto i : this->initVal->initValList)
+        val.push_back(i->eval(record));
+      auto varInfo = new VarInfo(token, shape, val);
+      auto global = new GlobalData(token, val);
+      ir.push_back(global);
+      record->insertVar(this->arrayName->name, varInfo);
+    } else {
+      string token = "%" + std::to_string(record->getID());
+      vector<int> shape;
+      int size = 1;
+
+      //计算数组的维度和每维的大小
+      for (auto i : arrayName->index) {
+        int tmp = i->eval(record);
+        shape.push_back(tmp);
+        size *= tmp;
+      }
+      vector<int> value;
+      value.resize(size);
+
+      auto allocaIR = new AllocaIR(token, size);
+      ir.push_back(allocaIR);
+
+      auto varInfo = new VarInfo(token, shape, value);
+      record->insertVar(arrayName->name, varInfo);
+
+      initVal->storeArray(this->arrayName, ir, record);
     }
-    vector<int> value;
-    value.resize(size);
-
-    auto allocaIR = new AllocaIR(token, size);
-    ir.push_back(allocaIR);
-
-    auto varInfo = new VarInfo(token, shape, value);
-    record->insertVar(arrayName->name, varInfo);
-
-    initVal->storeArray(this->arrayName, ir, record);
   }
 
   void DeclareStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -154,7 +221,7 @@ namespace compiler::front::ast {
           varUse = VarRedefChain("", this->rightExpr->eval(record), true);
           var->addVarUse(varUse, index);
         } catch (...) {
-          varUse = VarRedefChain("", INT32_MIN, false);
+          varUse = VarRedefChain("", 0, false);
           var->addVarUse(varUse, index);
         }
       }
@@ -163,17 +230,21 @@ namespace compiler::front::ast {
       auto assign = new AssignIR();
       assign->source1 = rightExpr->evalOp(ir, record);
       assign->operatorCode = OperatorCode::Mov;
-      assign->dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
+      assign->dest = OperatorName("%" + to_string(record->getID()));
+      assign->dest.defName = this->name->name;
       ir.push_back(assign);
 
       //更新符号表
       VarRedefChain varUse;
-      try {
-        varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-      } catch (...) {
-        varUse = VarRedefChain(assign->dest.name, INT32_MIN);
+      if (!record->isInLoop()) {
+        try {
+          varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+          var->addVarUse(varUse);
+        } catch (...) {
+          varUse = VarRedefChain(assign->dest.name, 0);
+          var->addVarUse(varUse);
+        }
       }
-      var->addVarUse(varUse);
     }
   }
 
@@ -188,10 +259,16 @@ namespace compiler::front::ast {
     auto funcdef = new FunDefIR(retType, name->name);
     auto newTable = new RecordTable(record);
 
-    //保存参数表
+    //保存参数表到fundefir
     for (auto i : args->args) {
-      auto opName = OperatorName(i->name->name, Type::Var);
-      funcdef->argList.push_back(opName);
+      auto ident = dynamic_cast<ArrayIdentifier *>(i->name);
+      if (ident) {
+        auto opName = OperatorName("&" + i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      } else {
+        auto opName = OperatorName(i->name->name, Type::Var);
+        funcdef->argList.push_back(opName);
+      }
     }
     //把函数的入参存入函数符号表
     args->genIR(funcdef->funcBody, newTable);
@@ -201,7 +278,7 @@ namespace compiler::front::ast {
 
     RetIR *ret;
     if (this->retType == INT) {
-      ret = new RetIR(OperatorName(0, Type::Var));
+      ret = new RetIR(OperatorName(0, Type::Imm));
     } else
       ret = new RetIR(OperatorName(Type::Void));
     funcdef->funcBody.push_back(ret);
@@ -220,20 +297,21 @@ namespace compiler::front::ast {
           shape.push_back(i->eval(record));
           size *= i->eval(record);
         }
+
         auto token = "%" + to_string(record->getID());
         auto dest = OperatorName(token);
         auto source = OperatorName("$" + to_string(i));
         auto assign = new AssignIR(dest, source);
 
         vector<int> val;
-        val.resize(size, INT32_MIN);
+        val.resize(1, 0);
 
         auto var = new VarInfo(ident->name, shape, val, false);
 
         record->insertVar(ident->name, var);
         ir.push_back(assign);
       } else {
-        string token = "%" + to_string(record->getID());
+        auto token = "%" + to_string(record->getID());
         auto dest = OperatorName(token);
         auto source = OperatorName("$" + to_string(i));
         auto assign = new AssignIR(dest, source);
@@ -243,6 +321,7 @@ namespace compiler::front::ast {
       }
     }
   }
+
   //fine
   void FunctionDefArg::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto varInfo = new VarInfo(name->name, INT32_MIN);
@@ -256,24 +335,101 @@ namespace compiler::front::ast {
     }
     record->insertVar(name->name, varInfo);
   }
+
   //完成
   void Block::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto newTable = new RecordTable(record);
-
     for (auto item : blockItem)
-      item->genIR(ir, newTable);
+      item->genIR(ir, record);
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto ifLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto elseLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto endLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir, record, ifLabel, elseLabel, true);
+    auto newTable = new RecordTable(record);
+    auto ifLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto elseLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto endLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
-    trueBlock->genIR(ir, record);
+    BlockIR *trueIR = new BlockIR();
+    BlockIR *falseIR = new BlockIR();
+    trueBlock->genIR(trueIR->block, newTable);
+    elseBlock->genIR(falseIR->block, newTable);
+    std::unordered_map<std::string, std::string> phiThen;
+    IRList phiThenMov;
+    for (auto it = trueIR->block.begin(); it != trueIR->block.end(); it++) {
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      VarInfo *tmp;
+      if (pIR) {
+        try {
+          tmp = record->searchVar(pIR->dest.defName);
+        } catch (...) {
+          continue;
+        }
+        try {
+          phiThen.at(pIR->dest.defName);
+        } catch (...) {
+          auto &varDefNameList = tmp->varUse[0];
+          std::string name;
+          for (auto it = varDefNameList.begin(); it != varDefNameList.end(); it++) {
+            if (it->defName == pIR->dest.name) {
+              it++;
+              if (it == varDefNameList.end()) {
+                throw runtime_error("???");
+              }
+              name = it->defName;
+              break;
+            }
+          }
+          phiThen[pIR->dest.defName] = name;
+          if (name != "") {
+            phiThenMov.push_back(new AssignIR(pIR->dest.name, name));
+          }
+        }
+      }
+    }
+    std::unordered_map<std::string, std::string> phiElse;
+    for (auto it = falseIR->block.rbegin(); it != falseIR->block.rend(); it++) {
+      auto temp = *it;
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      if (pIR) {
+        try {
+          auto tmp = record->searchVar(pIR->dest.defName);
+        } catch (...) {
+          continue;
+        }
+        try {
+          auto tmp = phiElse.at(pIR->dest.defName);
+        } catch (out_of_range) {
+          phiElse[pIR->dest.defName] = pIR->dest.name;
+        }
+      }
+    }
+    std::list<IR *> phiElseMov;
+    for (auto it = trueIR->block.rbegin(); it != trueIR->block.rend(); it++) {
+      auto temp = *it;
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      if (pIR) {
+        try {
+          auto tmp = phiElse.at(pIR->dest.defName);
+          phiElseMov.emplace_back(new AssignIR(tmp, pIR->dest.name));
+
+        } catch (out_of_range) {
+        }
+      }
+    }
+    for (auto item : trueIR->block) {
+      ir.push_back(item);
+    }
+    for (auto item : phiElseMov) {
+      ir.push_back(item);
+    }
     ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    this->elseBlock->genIR(ir, record);
+    for (auto item : phiThenMov) {
+      ir.push_back(item);
+    }
+    for (auto item : falseIR->block) {
+      ir.push_back(item);
+    }
     ir.push_back(endLabel);
   }
 
@@ -292,14 +448,22 @@ namespace compiler::front::ast {
   }
 
   void WhileStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto loopLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    auto endLoopLabel = new LabelIR(".L" + std::to_string(record->getID()));
-    cond->ConditionAnalysis(ir, record, loopLabel, endLoopLabel, true);
+    auto newTable = new RecordTable(record);
+    newTable->setInLoop(true);
+
+    auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    RecordTable::pushLabelPair(testLabel, endLoopLabel);
+    ir.push_back(new JmpIR(OperatorCode::Jmp, testLabel));
     ir.push_back(loopLabel);
-    RecordTable::pushLabelPair(loopLabel, endLoopLabel);
-    this->loopBlock->genIR(ir, record);
+    this->loopBlock->genIR(ir, newTable);
+    ir.push_back(testLabel);
+    cond->ConditionAnalysis(ir, newTable, loopLabel, endLoopLabel, true);
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();
+
+    newTable->setInLoop(false);
   }
 
   void ContinueStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -347,7 +511,7 @@ namespace compiler::front::ast {
       case ADD:
         return rightExpr->eval(record) + leftExpr->eval(record);
       case SUB:
-        return rightExpr->eval(record) + leftExpr->eval(record);
+        return leftExpr->eval(record) - rightExpr->eval(record);
       case MUL:
         return rightExpr->eval(record) * leftExpr->eval(record);
       case DIV:
@@ -414,8 +578,8 @@ namespace compiler::front::ast {
         ir.emplace_back(new JmpIR(OperatorCode::Jne, ifLabel));
       } catch (...) {
         if (trueJmp) {
-          OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
-          AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+          OperatorName dest = OperatorName("%" + to_string(record->getID())), left, right;
+          auto *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
           ir.push_back(assign);
           ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
           ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), elLabel)));
@@ -436,12 +600,12 @@ namespace compiler::front::ast {
      * 当前的简单策略，将每一个表达式拆分成if else两种结果，根据表达式含义推断跳转的位置
     */
     if (this->op == AND_OP) {
-      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      auto *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir, record, innerLabel, elLabel, true);
       ir.push_back(innerLabel);
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
     } else if (this->op == OR_OP) {
-      LabelIR *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
+      auto *innerLabel = new LabelIR(".L" + std::to_string(record->getID()));
       leftExpr->ConditionAnalysis(ir, record, ifLabel, innerLabel, true);
       ir.push_back(innerLabel);
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
@@ -460,9 +624,9 @@ namespace compiler::front::ast {
         } catch (...) {
           if (trueJmp) {
             OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID()));
-            auto left = leftExpr->evalOp(ir,record);
-            auto right = rightExpr->evalOp(ir,record);
-            AssignIR *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
+            auto left = leftExpr->evalOp(ir, record);
+            auto right = rightExpr->evalOp(ir, record);
+            auto *assign = new AssignIR(OperatorCode::Cmp, dest, left, right);
             ir.push_back(assign);
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getRelOpCode(), ifLabel)));
             ir.emplace_back((new JmpIR(static_cast<BinaryExpression *>(this)->getAntiRelOpCode(), elLabel)));
@@ -507,32 +671,33 @@ namespace compiler::front::ast {
   //binExpr分解expr的过程中生成ir
   OperatorName BinaryExpression::evalOp(IRList &ir, RecordTable *record) {
     try {
-      int tmp = this->eval(record);
-      auto opName = OperatorName("", Type::Imm);
-      opName.value = tmp;
-      return opName;
-    }
-    catch (...) {
+      if (!record->isInLoop()) {
+        int tmp = this->eval(record);
+        auto opName = OperatorName("", Type::Imm);
+        opName.value = tmp;
+        return opName;
+      }
+    } catch (...) {
     }
     OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
 
-    int RelOP[8] = {AND_OP,OR_OP,LT,LE,GE,GT,NE,EQ};
-    for (int i=0;i<8;i++){
+    int RelOP[8] = {AND_OP, OR_OP, LT, LE, GE, GT, NE, EQ};
+    for (int i = 0; i < 8; i++) {
       if (this->op == RelOP[i])
         throw runtime_error("rel op");
     }
     //排除所有的逻辑运算符
     try {
-      left = OperatorName(leftExpr->eval(record),Type::Imm);
+      if (!record->isInLoop()) { left = OperatorName(leftExpr->eval(record), Type::Imm); }
     } catch (...) {
-      left = leftExpr->evalOp(ir, record);
     }
+    left = leftExpr->evalOp(ir, record);
     try {
-      right = OperatorName(rightExpr->eval(record),Type::Imm);
+      if (!record->isInLoop()) { right = OperatorName(rightExpr->eval(record), Type::Imm); }
     } catch (...) {
-      right = rightExpr->evalOp(ir, record);
     }
-      /*      left = OperatorName(leftExpr->evalOp(ir, record));
+    right = rightExpr->evalOp(ir, record);
+    /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
 
     AssignIR *assign;
@@ -579,32 +744,66 @@ namespace compiler::front::ast {
     OperatorName dest = OperatorName("%" + std::to_string(record->getID()), tmpType);
     funCall->retOp = dest;
     for (auto i : args->args) {
-      auto val = i->evalOp(ir, record);
-      funCall->argList.push_back(val);
+      auto ident = dynamic_cast<Identifier *>(i);
+      if (ident) {
+        auto varInfo = record->searchVar(ident->name);
+        if (varInfo->isArray) {
+          auto arrayIdent = dynamic_cast<ArrayIdentifier *>(ident);
+          if (arrayIdent) {
+            //传入的是数组的子数组
+            if (arrayIdent->index.size() < varInfo->shape.size()) {
+              auto subArray = arrayIdent->getSubArray(ir, record, varInfo->shape.size());
+              funCall->argList.push_back(subArray);
+            } else {
+              auto opName = arrayIdent->evalOp(ir, record);
+              funCall->argList.push_back(opName);
+            }
+          } else {
+            auto opName = OperatorName(varInfo->arrayName);
+            funCall->argList.push_back(opName);
+          }
+
+        } else {
+          auto opName = ident->evalOp(ir, record);
+          funCall->argList.push_back(opName);
+        }
+      } else {
+        auto val = i->evalOp(ir, record);
+        funCall->argList.push_back(val);
+      }
+
+      //函数调用时,显式处理函数参数
+      //      auto arg = AssignIR(OperatorName("$" + to_string(counter++)), );
     }
     ir.push_back(funCall);
     return dest;
   }
 
   OperatorName Identifier::evalOp(IRList &ir, RecordTable *record) {
+    try {
+      if (!record->isInLoop()) {
+        auto opName = OperatorName(this->eval(record), Type::Imm);
+        return opName;
+      }
+    } catch (...) {
+    }
     auto varInfo = record->searchVar(this->name);
     auto opName = OperatorName(varInfo->getUseName(), Type::Var);
     return opName;
   }
 
-  //TODO 下标canAssign为false的情况
+
   OperatorName ArrayIdentifier::evalOp(IRList &ir, RecordTable *record) {
     auto varInfo = record->searchVar(this->name);
 
-    auto dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + std::to_string(record->getID()), Type::Var);
+    auto dest = OperatorName("%" + std::to_string(record->getID()), Type::Var);
     auto source = OperatorName(varInfo->arrayName);
     try {
-      OperatorName offset;
       std::vector<int> index;
       for (auto i : this->index)
         index.push_back(i->eval(record));
 
-      offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
+      auto offset = OperatorName(varInfo->getArrayIndex(index), Type::Imm);
       auto load = new LoadIR(dest, source, offset);
       ir.push_back(load);
       return dest;
@@ -626,7 +825,7 @@ namespace compiler::front::ast {
       auto assign = new AssignIR(tmpSize, vSize);
       ir.push_back(assign);
 
-      for (auto i = this->index.size() - 1; i >= 0; i--) {
+      for (int i = this->index.size() - 1; i >= 0; i--) {
         if (i == this->index.size() - 1) {
           auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
           ir.push_back(mov);
@@ -718,8 +917,27 @@ namespace compiler::front::ast {
     }
   }
 
-  OperatorName ArrayIdentifier::evalIndex(IRList &ir, RecordTable *record) {
-  }
+  OperatorName ArrayIdentifier::getSubArray(IRList &ir, RecordTable *record, int arraySize) {
+    auto varInfo = record->searchVar(this->name);
+
+    auto dest = OperatorName("&%" + to_string(record->getID()));
+    try {
+      vector<int> subOffset;
+      for (auto i : this->index)
+        subOffset.push_back(i->eval(record));
+      for (int i = this->index.size(); i < arraySize; ++i)
+        subOffset.push_back(0);
+
+      auto offset = OperatorName(varInfo->getArrayIndex(subOffset), Type::Imm);
+      auto array = OperatorName(varInfo->arrayName);
+
+      //计算subarray首地址相对于数组基址的偏移量
+      auto add = new AssignIR(OperatorCode::Add, dest, array, offset);
+      ir.push_back(add);
+      return dest;
+    } catch (...) {
+    }
+  };
 
   void ArrayIdentifier::storeRuntime(IRList &ir, RecordTable *record, OperatorName source) {
     auto var = record->searchVar(this->name);
@@ -735,6 +953,7 @@ namespace compiler::front::ast {
       auto store = new StoreIR(dest, source, offset);
       ir.push_back(store);
     } catch (...) {
+
       auto dest = OperatorName(var->arrayName);
       if (this->index.size() == 1) {
         auto store = new StoreIR(dest, source, this->index[0]->evalOp(ir, record));
@@ -751,7 +970,7 @@ namespace compiler::front::ast {
         auto assign = new AssignIR(tmpSize, vSize);
         ir.push_back(assign);
 
-        for (auto i = this->index.size() - 1; i >= 0; i--) {
+        for (int i = this->index.size() - 1; i >= 0; i--) {
           if (i == this->index.size() - 1) {
             auto mov = new AssignIR(indexContainer, this->index[this->index.size() - 1]->evalOp(ir, record));
             ir.push_back(mov);

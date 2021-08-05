@@ -13,3 +13,11 @@
 /.cache/*
 /test.cpp
 /test.s
+/testTools/Exe
+/testTools/gen.ir
+/testTools/test.c
+/testTools/test.data
+/testTools/test.log
+/testTools/this.out
+/testTools/std.out
+/testTools/testcase.sy

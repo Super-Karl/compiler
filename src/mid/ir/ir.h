@@ -30,6 +30,7 @@ namespace compiler::mid::ir {
     Type type;
     std::string name;//ir中的name
     int value;
+    std::string defName;
 
     OperatorName(int val, Type type = Type::Var) : value(val), type(type), name(""){};
 
@@ -85,6 +86,17 @@ namespace compiler::mid::ir {
     }
   };
 
+  class GlobalData : public IR {
+  public:
+    std::string name;
+    bool isArray;
+    std::vector<int> val;
+
+    GlobalData(std::string name, int val) : name(std::move(name)), isArray(false) { this->val.push_back(val); };
+
+    GlobalData(std::string name, std::vector<int> val) : name(std::move(name)), isArray(true), val(std::move(val)){};
+  };
+
   class FunCallIR : public IR {
   public:
     OperatorCode operatorCode = OperatorCode::Call;
@@ -126,7 +138,7 @@ namespace compiler::mid::ir {
       return this;
     }
     void print() {
-      std::cout << name << ':' << " ";
+      std::cout << "@" << name << ':' << " ";
       for (auto &i : argList) {
         printOpName(i, ' ');
       }
@@ -142,7 +154,7 @@ namespace compiler::mid::ir {
     OperatorCode operatorCode;
     OperatorName dest;
     OperatorName source1, source2;
-    //mov 只有dest source1
+
     AssignIR() = default;
 
     AssignIR(OperatorCode opcode, OperatorName dest, OperatorName source1, OperatorName source2) : IR(), operatorCode(opcode), dest(std::move(dest)), source1(std::move(source1)), source2(std::move(source2)){};
@@ -243,7 +255,7 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source);
+      printOpName(source, '\n', false);
     }
   };
 
@@ -264,7 +276,20 @@ namespace compiler::mid::ir {
       printOpCode(operatorCode);
       printOpName(dest, ' ');
       printOpName(offset, ' ');
-      printOpName(source);
+      printOpName(source, '\n', false);
+    }
+  };
+  class BlockIR:public IR{
+  public:
+    IRList block;
+    BlockIR()=default;
+    BlockIR* getThis(){
+      return this;
+    }
+    void print() override{
+      for (auto i : block){
+        i->print();
+      }
     }
   };
 }// namespace compiler::mid::ir

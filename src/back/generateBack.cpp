@@ -56,9 +56,9 @@ namespace compiler::back {
 
 
     list<compiler::back::INS *> generateBack(compiler::front::ast::AST *root) {
-        cout << "----------------------------------\n"
-                "开始生成arm汇编\n"
-                "----------------------------------\n";
+//        cout << "----------------------------------\n"
+//                "开始生成arm汇编\n"
+//                "----------------------------------\n";
         list<INS *> backlist;
         backlist.push_back(new MACRO());
         for (auto block:root->codeBlock) {

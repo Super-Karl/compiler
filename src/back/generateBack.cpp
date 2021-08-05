@@ -1,7 +1,7 @@
 //
 // Created by karl on 2021/7/29.
 //
-//
+//TODO 局部变量
 #include "generateBack.h"
 #include "regtable.h"
 
@@ -280,18 +280,18 @@ namespace compiler::back {
             backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
         } else if (functionCall->name->name == "getarray") {
-            int reg1 = getArrayArgAddress(vartable,backlist, static_cast<ArrayIdentifier*>(functionCall->args->args[0]));
-            backlist.push_back(new MOV(0,reg1,"reg2reg"));
+            int reg1 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[0]));
+            backlist.push_back(new MOV(0, reg1, "reg2reg"));
             freeRegForCalExp(reg1);
             //跳转
             backlist.push_back(new BL(functionCall->name->name));
             return;
         } else if (functionCall->name->name == "putarray") {
-            int reg1 = generateExp(vartable,backlist,functionCall->args->args[0]);
-            backlist.push_back(new MOV(0,reg1,"reg2reg"));
+            int reg1 = generateExp(vartable, backlist, functionCall->args->args[0]);
+            backlist.push_back(new MOV(0, reg1, "reg2reg"));
             freeRegForCalExp(reg1);
-            int reg2 = getArrayArgAddress(vartable,backlist, static_cast<ArrayIdentifier*>(functionCall->args->args[1]));
-            backlist.push_back(new MOV(1,reg2,"reg2reg"));
+            int reg2 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[1]));
+            backlist.push_back(new MOV(1, reg2, "reg2reg"));
             freeRegForCalExp(reg2);
             //跳转
             backlist.push_back(new BL(functionCall->name->name));
@@ -339,6 +339,8 @@ namespace compiler::back {
 
     //处理block
     void generateBlock(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Block *block, int nowWhileId) {
+        int localVarCount = 0;
+        int localVarSpace = 0;
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
                 case BreakStatemetType: {
@@ -406,10 +408,14 @@ namespace compiler::back {
                             case ConstArrayType:
                             case ArrayDeclareType:
                             case ArrayDeclareWithInitType: {
+                                localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
+                                localVarCount++;
                                 generateBackArray(vartable, backlist, subNode);
                                 break;
                             }
                             case VarDeclareWithInitType: {
+                                localVarSpace++;
+                                localVarCount++;
                                 //把右值放到r2
                                 int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                                 string name = subNode->name->name;
@@ -420,6 +426,8 @@ namespace compiler::back {
                                 break;
                             }
                             case VarDeclareType: {
+                                localVarSpace++;
+                                localVarCount++;
                                 string name = subNode->name->name;
                                 vartable.push_back(VAR(name, 0, tableIndex++));
                                 backlist.push_back(new STR(0));
@@ -464,15 +472,24 @@ namespace compiler::back {
                             freeRegForCalExp(reg);
                         }
                     }
+                    localVarSpace = 0;
                     backlist.push_back(new LDMIA());
                     break;
                 }
             }
         }
+        for (int i = 0; i < localVarCount; i++) {
+            vartable.pop_back();
+        }
+        if (localVarSpace > 0) {
+            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
+        }
     }
 
     //处理if_while的单条语句
     void generateStmt(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Node *stmt, int nowWhileId) {
+        int localVarSpace = 0;
+        int localVarCount = 0;
         switch ((stmt)->nodetype) {
             case BreakStatemetType: {
                 backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
@@ -539,10 +556,14 @@ namespace compiler::back {
                         case ConstArrayType:
                         case ArrayDeclareType:
                         case ArrayDeclareWithInitType: {
+                            localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
+                            localVarCount++;
                             generateBackArray(vartable, backlist, subNode);
                             break;
                         }
                         case VarDeclareWithInitType: {
+                            localVarSpace++;
+                            localVarCount++;
                             //把右值放到r2
                             int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                             string name = subNode->name->name;
@@ -553,6 +574,8 @@ namespace compiler::back {
                             break;
                         }
                         case VarDeclareType: {
+                            localVarSpace++;
+                            localVarCount++;
                             string name = subNode->name->name;
                             vartable.push_back(VAR(name, 0, tableIndex++));
                             backlist.push_back(new STR(0));
@@ -597,9 +620,16 @@ namespace compiler::back {
                         freeRegForCalExp(reg);
                     }
                 }
+                localVarSpace = 0;
                 backlist.push_back(new LDMIA());
                 break;
             }
+        }
+        for (int i = 0; i < localVarCount; i++) {
+            vartable.pop_back();
+        }
+        if (localVarSpace > 0) {
+            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
         }
     }
 

@@ -44,11 +44,11 @@ namespace compiler::back {
             if (regtable[i] == 0) {
                 regtable[i] = 1;
                 //
-                frintRegtable();
+//                frintRegtable();
                 return i;
             }
         }
-        std::cout<<"寄存器栈满";
+//        std::cout<<"寄存器栈满";
         return -1;
     }
 
@@ -58,7 +58,7 @@ namespace compiler::back {
             regtable[i] = 1;
             return true;
         } else {
-            std::cout << "寄存器使用错误";
+//            std::cout << "寄存器使用错误";
             return false;
         }
     }

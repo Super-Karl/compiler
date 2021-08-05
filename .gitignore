@@ -10,3 +10,5 @@
 /cmake*
 /clang-format.txt
 /testTools/*
+/testTool/testcase.s
+testTool/testcase.sy

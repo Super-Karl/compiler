@@ -190,7 +190,7 @@ namespace compiler::back {
             if (expression->index[i - 1]->nodetype == NumberExpressionType) {
                 int leftIndex = 1;
                 for (int j = i; j < getvar->arrayIndex.size(); j++) {
-                    leftIndex = leftIndex * getvar->arrayIndex[i];
+                    leftIndex = leftIndex * getvar->arrayIndex[j];
                 }
                 offset += leftIndex * static_cast<NumberExpression *>(expression->index[i - 1])->value;
             } else {
@@ -238,7 +238,7 @@ namespace compiler::back {
                     int reg2 = getCanUseRegForCalExp();
                     int leftIndex = 1;
                     for (int j = i; j < getvar->arrayIndex.size(); j++) {
-                        leftIndex = leftIndex * getvar->arrayIndex[i];
+                        leftIndex = leftIndex * getvar->arrayIndex[j];
                     }
                     backlist.push_back(new LDR(reg2, leftIndex * 4));
                     backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
@@ -798,7 +798,7 @@ namespace compiler::back {
             if (expression->index[i - 1]->nodetype == NumberExpressionType) {
                 int leftIndex = 1;
                 for (int j = i; j < getvar->arrayIndex.size(); j++) {
-                    leftIndex = leftIndex * getvar->arrayIndex[i];
+                    leftIndex = leftIndex * getvar->arrayIndex[j];
                 }
                 offset += leftIndex * static_cast<NumberExpression *>(expression->index[i - 1])->value;
             } else {
@@ -831,7 +831,7 @@ namespace compiler::back {
                     int reg2 = getCanUseRegForCalExp();
                     int leftIndex = 1;
                     for (int j = i; j < getvar->arrayIndex.size(); j++) {
-                        leftIndex = leftIndex * getvar->arrayIndex[i];
+                        leftIndex = leftIndex * getvar->arrayIndex[j];
                     }
                     backlist.push_back(new LDR(reg2, leftIndex * 4));
                     backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));

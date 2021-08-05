@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 touch test.log
 rm  test.log
 
@@ -10,14 +11,14 @@ then
     echo "-h 查看帮助"
     echo "-d 测试本目录下的testcase.sy文件"
     echo "-b 编译项目"
-elif test $1 == "-b"
+elif test "$1" == "-b"
 then
     cd ..
     cd build
     cmake ..
     make
     cd ..
-    cd testtools
+    cd testTools
 elif test $1 == "-l"
 then
     for file in ../testcase/*.sy
@@ -43,7 +44,7 @@ then
         #echo "${file}"
         echo "testfile ${file##*/}:"
         echo "testfile ${file##*/}" >> test.log
-        ./../build/compiler -a -printIR ../testcase/${file##*/} >> test.log
+        ./../build/compiler -printIR ../testcase/${file##*/} >> test.log
         if test $? -eq 1 
         then
         echo -e "\033[31m test $file error: Ir generated failed \033[0m" 

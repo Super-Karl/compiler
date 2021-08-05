@@ -224,7 +224,8 @@ namespace compiler::back {
             if (index != -1 && getvar->ispointer) {
                 backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * vartable[index].index)));
             } else if (index == -1) {
-                backlist.push_back(new LDR(regtomul, name));
+                backlist.push_back(new MOV32(regtomul, name));
+                //backlist.push_back(new LDR(regtomul, name));
             } else {
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
@@ -264,7 +265,8 @@ namespace compiler::back {
             if (index != -1 && getvar->ispointer) {
                 backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
             } else if (index == -1) {
-                backlist.push_back(new LDR(reg1, name));
+                backlist.push_back(new MOV32(reg1, name));
+                //backlist.push_back(new LDR(reg1, name));
             } else {
                 int reg2 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));
@@ -317,7 +319,8 @@ namespace compiler::back {
                 if (isarray) {
                     int reg = getCanUseRegForCalExp();
                     if (index == -1) {
-                        backlist.push_back(new LDR(reg, static_cast<Identifier *>(arg)->name));
+                        backlist.push_back(new MOV32(reg, static_cast<Identifier *>(arg)->name));
+                        //backlist.push_back(new LDR(reg, static_cast<Identifier *>(arg)->name));
                     } else {
                         int reg1 = getCanUseRegForCalExp();
                         backlist.push_back(new LDR(reg1, 4 * vartable[index].index + 8));
@@ -459,7 +462,8 @@ namespace compiler::back {
                             //全局变量
                             //取地址到r3
                             int reg1 = getCanUseRegForCalExp();
-                            backlist.push_back(new LDR(reg1, name));
+                            backlist.push_back(new MOV32(reg1, name));
+                            //backlist.push_back(new LDR(reg1, name));
                             backlist.push_back(new STR(reg, address(reg1)));
                             freeRegForCalExp(reg1);
                         } else {
@@ -607,7 +611,8 @@ namespace compiler::back {
                         //全局变量
                         //取地址到r3
                         int reg1 = getCanUseRegForCalExp();
-                        backlist.push_back(new LDR(reg1, name));
+                        backlist.push_back(new MOV32(reg1, name));
+                        //backlist.push_back(new LDR(reg1, name));
                         backlist.push_back(new STR(reg, address(reg1)));
                         freeRegForCalExp(reg1);
                     } else {
@@ -665,7 +670,8 @@ namespace compiler::back {
                 if (index == -1) {
                     //全局变量
                     //取地址到ldr reg,=name
-                    backlist.push_back(new LDR(reg, name));
+                    backlist.push_back(new MOV32(reg, name));
+                    //backlist.push_back(new LDR(reg, name));
                     //读到ldr reg,[reg]
                     backlist.push_back(new LDR(reg, address(reg)));
                 } else {
@@ -847,7 +853,8 @@ namespace compiler::back {
             if (index != -1 && getvar->ispointer) {
                 backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * vartable[index].index)));
             } else if (index == -1) {
-                backlist.push_back(new LDR(regtomul, name));
+                backlist.push_back(new MOV32(regtomul, name));
+                //backlist.push_back(new LDR(regtomul, name));
             } else {
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
@@ -887,7 +894,8 @@ namespace compiler::back {
             if (index != -1 && getvar->ispointer) {
                 backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
             } else if (index == -1) {
-                backlist.push_back(new LDR(reg1, name));
+                backlist.push_back(new MOV32(reg1, name));
+                //backlist.push_back(new LDR(reg1, name));
             } else {
                 int reg2 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));

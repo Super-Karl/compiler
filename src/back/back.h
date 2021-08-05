@@ -76,10 +76,10 @@ namespace compiler::back {
     class MACRO : public INS {
     public:
         MACRO() : INS(macroType) {
-            /*fullIns = ".macro\tmov32,\treg,\tval\n"
+            fullIns = ".macro\tmov32,\treg,\tval\n"
                       "    movw\t\\reg,\t#:lower16:\\val\n"
                       "    movt\t\\reg,\t#:upper16:\\val\n"
-                      ".endm\n";*/
+                      ".endm\n";
             fullIns = ".arch armv7ve\n";
         }
     };

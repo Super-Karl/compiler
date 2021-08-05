@@ -239,14 +239,62 @@ namespace compiler::front::ast {
       if (!record->isInLoop()) {
         try {
           varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-          var->addVarUse(varUse);
         } catch (...) {
           varUse = VarRedefChain(assign->dest.name, 0);
-          var->addVarUse(varUse);
         }
       }
+      varUse = VarRedefChain(assign->dest.name, 0);
+      var->addVarUse(varUse);
     }
   }
+
+//  void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
+//    auto var = record->searchVar(this->name->name);
+//    if (var->isArray) {
+//      auto source = rightExpr->evalOp(ir, record);
+//
+//      dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
+//
+//      //尝试计算下标
+//      std::vector<int> index;
+//      try {
+//        for (auto i : name->getIndex())
+//          index.push_back(i->eval(record));
+//      } catch (...) {
+//      }
+//      VarRedefChain varUse;
+//
+//      if (!index.empty()) {
+//        try {
+//          varUse = VarRedefChain("", this->rightExpr->eval(record), true);
+//          var->addVarUse(varUse, index);
+//        } catch (...) {
+//          varUse = VarRedefChain("", 0, false);
+//          var->addVarUse(varUse, index);
+//        }
+//      }
+//
+//    } else {
+//      auto assign = new AssignIR();
+//      assign->source1 = rightExpr->evalOp(ir, record);
+//      assign->operatorCode = OperatorCode::Mov;
+//      assign->dest = OperatorName("%" + to_string(record->getID()));
+//      assign->dest.defName = this->name->name;
+//      ir.push_back(assign);
+//
+//      //更新符号表
+//      VarRedefChain varUse;
+//      if (!record->isInLoop()) {
+//        try {
+//          varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+//          var->addVarUse(varUse);
+//        } catch (...) {
+//          varUse = VarRedefChain(assign->dest.name, 0);
+//          var->addVarUse(varUse);
+//        }
+//      }
+//    }
+//  }
 
   //完成
   void FunctionDefine::genIR(mid::ir::IRList &ir, RecordTable *record) {

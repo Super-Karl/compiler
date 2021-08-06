@@ -451,7 +451,7 @@ namespace compiler::back {
                     if (static_cast<AssignStmt *>(*item)->name->nodetype == ArrayIdentifierType) {
                         int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
                         int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
-                        backlist.push_back(new STR(reg2, address(reg1)));
+                        backlist.push_back(new STR(reg2, address(reg1,0)));
                         freeRegForCalExp(reg1);
                         freeRegForCalExp(reg2);
                         break;
@@ -466,7 +466,7 @@ namespace compiler::back {
                             int reg1 = getCanUseRegForCalExp();
                             backlist.push_back(new MOV32(reg1, name));
                             //backlist.push_back(new LDR(reg1, name));
-                            backlist.push_back(new STR(reg, address(reg1)));
+                            backlist.push_back(new STR(reg, address(reg1,0)));
                             freeRegForCalExp(reg1);
                         } else {
                             backlist.push_back(new STR(reg, address("fp", -8 - 4 * vartable[index].index)));
@@ -601,7 +601,7 @@ namespace compiler::back {
                 if (static_cast<AssignStmt *>(stmt)->name->nodetype == ArrayIdentifierType) {
                     int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
                     int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
-                    backlist.push_back(new STR(reg2, address(reg1)));
+                    backlist.push_back(new STR(reg2, address(reg1,0)));
                     freeRegForCalExp(reg1);
                     freeRegForCalExp(reg2);
                     break;
@@ -616,7 +616,7 @@ namespace compiler::back {
                         int reg1 = getCanUseRegForCalExp();
                         backlist.push_back(new MOV32(reg1, name));
                         //backlist.push_back(new LDR(reg1, name));
-                        backlist.push_back(new STR(reg, address(reg1)));
+                        backlist.push_back(new STR(reg, address(reg1,0)));
                         freeRegForCalExp(reg1);
                     } else {
                         backlist.push_back(new STR(reg, address("fp", -8 - 4 * vartable[index].index)));
@@ -677,7 +677,7 @@ namespace compiler::back {
                     backlist.push_back(new MOV32(reg, name));
                     //backlist.push_back(new LDR(reg, name));
                     //读到ldr reg,[reg]
-                    backlist.push_back(new LDR(reg, address(reg)));
+                    backlist.push_back(new LDR(reg, address(reg,0)));
                 } else {
                     //读到ldr reg, [fp, #offset]
                     backlist.push_back(new LDR(reg, address("fp", -8 - 4 * vartable[index].index)));

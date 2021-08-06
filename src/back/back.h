@@ -18,8 +18,6 @@ namespace compiler::back {
         SourceType Type;
 
         Source() = default;
-
-        explicit Source(SourceType type) : Type(type) {}
     };
 
 
@@ -41,22 +39,6 @@ namespace compiler::back {
             } else {
                 addr = "[r" + to_string(reg) + ",#" + to_string(offset) + "]";
             }
-        }
-
-        address(int reg) {
-            addr = "[r" + to_string(reg) + "]";
-        }
-
-        address(string reg, int offset, string s) {
-            addr = "[" + reg + ",#" + to_string(offset) + "]" + s;
-        }
-
-        address(string reg) {
-            addr = reg;
-        }
-
-        address(string reg, string reg2) {
-            addr = "[" + reg + "," + reg2 + "]";
         }
     };
 
@@ -86,18 +68,6 @@ namespace compiler::back {
 
     class Lable : public INS {
     public :
-        LableType lableType;
-        string name;
-
-        Lable(LableType lableType, string realName = "NULL") : lableType(lableType), INS(INSlableType) {
-            switch (lableType) {
-                case FunctionType: {
-                    name = "function_" + realName;// + "_" + to_string(FunctionCount);
-                    fullIns = name;
-                    break;
-                }
-            }
-        }
 
         Lable(string name) : INS(INSlableType) {
             fullIns = name + ":\n";
@@ -132,9 +102,8 @@ namespace compiler::back {
 
     class FUNC : public INS {
     public:
-        string name;
 
-        FUNC(string name) : name(name), INS(funcLable) {
+        FUNC(string name) : INS(funcLable) {
             fullIns = ".text\n"
                       ".global\t" + name + "\n"
                                            ".type\t" + name + ",\t%function\n" +
@@ -147,10 +116,6 @@ namespace compiler::back {
         STMDB() : INS(stmdb) {
             fullIns = "\tstmdb\tsp!,{fp, lr}\n"
                       "\tadd\tfp, sp, #4\n";
-        }
-
-        STMDB(string func) : INS(stmdb) {
-            fullIns = "\tstmdb\tsp!,{r1-r6}\n";
         }
     };
 
@@ -205,10 +170,6 @@ namespace compiler::back {
         MOV32(int reg, string name) : INS(mov32) {
             fullIns = "\tmov32 r" + to_string(reg) + ", " + name + "\n";
         }
-
-        MOV32(int reg, int value) : INS(mov32) {
-            fullIns = "\tmov32 r" + to_string(reg) + ", " + to_string(value) + "\n";
-        }
     };
 
     class MOV : public INS {
@@ -217,9 +178,9 @@ namespace compiler::back {
             fullIns = "\tmov\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
         }
 
-        MOV(int reg, int value, string type) : INS(mov16) {
+        MOV(int reg, int reg2, string type) : INS(mov16) {
             if (type == "reg2reg") {
-                fullIns = "\tmov\tr" + to_string(reg) + ", r" + to_string(value) + "\n";
+                fullIns = "\tmov\tr" + to_string(reg) + ", r" + to_string(reg2) + "\n";
             }
         }
 
@@ -248,17 +209,10 @@ namespace compiler::back {
         LDR(int reg, int num) : INS(ldr) {
             fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num)+"\n";
         }
-
-        LDR(int reg, string name) : INS(ldr) {
-            fullIns = "\tldr r" + to_string(reg) + ",=" + name+"\n";
-        }
     };
 
     class MLA : public INS {
     public:
-        MLA(string rd, string rm, string rs, string rn) : INS(mla) {
-            fullIns = "\tmla\t" + rd + ",\t" + rm + ",\t" + rs + ",\t" + rn + "\n";
-        }
         MLA(int rd, int rm, int rs, int rn) : INS(mla) {
             fullIns = "\tmla\tr" + to_string(rd) + ",\tr" + to_string(rm) + ",\tr" + to_string(rs) + ",\tr" + to_string(rn) + "\n";
         }
@@ -274,10 +228,6 @@ namespace compiler::back {
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
         }
 
-        OP(string op, int rd, string rn, string op2) : INS(option) {
-            fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", " + op2 + "\n";
-        }
-
         OP(string op, string rd, string rn, string op2) : INS(option) {
             fullIns = "\t" + op + " " + rd + ", " + rn + ", " + op2 + "\n";
         }
@@ -285,13 +235,13 @@ namespace compiler::back {
 
     class PUSH : public INS {
     public:
-        PUSH(initializer_list<int> list) : INS(push) {
+        /*PUSH(initializer_list<int> list) : INS(push) {
             fullIns = "\tpush {r" + to_string(*(list.begin()));
             for (auto i = list.begin(); i != list.end(); i++) {
                 fullIns = fullIns + ",r" + to_string(*i);
             }
             fullIns = fullIns + "}\n";
-        }
+        }*/
 
         PUSH(string list) : INS(push) {
             fullIns = "\tpush {" + list + "}\n";
@@ -300,13 +250,13 @@ namespace compiler::back {
 
     class POP : public INS {
     public:
-        POP(initializer_list<int> list) : INS(pop) {
+        /*POP(initializer_list<int> list) : INS(pop) {
             fullIns = "\tpop {r" + to_string(*(list.begin()));
             for (auto i = list.begin(); i != list.end(); i++) {
                 fullIns = fullIns + ",r" + to_string(*i);
             }
             fullIns = fullIns + "}";
-        }
+        }*/
 
         POP(string list) : INS(pop) {
             fullIns = "\tpop {" + list + "}\n";

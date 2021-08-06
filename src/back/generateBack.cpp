@@ -231,7 +231,7 @@ namespace compiler::back {
             } else {
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", regtomul, 11, reg1));
+                backlist.push_back(new OP("sub", regtomul, "fp", reg1));
                 freeRegForCalExp(reg1);
             }
             int reg = getCanUseRegForCalExp();
@@ -272,7 +272,7 @@ namespace compiler::back {
             } else {
                 int reg2 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", reg1, 11, reg2));
+                backlist.push_back(new OP("sub", reg1, "fp", reg2));
                 freeRegForCalExp(reg2);
             }
             backlist.push_back(new OP("add", regtomul, reg1, regtomul));
@@ -326,7 +326,7 @@ namespace compiler::back {
                     } else {
                         int reg1 = getCanUseRegForCalExp();
                         backlist.push_back(new LDR(reg1, 4 * vartable[index].index + 8));
-                        backlist.push_back(new OP("sub", reg, 11, reg1));
+                        backlist.push_back(new OP("sub", reg, "fp", reg1));
                         freeRegForCalExp(reg1);
                     }
                     backlist.push_back(new STR(reg));
@@ -862,7 +862,7 @@ namespace compiler::back {
             } else {
                 int reg1 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", regtomul, 11, reg1));
+                backlist.push_back(new OP("sub", regtomul, "fp", reg1));
                 freeRegForCalExp(reg1);
             }
             int reg = getCanUseRegForCalExp();
@@ -903,7 +903,7 @@ namespace compiler::back {
             } else {
                 int reg2 = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", reg1, 11, reg2));
+                backlist.push_back(new OP("sub", reg1, "fp", reg2));
                 freeRegForCalExp(reg2);
             }
             backlist.push_back(new OP("add", regtomul, reg1, regtomul));

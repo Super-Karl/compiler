@@ -224,6 +224,10 @@ namespace compiler::back {
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
         }
 
+        OP(string op, int rd, string rn, int rm) : INS(option) {
+            fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", r" + to_string(rm) + "\n";
+        }
+
         OP(string op, int rd, int rn, string op2) : INS(option) {
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
         }

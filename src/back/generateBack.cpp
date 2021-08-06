@@ -491,6 +491,7 @@ namespace compiler::back {
         }
         for (int i = 0; i < localVarCount; i++) {
             vartable.pop_back();
+            tableIndex--;
         }
         if (localVarSpace > 0) {
             backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
@@ -639,6 +640,7 @@ namespace compiler::back {
         }
         for (int i = 0; i < localVarCount; i++) {
             vartable.pop_back();
+            tableIndex--;
         }
         if (localVarSpace > 0) {
             backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));

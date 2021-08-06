@@ -405,11 +405,11 @@ namespace compiler::back {
                     break;
                 }
                 case FunctionCallType: {
-                    backlist.push_back(new PUSH("r1-r8"));
+                    backlist.push_back(new PUSH("r1-r10"));
                     pushregtable();
                     generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(*item));
                     popregtable();
-                    backlist.push_back(new POP("r1-r8"));
+                    backlist.push_back(new POP("r1-r10"));
                     break;
                 }
                 case DeclareStatementType: {
@@ -554,11 +554,11 @@ namespace compiler::back {
                 break;
             }
             case FunctionCallType: {
-                backlist.push_back(new PUSH("r1-r8"));
+                backlist.push_back(new PUSH("r1-r10"));
                 pushregtable();
                 generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(stmt));
                 popregtable();
-                backlist.push_back(new POP("r1-r8"));
+                backlist.push_back(new POP("r1-r10"));
                 break;
             }
             case DeclareStatementType: {
@@ -655,11 +655,11 @@ namespace compiler::back {
                 return reg;
             }
             case FunctionCallType: {
-                backlist.push_back(new PUSH("r1-r8"));
+                backlist.push_back(new PUSH("r1-r10"));
                 pushregtable();
                 generateFuncCall(vartable, backlist, static_cast<FunctionCall *>(expression));
                 popregtable();
-                backlist.push_back(new POP("r1-r8"));
+                backlist.push_back(new POP("r1-r10"));
                 int reg = getCanUseRegForCalExp();
                 backlist.push_back(new MOV(reg, 0, "reg2reg"));
                 return reg;

@@ -244,7 +244,7 @@ namespace compiler::back{
         int RegNum;
         int Offset=0;
         //TODO 完成这两个类的构造,并不确定是否需要这个
-        Indirect_Reg(std::string name,int Offset1=0):RegName(name),Offset(Offset){};
+        Indirect_Reg(std::string name,int Offset1=0):RegName(name),Offset(Offset1){};
         Indirect_Reg(int num,int Offset=0);
         void print(){
             if(RegName!="")
@@ -342,6 +342,8 @@ namespace compiler::back{
             label.print();
             if(label.LabelName!="")
                 std::cout<<": ";
+            else
+                std::cout<<"    ";
             operation.print();
             std::cout<<" ";
             operand.print();
@@ -368,15 +370,31 @@ namespace compiler::back{
     class VarDeclaration:public Sentence{
         //写的有问题存疑?
     public:
-        BarCode barcode;
+        EQUKeywords equKeywords;
         LABEL label;
-        VarDeclaration(BarCode bcode,LABEL label1):barcode(bcode), label(label1){};
+        VarDeclaration( EQUKeywords equKeywords1,std::string name1=""):equKeywords(equKeywords1),label(name1){};
         VarDeclaration *getThis() override{
             return this;
         }
         void print(){
-            printBarcode(barcode);
+            printEQUKeywords(equKeywords);
+            std::cout<<" ";
             label.print();
+            std::cout<<std::endl;
+        }
+    };
+    class Varvalue:public Sentence{
+    public:
+        EQUKeywords equKeywords;
+        int value;
+        Varvalue(EQUKeywords equKeywords1,int value1):equKeywords(equKeywords1),value(value1){};
+        Varvalue *getThis() override{
+            return this;
+        }
+        void print(){
+            printEQUKeywords(equKeywords);
+            std::cout<<" "<<value;
+            std::cout<<std::endl;
         }
     };
     class TypeDeclaration:public  Sentence{

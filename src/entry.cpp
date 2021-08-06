@@ -21,7 +21,10 @@ compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName so
 int createStack(vector<compiler::back::Sentence *> &armList);
 string findFromRegs(string name,map<string,string> usedReg);
 string allocReg(map<string,string> &usedReg);
+bool findFromSecond(string name,map<string,string> usedReg);
 void beginFunc(string FuncName,vector<compiler::back::Sentence *> &armList);
+void stackPushBack(vector<compiler::back::Sentence *> &armList,int curStack,string reg);
+void stackPop(vector<compiler::back::Sentence *> &armList,int curStack,string reg);
 
 int main(int argc, char **argv) {
   auto *argParser = new compiler::controller::ArgParser(argc, argv);
@@ -35,6 +38,7 @@ int main(int argc, char **argv) {
   auto ir = compiler::controller::generator::genIR(root);
   if (argParser->printIR)freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
+  cout<<endl<<endl<<endl;
   auto arm = genBack(ir);
   for(auto var:arm){
       var->print();
@@ -50,9 +54,29 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     vector<compiler::back::Sentence *> armList;
     for (auto val : ir)//ir的每一个块
     {
+        compiler::mid::ir::GlobalData *global=dynamic_cast<compiler::mid::ir::GlobalData *>(val);
+        if(global!=nullptr){
+            compiler::back::Sentence *blockdeclaration=new compiler::back::BlockDeclaration(compiler::back::EQUKeywords::data);
+            armList.push_back(blockdeclaration);
+            string name;
+            if(global->isArray==false){
+            name=global->name.erase(0,1);
+            compiler::back::Sentence *var1=new compiler::back::VarDeclaration(compiler::back::EQUKeywords::global,name);
+            armList.push_back(var1);
+            compiler::back::LABEL *label=new compiler::back::LABEL(name);
+            compiler::back::Sentence *var2=new compiler::back::Instr_Sentence(*label);
+            armList.push_back(var2);
+            compiler::back::Sentence *var3=new compiler::back::Varvalue(compiler::back::EQUKeywords::word,global->val[0]);
+            armList.push_back(var3);
+            }
+
+        }
         int mainFunFlag=0;
         int sumOfValues=0;
         int funCallFlag=0;//监测是否使用函数
+        int startStackSize=0;
+        int curStack=0;
+        vector<int> LDRlr;
         map<string,string> usedReg;//变量和寄存器的映射关系
         vector<string> Regs;//使用过的寄存器
         int beginIndex;
@@ -142,34 +166,90 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                         armList.push_back(paramToReg(param,i,usedReg,Regs));
                         i++;
                     }
-                    armList.push_back(sentence);
+                    for(auto reg:Regs){
+                        stackPushBack(armList,curStack,reg);
+                        curStack++;
+                    }
+                    curStack=0;
+                    armList.push_back(sentence);//这个push的是BL
+                    //函数后恢复现场
+                    compiler::back::OPERATION *operationR0 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                    compiler::back::OperateNum *destR0 = new compiler::back::Direct_Reg("r0");
+                    compiler::back::OperateNum *sourceR0 = new compiler::back::Direct_Reg("r0");
+                    compiler::back::OPERAND *operandR0=new compiler::back::OPERAND(destR0,sourceR0);
+                    compiler::back::Sentence  *sentenceR0=new compiler::back::Instr_Sentence(*operationR0,*operandR0);
+
+                    compiler::back::OPERATION *operation0 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                    compiler::back::OperateNum *dest0 = new compiler::back::Direct_Reg("r0");
+                    compiler::back::OperateNum *source0 = new compiler::back::ImmNum(0);
+                    compiler::back::OPERAND *operand0=new compiler::back::OPERAND(dest0,source0);
+                    compiler::back::Sentence  *sentence0=new compiler::back::Instr_Sentence(*operation0,*operand0);
+                    armList.push_back(sentenceR0);
+                    armList.push_back(sentence0);
+                    for(auto reg:Regs){
+                        stackPop(armList,curStack,reg);
+                        curStack++;
+                    }
+                    curStack=0;
+                    compiler::back::OPERATION *operation1 = new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                    compiler::back::OperateNum *dest1 = new compiler::back::Direct_Reg("lr");
+                    compiler::back::OperateNum *source3 = new compiler::back::Indirect_Reg("sp",4);
+                    compiler::back::OPERAND *operand2=new compiler::back::OPERAND(dest1,source3);
+                    compiler::back::Sentence  *sentence1=new compiler::back::Instr_Sentence(*operation1,*operand2);
+                    armList.push_back(sentence1);
+                    LDRlr.push_back(armList.size()-1);
                 }
                 //函数返回部分
                 compiler::mid::ir::RetIR *retInstr=dynamic_cast<compiler::mid::ir::RetIR *>(funcBody);
                 if(funcallInstr!=nullptr){
                     op = new compiler::back::OPERATION(compiler::back::Instruction::BL);
                 }
-
+                //函数if导致的跳转
+                compiler::mid::ir::JmpIR *jumpInstr=dynamic_cast<compiler::mid::ir::JmpIR *>(funcBody);
+                if(jumpInstr!=nullptr){
+                    op = new compiler::back::OPERATION(compiler::back::Instruction::B);
+                    compiler::back::LABEL *b_label=new compiler::back::LABEL(jumpInstr->label);
+                    compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*b_label);
+                    armList.push_back(sentence);
+                }
+                compiler::mid::ir::LabelIR *labelInstr=dynamic_cast<compiler::mid::ir::LabelIR *>(funcBody);
+                if(labelInstr!=nullptr){
+                    compiler::back::LABEL *label=new compiler::back::LABEL(labelInstr->label);
+                    compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*label);
+                    armList.push_back(sentence);
+                }
             }
+            compiler::back::OPERATION * endMOV=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+            compiler::back::OperateNum * PCReg=new compiler::back::Direct_Reg("pc");
+            compiler::back::OperateNum * R14Reg=new compiler::back::Direct_Reg("lr");
+            compiler::back::OPERAND *endOPERAND=new compiler::back::OPERAND(PCReg,R14Reg);
+            compiler::back::Sentence *endSentence=new compiler::back::Instr_Sentence(*endMOV,*endOPERAND);
+            //函数后面的部分
+            if(funCallFlag==1)
+                startStackSize=4*Regs.size()+4;
+            else
+                startStackSize=4;
+            //cout<<armList.size();
+            compiler::back::Instr_Sentence *beginSentence1=dynamic_cast<compiler::back::Instr_Sentence *>(armList[beginIndex]);
+            compiler::back::ImmNum *stackSize=new compiler::back::ImmNum(startStackSize);//开始时栈的大小
+            beginSentence1->operand.OPERAND3=stackSize;
+            armList[beginIndex]=beginSentence1;
+            compiler::back::Instr_Sentence *beginSentence2=dynamic_cast<compiler::back::Instr_Sentence *>(armList[beginIndex+1]);
+            compiler::back::OperateNum *stackSize2=new compiler::back::Indirect_Reg("sp",startStackSize-4);
+            beginSentence2->operand.OPERAND2=stackSize2;
+            armList[beginIndex+1]=beginSentence2;
+            //cout<<Regs.size()<<endl;
+            for(auto val:LDRlr) {
+                //cout<<val<<"val"<<endl;
+                compiler::back::Instr_Sentence *LDRlrp=dynamic_cast<compiler::back::Instr_Sentence *>(armList[val]);
+                LDRlrp->operand.OPERAND2=stackSize2;
+                armList[val]=LDRlrp;
+            }
+            armList.push_back(endSentence);
+
+            Regs.clear();
+            usedReg.clear();
         }
-        compiler::back::OPERATION * endMOV=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
-        compiler::back::OperateNum * PCReg=new compiler::back::Direct_Reg("pc");
-        compiler::back::OperateNum * R14Reg=new compiler::back::Direct_Reg("r14");
-        compiler::back::OPERAND *endOPERAND=new compiler::back::OPERAND(PCReg,R14Reg);
-        compiler::back::Sentence *endSentence=new compiler::back::Instr_Sentence(*endMOV,*endOPERAND);
-        //函数后面的部分
-        compiler::back::Instr_Sentence *beginSentence1=dynamic_cast<compiler::back::Instr_Sentence *>(armList[beginIndex]);
-        compiler::back::ImmNum *stackSize=new compiler::back::ImmNum(4*Regs.size());//开始时栈的大小
-        beginSentence1->operand.OPERAND3=stackSize;
-        armList[beginIndex]=beginSentence1;
-        compiler::back::Instr_Sentence *beginSentence2=dynamic_cast<compiler::back::Instr_Sentence *>(armList[beginIndex+1]);
-        compiler::back::OperateNum *stackSize2=new compiler::back::Indirect_Reg("sp",4*Regs.size()-4);
-        beginSentence2->operand.OPERAND2=stackSize2;
-        cout<<Regs.size()<<endl;
-        armList[beginIndex+1]=beginSentence2;
-        armList.push_back(endSentence);
-        Regs.clear();
-        usedReg.clear();
     }
     return armList;
 }
@@ -187,9 +267,9 @@ compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName so
             }
             else{//表中不存在,进行寄存器分配
                  string regName=allocReg(usedReg);
-                 if(source1.name.find("$")==-1){
+                 if(source1.name.find("$")==-1 && findFromSecond(source1.name,usedReg)==0){
                      Regs.push_back(regName);
-                     cout<<"paramter deleted"<<endl;
+                     //cout<<"paramter deleted"<<endl;
                  }
                  armNum=new compiler::back::Direct_Reg(regName);
                  usedReg.insert(map<string, string>::value_type(source.name, regName));
@@ -226,7 +306,19 @@ string allocReg(map<string,string> &usedReg)
             return regName;
     }
 }
-
+bool findFromSecond(string name,map<string,string> usedReg){
+    int flag=0;
+    map<string,string>::iterator iter;
+    for (iter=usedReg.begin(); iter!=usedReg.end(); iter++){
+        //cout<<usedReg[iter->first];
+        if(usedReg[iter->first] == name)//找到了
+        {
+            flag=1;
+            break;
+        }
+    }
+    return flag;
+}
 string findFromRegs(string name,map<string,string> usedReg)
 {
     auto iter=usedReg.find(name);
@@ -237,6 +329,7 @@ string findFromRegs(string name,map<string,string> usedReg)
 
 compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string>usedReg,vector<string> Regs)
 {
+    //将参数转换到寄存器
     compiler::back::OPERATION *operation=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
     compiler::back::OperateNum * dest=new compiler::back::Direct_Reg("r"+to_string(i));
     compiler::back::OperateNum * operatenum=convertVarToReg(arg,usedReg,Regs,arg);
@@ -259,16 +352,29 @@ int createStack(vector<compiler::back::Sentence *> &armList)
     compiler::back::Sentence  *sentence=new compiler::back::Instr_Sentence(*operation,*operand1);
     armList.push_back(sentence);
     compiler::back::OPERATION *operation1 = new compiler::back::OPERATION(compiler::back::Instruction::STR);
-    compiler::back::OperateNum *dest1 = new compiler::back::Direct_Reg("r14");
+    compiler::back::OperateNum *dest1 = new compiler::back::Direct_Reg("lr");
     compiler::back::OperateNum *source3 = new compiler::back::Indirect_Reg("sp",4);
     compiler::back::OPERAND *operand2=new compiler::back::OPERAND(dest1,source3);
     compiler::back::Sentence  *sentence1=new compiler::back::Instr_Sentence(*operation1,*operand2);
     armList.push_back(sentence1);
     return armList.size()-2;
 }
-void stackPushBack(vector<compiler::back::Sentence *> &armList)
+void stackPushBack(vector<compiler::back::Sentence *> &armList,int curStack,string reg)
 {
-
+    compiler::back::OPERATION *operation = new compiler::back::OPERATION(compiler::back::Instruction::STR);
+    compiler::back::OperateNum *dest = new compiler::back::Direct_Reg(reg);
+    compiler::back::OperateNum *source = new compiler::back::Indirect_Reg("sp",4*curStack);
+    compiler::back::OPERAND *operand=new compiler::back::OPERAND(dest,source);
+    compiler::back::Sentence  *sentence=new compiler::back::Instr_Sentence(*operation,*operand);
+    armList.push_back(sentence);
+}
+void stackPop(vector<compiler::back::Sentence *> &armList,int curStack,string reg){
+    compiler::back::OPERATION *operation = new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+    compiler::back::OperateNum *dest = new compiler::back::Direct_Reg(reg);
+    compiler::back::OperateNum *source = new compiler::back::Indirect_Reg("sp",4*curStack);
+    compiler::back::OPERAND *operand=new compiler::back::OPERAND(dest,source);
+    compiler::back::Sentence  *sentence=new compiler::back::Instr_Sentence(*operation,*operand);
+    armList.push_back(sentence);
 }
 void beginFunc(string FuncName,vector<compiler::back::Sentence *> &armList)
 {

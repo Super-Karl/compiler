@@ -449,8 +449,8 @@ namespace compiler::back {
                 }
                 case AssignStmtType: {
                     if (static_cast<AssignStmt *>(*item)->name->nodetype == ArrayIdentifierType) {
-                        int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
                         int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
+                        int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
                         backlist.push_back(new STR(reg2, address(reg1)));
                         freeRegForCalExp(reg1);
                         freeRegForCalExp(reg2);
@@ -598,8 +598,8 @@ namespace compiler::back {
             }
             case AssignStmtType: {
                 if (static_cast<AssignStmt *>(stmt)->name->nodetype == ArrayIdentifierType) {
-                    int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
                     int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
+                    int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
                     backlist.push_back(new STR(reg2, address(reg1)));
                     freeRegForCalExp(reg1);
                     freeRegForCalExp(reg2);

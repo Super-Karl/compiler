@@ -47,7 +47,7 @@ namespace compiler::back {
             if (regtable[i] == 0) {
                 regtable[i] = 1;
 
-                frintRegtable();
+//                frintRegtable();
                 return i;
             }
         }
@@ -56,7 +56,7 @@ namespace compiler::back {
             freeRegForCalExp(i);
         }
         backlist.push_back(new PUSH("r1-r7"));
-        std::cout<<"寄存器栈满";
+//        std::cout<<"寄存器栈满";
         return getCanUseRegForCalExp();
     }
 
@@ -66,7 +66,7 @@ namespace compiler::back {
             regtable[i] = 1;
             return true;
         } else {
-            std::cout << "寄存器使用错误";
+//            std::cout << "寄存器使用错误";
             return false;
         }
     }

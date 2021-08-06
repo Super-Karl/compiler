@@ -25,6 +25,8 @@ namespace compiler::back {
     };
 
     //变量
+    list<INS *> backlist;
+
     std::unordered_map<string, VAR *> globalVartable;
 
     int tableIndex = 0;//一个函数的参数个数，用于编号
@@ -59,7 +61,7 @@ namespace compiler::back {
 //        cout << "----------------------------------\n"
 //                "开始生成arm汇编\n"
 //                "----------------------------------\n";
-        list<INS *> backlist;
+
         backlist.push_back(new MACRO());
         for (auto block:root->codeBlock) {
             if (block->nodetype == FunctionDefineType) {

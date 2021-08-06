@@ -4,10 +4,11 @@
 
 #ifndef COMPILER_REGTABLE_H
 #define COMPILER_REGTABLE_H
-#define m 9
+#define m 11
 
 #include<stack>
 #include<vector>
+#include<list>
 #include<iostream>
 
 namespace compiler::back {

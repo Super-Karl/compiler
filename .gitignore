@@ -1,4 +1,4 @@
-################################################################################
+﻿################################################################################
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
@@ -11,4 +11,6 @@
 /clang-format.txt
 /testTools/*
 /testTool/testcase.s
-testTool/testcase.sy
+/testTool/testcase.sy
+/testTool/testcase.log
+/testTool/testcase.in

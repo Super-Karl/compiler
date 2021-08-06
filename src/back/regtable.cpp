@@ -49,7 +49,8 @@ namespace compiler::back {
             }
         }
         std::cout<<"寄存器栈满";
-        return -1;
+        //return -1;
+        return 0;
     }
 
     //占用i寄存器

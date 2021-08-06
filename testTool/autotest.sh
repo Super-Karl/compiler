@@ -11,14 +11,23 @@ fi
 if test "$1" == "-h"
 then
   echo -e "为了保证本脚本能够正确运行,请将静态运行时库 .a文件放到testTool文件夹下\n并部署到树莓派上进行测试\n"
-  echo "-a :测试testcase目录下的全部样例"
-  echo -e "-s [input] 测试单个样例 input为要测试的文件名\n           默认的测试文件输入为同名的in文件\n           默认输出为testTool文件夹下的testcase.log"
+  echo -e "-s [input] 测试单个样例 input为要测试的文件名\n           默认的测试文件输入为同名的in文件\n
+           默认输出为testTool文件夹下的testcase.log"
+  echo "-a 测试testcase目录下的全部样例"
+  echo "-b 自动build 工程"
   echo "-h 查看帮助"
 elif test "$1" == "-a"
 then
-  cd ../build || exit
-  cmake ..
-  make
+  if test ![-d "../build"]
+  then
+    mkdir ../build
+    cd ../build || exit
+    cmake ..
+    make
+    cd ../testTool || exit
+  fi
+
+
   cd ../testTool || exit
   for file in ../testcase/*.sy
   do
@@ -59,4 +68,15 @@ then
       echo "存在输入文件"
     fi
   done
+#build项目
+elif test "$1" == "-b"
+then
+  if test ![-d "../build"]
+  then
+    mkdir ../build && cd ../build || exit
+    cmake ..
+    make
+    cd ../testTool || exit
+  fi
+
 fi

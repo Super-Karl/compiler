@@ -27,6 +27,8 @@ then
     cd ../testTool || exit
   fi
 
+  total=0
+  success=0
 
   cd ../testTool || exit
   for file in ../testcase/*.sy
@@ -71,14 +73,15 @@ then
       echo $? >> testcase.out
     else
       ./testcase > testcase.out
+      echo -e "\n" > testcase.out
       echo $? >> testcase.out
+      sed '/^[  ]*$/d' file
     fi
 
 #    sed -i '1d' testcase.out
 
     outputfile="${basename}.out"
-    echo "$outputfile"
-    diff -b "../testcase/${outputfile}" testcase.out
+    diff -b -q "../testcase/${outputfile}" testcase.out
 
     if test $? -eq 1
     then
@@ -135,7 +138,9 @@ then
     echo $? >> testcase.out
   else
     ./testcase >testcase.out
+    echo -e "\n" > testcase.out
     echo $? >>testcase.out
+    sed '/^[  ]*$/d' file
   fi
 
 #  sed -i "1d" testcase.out

@@ -171,7 +171,7 @@ namespace compiler::back{
         LABEL(){};
         void print(){
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<LabelName;
             std::cout<<LabelName;
             outfile.close();
@@ -207,7 +207,7 @@ namespace compiler::back{
             void print(){
                 printInstruction(OffsetInstr);
                 std::fstream outfile;
-                outfile.open("result.s", std::ios::app);
+                outfile.open("testcase.s", std::ios::app);
                 if(OffsetNum!=0){
                 outfile<<" #"<<OffsetNum;
                 std::cout<<" #"<<OffsetNum;
@@ -241,7 +241,7 @@ namespace compiler::back{
         }
         void print(){
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
                 outfile<<RegName;
                 std::cout<<RegName;
@@ -262,7 +262,7 @@ namespace compiler::back{
         Indirect_Reg(int num,int Offset=0);
         void print(){
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
                 outfile<<"["<<RegName;
                 std::cout<<"["<<RegName;
@@ -284,7 +284,7 @@ namespace compiler::back{
         }
         void print(){
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<"#"<<value;
             std::cout<<"#"<<value;
             outfile.close();
@@ -301,7 +301,7 @@ namespace compiler::back{
         }
         void print(){
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<value;
             std::cout<<value;
             outfile.close();
@@ -331,7 +331,7 @@ namespace compiler::back{
                 OPERAND1->print();
             if(OPERAND2!= nullptr){
                 std::fstream outfile;
-                outfile.open("result.s", std::ios::app);
+                outfile.open("testcase.s", std::ios::app);
                 outfile<<",";
                 outfile.close();
                 std::cout<<",";
@@ -339,7 +339,7 @@ namespace compiler::back{
             }
             if(OPERAND3!= nullptr){
                 std::fstream outfile;
-                outfile.open("result.s", std::ios::app);
+                outfile.open("testcase.s", std::ios::app);
                 outfile<<",";
                 outfile.close();
                 std::cout<<",";
@@ -379,31 +379,31 @@ namespace compiler::back{
             label.print();
             if(label.LabelName!=""){
                 std::fstream outfile;
-                outfile.open("result.s", std::ios::app);
+                outfile.open("testcase.s", std::ios::app);
                 outfile<<": ";
                 outfile.close();
                 std::cout<<": ";
             }
             else{
                 std::fstream outfile;
-                outfile.open("result.s", std::ios::app);
+                outfile.open("testcase.s", std::ios::app);
                 outfile<<"    ";
                 outfile.close();
                 std::cout<<"    ";
             }
             operation.print();
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
             std::cout<<" ";
             operand.print();
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
             std::cout<<" ";
             b_label.print();
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
             std::cout<<std::endl;
@@ -421,7 +421,7 @@ namespace compiler::back{
         void print(){
             printEQUKeywords(equkeywords);
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             std::cout<<std::endl;
             outfile<<std::endl;
             outfile.close();
@@ -440,12 +440,12 @@ namespace compiler::back{
         void print(){
             printEQUKeywords(equKeywords);
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
             std::cout<<" ";
             label.print();
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
             std::cout<<std::endl;
@@ -463,7 +463,7 @@ namespace compiler::back{
         void print(){
             printEQUKeywords(equKeywords);
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" "<<value;
             std::cout<<" "<<value;
             outfile<<std::endl;
@@ -484,17 +484,17 @@ namespace compiler::back{
         void print(){
             printEQUKeywords(equkeywords);
             std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
             std::cout<<" ";
             label.print();
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
             std::cout<<" ";
             printType(type);
-            outfile.open("result.s", std::ios::app);
+            outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
             std::cout<<std::endl;

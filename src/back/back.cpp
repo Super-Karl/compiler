@@ -10,7 +10,7 @@ namespace compiler::back{
     void printInstruction(Instruction instr)
     {
         std::fstream outfile;
-        outfile.open("result.s", std::ios::app);
+        outfile.open("testcase.s", std::ios::app);
         switch(instr){
             case Instruction::NOP:
                 outfile<<"";
@@ -154,7 +154,7 @@ namespace compiler::back{
     void printBarcode(BarCode barCode)
     {
         std::fstream outfile;
-        outfile.open("result.s",std::ios::app);
+        outfile.open("testcase.s",std::ios::app);
         switch (barCode) {
             case BarCode::NOP:
                 outfile<<"";
@@ -221,7 +221,7 @@ namespace compiler::back{
     }
     void printSuffix(Suffix suffix){
         std::fstream outfile;
-        outfile.open("result.s",std::ios::app);
+        outfile.open("testcase.s",std::ios::app);
 
         switch (suffix) {
             case Suffix::SNOP:
@@ -241,7 +241,7 @@ namespace compiler::back{
     }
     void printEQUKeywords(EQUKeywords equKeywords){
         std::fstream outfile;
-        outfile.open("result.s",std::ios::app);
+        outfile.open("testcase.s",std::ios::app);
         switch (equKeywords) {
             case EQUKeywords::nop:
                 outfile<<"";
@@ -412,7 +412,7 @@ namespace compiler::back{
     }
     void printType(TYPE type){
         std::fstream outfile;
-        outfile.open("result.s",std::ios::app);
+        outfile.open("testcase.s",std::ios::app);
         switch (type) {
             case TYPE::NOP:
                 outfile<<"";
@@ -431,7 +431,7 @@ namespace compiler::back{
     }
     void printstmType(stmType stmtype){
         std::fstream outfile;
-        outfile.open("result.s",std::ios::app);
+        outfile.open("testcase.s",std::ios::app);
         switch (stmtype) {
             case stmType::NOP:
                 outfile<<"";

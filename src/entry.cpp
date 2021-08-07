@@ -28,6 +28,15 @@ void stackPushBack(vector<compiler::back::Sentence *> &armList,int curStack,stri
 void stackPop(vector<compiler::back::Sentence *> &armList,int curStack,string reg);
 
 int main(int argc, char **argv) {
+    string inputfile=argv[4];
+    FILE *input =fopen(argv[4],"r");
+    if(input==nullptr){
+        cout<<"输出文件错误";
+
+    }
+    ofstream outfile;
+    string outputfile=argv[3];
+    outfile.open(outputfile);
   auto *argParser = new compiler::controller::ArgParser(argc, argv);
 
   auto *root = compiler::controller::generator::generate(argParser->input);
@@ -41,9 +50,7 @@ int main(int argc, char **argv) {
   compiler::controller::generator::printIR(ir);
   cout<<endl<<endl<<endl;
   auto arm = genBack(ir);
-    std::fstream outfile;
-    outfile.open("result.s", fstream::out | ios_base::trunc);
-    outfile.close();
+  std::fstream file( "testcase.s", std::ios::out );
   for(auto var:arm){
       var->print();
   }

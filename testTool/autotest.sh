@@ -75,7 +75,7 @@ then
       ./testcase > testcase.out
       echo -e "\n" > testcase.out
       echo $? >> testcase.out
-      sed '/^[  ]*$/d' file
+      sed '/^[  ]*$/d' testcase.out
     fi
 
 #    sed -i '1d' testcase.out
@@ -83,12 +83,12 @@ then
     outputfile="${basename}.out"
     diff -b -q "../testcase/${outputfile}" testcase.out
 
-    if test $? -eq 1
-    then
-      echo "test ${file##*/} assembly error"
-    else
-      echo "test ${file##*/} pass"
-    fi
+#    if test $? -eq 1
+#    then
+#      echo "test ${file##*/} assembly error"
+#    else
+#      echo "test ${file##*/} pass"
+#    fi
 
   done
 
@@ -140,7 +140,7 @@ then
     ./testcase >testcase.out
     echo -e "\n" > testcase.out
     echo $? >>testcase.out
-    sed '/^[  ]*$/d' file
+    sed '/^[  ]*$/d' testcase.out
   fi
 
 #  sed -i "1d" testcase.out
@@ -148,12 +148,12 @@ then
   outputfile="${basename%%.*}.out"
   diff -b testcase.out "${dir}/${outputfile}"
 
-  if test $? -eq 1
-  then
-    echo -e "test ${inputFile##/*} fail"
-  else
-    echo -e "test ${inputFile##/*} pass"
-  fi
+#  if test $? -eq 1
+#  then
+#    echo -e "test ${inputFile##/*} fail"
+#  else
+#    echo -e "test ${inputFile##/*} pass"
+#  fi
 
 #build项目
 elif test "$1" == "-b"

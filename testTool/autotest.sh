@@ -70,7 +70,10 @@ then
     then
       cp "../testcase/${inputfile}" testcase.in
       ./testcase < testcase.in > testcase.out
+      echo -e "\n" testcase.out
       echo $? >> testcase.out
+      sed '/^\s*$/d' testcase.out
+      sed '/^[  ]*$/d' testcase.out
     else
       ./testcase > testcase.out
       echo -e "\n" > testcase.out
@@ -136,7 +139,10 @@ then
   then
     cp "${dir}/${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
-    echo $? >> testcase.out
+    echo -e "\n" > testcase.out
+    echo $? >>testcase.out
+    sed '/^\s*$/d' testcase.out
+    sed '/^[  ]*$/d' testcase.out
   else
     ./testcase >testcase.out
     echo -e "\n" > testcase.out

@@ -1,7 +1,7 @@
 // Created by wnx on 2021/7/5.
 //
 #include "front/ast/AstNode.h"
-#include "parser.hpp"
+#include "../../front/parser/parser.hpp"
 #include <assert.h>
 #include <iostream>
 

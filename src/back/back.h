@@ -327,21 +327,24 @@ namespace compiler::back{
         //OPERAND(){};
         OPERAND(OperateNum *operand1 = nullptr,OperateNum *operand2 = nullptr,OperateNum *operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3){};
         void print(){
-            std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
             if(OPERAND1!= nullptr)
                 OPERAND1->print();
             if(OPERAND2!= nullptr){
+                std::fstream outfile;
+                outfile.open("result.s", std::ios::app);
                 outfile<<",";
+                outfile.close();
                 std::cout<<",";
                 OPERAND2->print();
             }
             if(OPERAND3!= nullptr){
+                std::fstream outfile;
+                outfile.open("result.s", std::ios::app);
                 outfile<<",";
+                outfile.close();
                 std::cout<<",";
                 OPERAND3->print();
             }
-            outfile.close();
         }
     };
 //三大部分构造完毕,注释域不用管
@@ -373,27 +376,37 @@ namespace compiler::back{
             return this;
         }
         void print(){
-            std::fstream outfile;
-            outfile.open("result.s", std::ios::app);
             label.print();
             if(label.LabelName!=""){
+                std::fstream outfile;
+                outfile.open("result.s", std::ios::app);
                 outfile<<": ";
+                outfile.close();
                 std::cout<<": ";
             }
             else{
+                std::fstream outfile;
+                outfile.open("result.s", std::ios::app);
                 outfile<<"    ";
+                outfile.close();
                 std::cout<<"    ";
             }
             operation.print();
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             outfile<<"";
+            outfile.close();
             std::cout<<" ";
             operand.print();
+            outfile.open("result.s", std::ios::app);
             outfile<<" ";
+            outfile.close();
             std::cout<<" ";
             b_label.print();
+            outfile.open("result.s", std::ios::app);
             outfile<<std::endl;
-            std::cout<<std::endl;
             outfile.close();
+            std::cout<<std::endl;
         }
     };
     //伪指令类型(因为伪指令的形式比较多,想写在一起,也有合并的可能,但是目前先写开)
@@ -406,9 +419,9 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            printEQUKeywords(equkeywords);
             std::fstream outfile;
             outfile.open("result.s", std::ios::app);
-            printEQUKeywords(equkeywords);
             std::cout<<std::endl;
             outfile<<std::endl;
             outfile.close();
@@ -425,13 +438,16 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            printEQUKeywords(equKeywords);
             std::fstream outfile;
             outfile.open("result.s", std::ios::app);
-            printEQUKeywords(equKeywords);
             outfile<<" ";
+            outfile.close();
             std::cout<<" ";
             label.print();
+            outfile.open("result.s", std::ios::app);
             outfile<<std::endl;
+            outfile.close();
             std::cout<<std::endl;
             outfile.close();
         }
@@ -445,9 +461,9 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            printEQUKeywords(equKeywords);
             std::fstream outfile;
             outfile.open("result.s", std::ios::app);
-            printEQUKeywords(equKeywords);
             outfile<<" "<<value;
             std::cout<<" "<<value;
             outfile<<std::endl;
@@ -466,18 +482,22 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            printEQUKeywords(equkeywords);
             std::fstream outfile;
             outfile.open("result.s", std::ios::app);
-            printEQUKeywords(equkeywords);
             outfile<<" ";
+            outfile.close();
             std::cout<<" ";
             label.print();
+            outfile.open("result.s", std::ios::app);
             outfile<<" ";
+            outfile.close();
             std::cout<<" ";
             printType(type);
+            outfile.open("result.s", std::ios::app);
             outfile<<std::endl;
-            std::cout<<std::endl;
             outfile.close();
+            std::cout<<std::endl;
         }
     };
 }

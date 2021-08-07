@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <list>
-#include <mid/recordTable/RecordTable.h>
+#include "../../mid/recordTable/RecordTable.h"
 #include <vector>
 
 #include "enum/enums.h"

@@ -63,7 +63,7 @@ then
 
     basename=${file##*/}
     basename=${basename%%.*}
-    inputfile="${basename}.in"
+    inputfile="${basename}"".in"
     if test -e "../testcase/${inputfile}"
     then
       cp "../testcase/${inputfile}" testcase.in
@@ -76,7 +76,7 @@ then
 
     sed -i '1d' testcase.out
 
-    outputfile="${basename}.out"
+    outputfile="${basename}"".out"
     echo "$outputfile"
     diff -b "../testcase/${outputfile}" testcase.out
 
@@ -108,7 +108,7 @@ then
     rm test.in
   fi
 
-  inputfile="${inputFile%%.*}.in"
+  inputfile="${inputFile%%.*}"".in"
 
   if test -e "test.out"
   then
@@ -124,7 +124,7 @@ then
     arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
   fi
 
-  inputfile="${inputFile%%.*}.in"
+  inputfile="${inputFile%%.*}"".in"
   echo "$inputfile"
   if test -e "$inputfile"
   then
@@ -135,7 +135,7 @@ then
 
 #  sed -i "1d" testcase.out
 
-  outputfile="${inputfile%%.*}.out"
+  outputfile="${inputfile%.*}"".out"
   echo "$outputfile"
   diff -b testcase.out "${outputfile}"
 

@@ -138,7 +138,7 @@ then
   sed -i "1d" testcase.out
 
   outputfile="${basename%%.*}.out"
-  diff -b testcase.out "${outputfile}"
+  diff -b testcase.out "${dir}/${outputfile}"
 
   if test $? -eq 1
   then

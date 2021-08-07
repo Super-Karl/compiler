@@ -7,7 +7,7 @@
 
 namespace compiler::back {
 
-    std::vector<int> regtable(15);
+    std::vector<int> regtable(m);
 
     std::stack<std::vector<int>> regtableStack;
 
@@ -51,36 +51,25 @@ namespace compiler::back {
                 return i;
             }
         }
-        for(int i=1; i<=7; i++)
+        /*for(int i=1; i<=7; i++)
         {
             freeRegForCalExp(i);
         }
         backlist.push_back(new PUSH("r1-r7"));
 //        std::cout<<"寄存器栈满";
-        return getCanUseRegForCalExp();
-    }
-
-    //占用i寄存器
-    bool useRegForCalExp(int i) {
-        if (regtable[i] == 0) {
-            regtable[i] = 1;
-            return true;
-        } else {
-//            std::cout << "寄存器使用错误";
-            return false;
-        }
+        return getCanUseRegForCalExp();*/
     }
 
     void freeRegForCalExp(int i) {
         if (1 <= i && i < m) {
             regtable[i] = 0;
         }
-        if(i==10)
+        /*if(i==10)
         {
             for(int i=1; i<=7;i++){
                 regtable[i]=1;
             }
             backlist.push_back(new POP("r1-r7"));
-        }
+        }*/
     }
 }

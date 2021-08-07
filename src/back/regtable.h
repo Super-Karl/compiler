@@ -4,7 +4,7 @@
 
 #ifndef COMPILER_REGTABLE_H
 #define COMPILER_REGTABLE_H
-#define m 11
+#define m 10000
 
 #include<stack>
 #include<vector>

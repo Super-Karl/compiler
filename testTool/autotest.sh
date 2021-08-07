@@ -77,12 +77,12 @@ then
     sed -i '1d' testcase.out
 
     outputfile="${basename}.out"
-
+    echo "$outputfile"
     diff -b "../testcase/${outputfile}" testcase.out
 
     if test $? -eq 1
     then
-      echo "test ${file##*/} fail"
+      echo "test ${file##*/} assembly error"
     else
       echo "test ${file##*/} pass"
     fi
@@ -136,7 +136,6 @@ then
 #  sed -i "1d" testcase.out
 
   outputfile="${inputfile%%.*}.out"
-
   diff -b testcase.out "${outputfile}"
 
   if test $? -eq 1

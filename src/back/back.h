@@ -26,7 +26,7 @@ namespace compiler::back {
         string addr;
 
         address(string reg, int reg1, string s) {
-            addr = "[" + reg + ","+ s + to_string(reg1) + "]";
+            addr = "[" + reg + "," + s + "r" + to_string(reg1) + "]";
         }
 
         address(int reg, int offset) {
@@ -136,8 +136,9 @@ namespace compiler::back {
         B(string name) : INS(b) {
             fullIns = "\tb\t" + name + "\n";
         }
-        B(string s,string name) : INS(b) {
-            fullIns = "\tb"+s+"\t" + name + "\n";
+
+        B(string s, string name) : INS(b) {
+            fullIns = "\tb" + s + "\t" + name + "\n";
         }
     };
 
@@ -200,7 +201,7 @@ namespace compiler::back {
         }
 
         LDR(int reg, int num) : INS(ldr) {
-            fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num)+"\n";
+            fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num) + "\n";
         }
     };
 

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -40,6 +41,9 @@ int main(int argc, char **argv) {
   compiler::controller::generator::printIR(ir);
   cout<<endl<<endl<<endl;
   auto arm = genBack(ir);
+    std::fstream outfile;
+    outfile.open("result.s", fstream::out | ios_base::trunc);
+    outfile.close();
   for(auto var:arm){
       var->print();
   }
@@ -69,13 +73,25 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
             compiler::back::Sentence *var3=new compiler::back::Varvalue(compiler::back::EQUKeywords::word,global->val[0]);
             armList.push_back(var3);
             }
-
+            if(global->isArray==true){
+                name=global->name.erase(0,2);
+                compiler::back::Sentence *var1=new compiler::back::VarDeclaration(compiler::back::EQUKeywords::global,name);
+                armList.push_back(var1);
+                compiler::back::LABEL *label=new compiler::back::LABEL(name);
+                compiler::back::Sentence *var2=new compiler::back::Instr_Sentence(*label);
+                armList.push_back(var2);
+                for(auto val:global->val){
+                    compiler::back::Sentence *var3=new compiler::back::Varvalue(compiler::back::EQUKeywords::word,val);
+                    armList.push_back(var3);
+                }
+            }
         }
         int mainFunFlag=0;
         int sumOfValues=0;
         int funCallFlag=0;//监测是否使用函数
         int startStackSize=0;
         int curStack=0;
+        int arraySize=0;
         vector<int> LDRlr;
         map<string,string> usedReg;//变量和寄存器的映射关系
         vector<string> Regs;//使用过的寄存器
@@ -203,6 +219,7 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                 compiler::mid::ir::RetIR *retInstr=dynamic_cast<compiler::mid::ir::RetIR *>(funcBody);
                 if(funcallInstr!=nullptr){
                     op = new compiler::back::OPERATION(compiler::back::Instruction::BL);
+
                 }
                 //函数if导致的跳转
                 compiler::mid::ir::JmpIR *jumpInstr=dynamic_cast<compiler::mid::ir::JmpIR *>(funcBody);
@@ -218,18 +235,86 @@ vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
                     compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*label);
                     armList.push_back(sentence);
                 }
+                compiler::mid::ir::AllocaIR *allocaIr=dynamic_cast<compiler::mid::ir::AllocaIR *>(funcBody);
+                if(allocaIr!=nullptr){
+                    funCallFlag=1;
+                    int size=allocaIr->size;
+                    arraySize+=size;
+                    auto op = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+                    auto dest=new compiler::back::Direct_Reg("r0");
+                    auto source1=new compiler::back::Direct_Reg("sp");
+                    auto source2=new compiler::back::ImmNum(0);
+                    auto operand1=new compiler::back::OPERAND(dest,source1,source2);
+                    auto sentence=new compiler::back::Instr_Sentence(*op,*operand1);
+                    armList.push_back(sentence);
+                    auto op1 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+                    auto dest1=new compiler::back::Direct_Reg("r1");
+                    auto source12=new compiler::back::ImmNum(0);
+                    auto operand12=new compiler::back::OPERAND(dest1,source12);
+                    auto sentence1=new compiler::back::Instr_Sentence(*op1,*operand12);
+                    armList.push_back(sentence1);
+                    auto op2 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+                    auto dest2=new compiler::back::Direct_Reg("r2");
+                    auto source13=new compiler::back::ImmNum(4*size);
+                    auto operand13=new compiler::back::OPERAND(dest2,source13);
+                    auto sentence2=new compiler::back::Instr_Sentence(*op2,*operand13);
+                    armList.push_back(sentence2);
+                    auto op3 = new compiler::back::OPERATION(compiler::back::Instruction::BL);
+                    auto b_label=new compiler::back::LABEL("memset");
+                    auto sentence3=new compiler::back::Instr_Sentence(*op3,*b_label);
+                    armList.push_back(sentence3);
+                }
+                auto *storeIr=dynamic_cast<compiler::mid::ir::StoreIR *>(funcBody);
+                if(storeIr!=nullptr){
+                    int value=storeIr->source.value;
+                    int offset=storeIr->offset.value;
+                    auto op = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                    auto dest=new compiler::back::Direct_Reg("lr");
+                    auto source=new compiler::back::ImmNum(value);
+                    auto operand=new compiler::back::OPERAND(dest,source);
+                    auto sentence=new compiler::back::Instr_Sentence(*op,*operand);
+                    armList.push_back(sentence);
+                    auto op1 = new compiler::back::OPERATION(compiler::back::Instruction::STR);
+                    auto dest1=new compiler::back::Direct_Reg("lr");
+                    auto source1=new compiler::back::Indirect_Reg("sp",4*offset);
+                    auto operand1=new compiler::back::OPERAND(dest1,source1);
+                    auto sentence1=new compiler::back::Instr_Sentence(*op1,*operand1);
+                    armList.push_back(sentence1);
+                }
             }
+
+
+
+            //函数后面的部分
+            if(funCallFlag==1)
+                startStackSize=4*Regs.size()+4*arraySize+4;
+            else
+                startStackSize=4;
+            //cout<<armList.size();
+
+            compiler::back::OPERATION * endLDR=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+            compiler::back::OperateNum * LDRPC=new compiler::back::Direct_Reg("lr");
+            compiler::back::OperateNum * LDRSP=new compiler::back::Indirect_Reg("sp",startStackSize-4);
+            compiler::back::OPERAND *LDROPERAND=new compiler::back::OPERAND(LDRPC,LDRSP);
+            compiler::back::Sentence *LDRSentence=new compiler::back::Instr_Sentence(*endLDR,*LDROPERAND);
+            armList.push_back(LDRSentence);
+
+            compiler::back::OPERATION * endADD=new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+            compiler::back::OperateNum * ADDPC=new compiler::back::Direct_Reg("sp");
+            compiler::back::OperateNum * ADDLR=new compiler::back::Direct_Reg("sp");
+            auto ADDImm=new compiler::back::ImmNum(startStackSize);
+            compiler::back::OPERAND *endADDOPERAND=new compiler::back::OPERAND(ADDPC,ADDLR,ADDImm);
+            compiler::back::Sentence *endADDSentence=new compiler::back::Instr_Sentence(*endADD,*endADDOPERAND);
+            armList.push_back(endADDSentence);
+
             compiler::back::OPERATION * endMOV=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
             compiler::back::OperateNum * PCReg=new compiler::back::Direct_Reg("pc");
             compiler::back::OperateNum * R14Reg=new compiler::back::Direct_Reg("lr");
             compiler::back::OPERAND *endOPERAND=new compiler::back::OPERAND(PCReg,R14Reg);
             compiler::back::Sentence *endSentence=new compiler::back::Instr_Sentence(*endMOV,*endOPERAND);
-            //函数后面的部分
-            if(funCallFlag==1)
-                startStackSize=4*Regs.size()+4;
-            else
-                startStackSize=4;
-            //cout<<armList.size();
+
+
+
             compiler::back::Instr_Sentence *beginSentence1=dynamic_cast<compiler::back::Instr_Sentence *>(armList[beginIndex]);
             compiler::back::ImmNum *stackSize=new compiler::back::ImmNum(startStackSize);//开始时栈的大小
             beginSentence1->operand.OPERAND3=stackSize;

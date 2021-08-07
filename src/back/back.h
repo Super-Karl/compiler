@@ -9,6 +9,7 @@
 #define COMPILER_BACK_H
 #include <iostream>
 #include <vector>
+#include <fstream>
 namespace compiler::back{
     //TODO:并没有加汇编语言程序中表达式和运算符的部分(因为我使用的时候一直在报错,所以并不明白他干了什么)
     class LABEL;//标号域
@@ -169,7 +170,11 @@ namespace compiler::back{
         LABEL(std::string name):LabelName(name){};
         LABEL(){};
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
+            outfile<<LabelName;
             std::cout<<LabelName;
+            outfile.close();
         }
     };
 
@@ -201,8 +206,13 @@ namespace compiler::back{
             OffsetOperate(Instruction instr,int num):OffsetInstr(instr),OffsetNum(num){};
             void print(){
                 printInstruction(OffsetInstr);
-                if(OffsetNum!=0)
+                std::fstream outfile;
+                outfile.open("result.s", std::ios::app);
+                if(OffsetNum!=0){
+                outfile<<" #"<<OffsetNum;
                 std::cout<<" #"<<OffsetNum;
+                }
+                outfile.close();
             }
     };
     //操作数类
@@ -230,11 +240,15 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             if(RegName!=""){
+                outfile<<RegName;
                 std::cout<<RegName;
                 printSuffix(suffix);
                 offsetoperate.print();
             }
+            outfile.close();
         }
 
     };
@@ -247,10 +261,17 @@ namespace compiler::back{
         Indirect_Reg(std::string name,int Offset1=0):RegName(name),Offset(Offset1){};
         Indirect_Reg(int num,int Offset=0);
         void print(){
-            if(RegName!="")
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
+            if(RegName!=""){
+                outfile<<"["<<RegName;
                 std::cout<<"["<<RegName;
+            }
+                outfile<<",#"<<Offset;
                 std::cout<<",#"<<Offset;
+            outfile<<"]";
             std::cout<<"]";
+            outfile.close();
         }
     };
 
@@ -262,7 +283,11 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
+            outfile<<"#"<<value;
             std::cout<<"#"<<value;
+            outfile.close();
         }
 
     };
@@ -275,7 +300,11 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
+            outfile<<value;
             std::cout<<value;
+            outfile.close();
         }
     };
     class NumList:public OperateNum{
@@ -298,16 +327,21 @@ namespace compiler::back{
         //OPERAND(){};
         OPERAND(OperateNum *operand1 = nullptr,OperateNum *operand2 = nullptr,OperateNum *operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3){};
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             if(OPERAND1!= nullptr)
                 OPERAND1->print();
             if(OPERAND2!= nullptr){
+                outfile<<",";
                 std::cout<<",";
                 OPERAND2->print();
             }
             if(OPERAND3!= nullptr){
+                outfile<<",";
                 std::cout<<",";
                 OPERAND3->print();
             }
+            outfile.close();
         }
     };
 //三大部分构造完毕,注释域不用管
@@ -339,17 +373,27 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             label.print();
-            if(label.LabelName!="")
+            if(label.LabelName!=""){
+                outfile<<": ";
                 std::cout<<": ";
-            else
+            }
+            else{
+                outfile<<"    ";
                 std::cout<<"    ";
+            }
             operation.print();
+            outfile<<"";
             std::cout<<" ";
             operand.print();
+            outfile<<" ";
             std::cout<<" ";
             b_label.print();
+            outfile<<std::endl;
             std::cout<<std::endl;
+            outfile.close();
         }
     };
     //伪指令类型(因为伪指令的形式比较多,想写在一起,也有合并的可能,但是目前先写开)
@@ -362,8 +406,12 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             printEQUKeywords(equkeywords);
             std::cout<<std::endl;
+            outfile<<std::endl;
+            outfile.close();
         }
     };
     //变量类型声明(全局/局部)
@@ -377,10 +425,15 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             printEQUKeywords(equKeywords);
+            outfile<<" ";
             std::cout<<" ";
             label.print();
+            outfile<<std::endl;
             std::cout<<std::endl;
+            outfile.close();
         }
     };
     class Varvalue:public Sentence{
@@ -392,9 +445,14 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             printEQUKeywords(equKeywords);
+            outfile<<" "<<value;
             std::cout<<" "<<value;
+            outfile<<std::endl;
             std::cout<<std::endl;
+            outfile.close();
         }
     };
     class TypeDeclaration:public  Sentence{
@@ -408,12 +466,18 @@ namespace compiler::back{
             return this;
         }
         void print(){
+            std::fstream outfile;
+            outfile.open("result.s", std::ios::app);
             printEQUKeywords(equkeywords);
+            outfile<<" ";
             std::cout<<" ";
             label.print();
+            outfile<<" ";
             std::cout<<" ";
             printType(type);
+            outfile<<std::endl;
             std::cout<<std::endl;
+            outfile.close();
         }
     };
 }

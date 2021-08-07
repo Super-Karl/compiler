@@ -3,7 +3,7 @@
 ################################################################################
 
 /.vscode
-/build
+/build/*
 /.idea
 /cmake-build-debug
 /.cache/
@@ -14,3 +14,4 @@
 /testTool/testcase.sy
 /testTool/testcase.log
 /testTool/testcase.in
+/testTool/testcase.out

@@ -201,7 +201,8 @@ namespace compiler::back {
         }
 
         LDR(int reg, int num) : INS(ldr) {
-            fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num) + "\n";
+            //fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num) + "\n";
+            fullIns = "\tmov32 r" + to_string(reg) + ", " + to_string(num) + "\n";
         }
     };
 

@@ -92,34 +92,34 @@ then
 elif test "$1" == "-s"
 then
   inputFile="$2"
-  if test -e "test.s"
+  if test -e "testcase.s"
   then
-  rm test.s
+  rm testcase.s
   fi
 
-  if test -e "test.sy"
+  if test -e "testcase.sy"
   then
-  rm test.sy
+  rm testcase.sy
   fi
-  cp "$inputFile" test.sy
+  cp "${inputFile}" testcase.sy
 
-  if test -e "test.in"
+  if test -e "testcase.in"
   then
-    rm test.in
+    rm testcase.in
   fi
 
-  dir=$(dirname $inputFile)
+  dir=$(dirname "$inputFile")
 
   basename=${inputFile##*/}
 
   inputfile="${basename%%.*}.in"
 
-  if test -e "test.out"
+  if test -e "testcase.out"
   then
-    rm test.out
+    rm testcase.out
   fi
 
-  ../build/compiler -S -o test.s test.sy
+  ../build/compiler -S -o testcase.s testcase.sy
 
   if test $? == 1
   then
@@ -133,6 +133,9 @@ then
     cp "${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
     echo $? >> testcase.out
+  else
+    ./testcase >testcase.out
+    echo $? >>testcase.out
   fi
 
   sed -i "1d" testcase.out

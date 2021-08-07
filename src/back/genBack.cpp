@@ -2,7 +2,7 @@
 // Created by duhao on 2021/7/30.
 //
 #include"back.h"
-#include"mid/ir/ir.h"
+#include"../mid/ir/ir.h"
 #include<vector>
 namespace compiler::back::genarm{
     void genarm(compiler::mid::ir::IR * ir)

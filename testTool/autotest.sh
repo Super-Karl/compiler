@@ -136,6 +136,7 @@ then
 #  sed -i "1d" testcase.out
 
   outputfile="${inputfile%%.*}.out"
+  echo "$outputfile"
   diff -b testcase.out "${outputfile}"
 
   if test $? -eq 1

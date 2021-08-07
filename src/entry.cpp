@@ -37,16 +37,16 @@ int main(int argc, char **argv) {
     ofstream outfile;
     string outputfile=argv[3];
     outfile.open(outputfile);
-  auto *argParser = new compiler::controller::ArgParser(argc, argv);
+  //auto *argParser = new compiler::controller::ArgParser(argc, argv);
 
-  auto *root = compiler::controller::generator::generate(argParser->input);
+  auto *root = compiler::controller::generator::generate(input);
 
 //  root->print();
   Hash constTbale;
   compiler::astpassir::FirstPassRoot(root, constTbale);
 
   auto ir = compiler::controller::generator::genIR(root);
-  if (argParser->printIR)freopen("gen.ir","w",stdout);
+  //if (argParser->printIR)freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
   cout<<endl<<endl<<endl;
   auto arm = genBack(ir);

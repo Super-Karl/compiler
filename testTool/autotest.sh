@@ -130,7 +130,7 @@ then
 
   if test -e "${inputfile}"
   then
-    cp "${inputfile}" testcase.in
+    cp "${dir}/${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
     echo $? >> testcase.out
   else

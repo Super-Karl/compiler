@@ -66,10 +66,25 @@ then
     inputfile="${basename}.in"
     if test -e "../testcase/${inputfile}"
     then
-      cp "${inputfile}" test.in
-      echo "存在输入文件"
-      ./test < test.in > test.out
+      cp "../testcase/${inputfile}" testcase.in
+      ./test < testcase.in > testcase.out
+      echo $? >> testcase.out
+    else
+      ./test > testcase.out
+      echo $? >> testcase.out
+    fi
 
+    sed -i '1d' testcase.out
+
+    outputfile="${inputfile%%.*}.out"
+
+    diff -b "$outputfile" testcase.out
+
+    if test $? -eq 1
+    then
+      echo "test ${inputFile} fail"
+    else
+      echo "test ${inputFile} pass"
     fi
 
   done
@@ -98,7 +113,7 @@ then
     rm test.out
   fi
 
-  ../build/compiler -S -o test.s test.sy
+  ../build/compiler -S -o test.s "${inputFile}"
 
   if test $? == 1
   then
@@ -111,10 +126,23 @@ then
 
   if test -e inputfile
   then
-    cp inputfile test.in
+    cp inputfile testcase.in
+    ./test < testcase.in >testcase.out
+    echo $? >> testcase.out
   fi
 
-  ./test
+  sed -i "1d" testcase.out
+
+  outputfile="${inputfile%%.*}.out"
+
+  diff -b test.out "../testcase/${outputfile}"
+
+  if test $? -eq 1
+  then
+    echo -e "test ${inputFile##/*} fail"
+  else
+    echo -e "test ${inputFile##/*} pass"
+  fi
 
 #build项目
 elif test "$1" == "-b"

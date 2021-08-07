@@ -74,7 +74,7 @@ then
       echo $? >> testcase.out
     fi
 
-    sed -i '1d' testcase.out
+#    sed -i '1d' testcase.out
 
     outputfile="${basename}.out"
     echo "$outputfile"
@@ -128,7 +128,7 @@ then
     arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
   fi
 
-  if test -e "${inputfile}"
+  if test -e "${dir}/${inputfile}"
   then
     cp "${dir}/${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
@@ -138,7 +138,7 @@ then
     echo $? >>testcase.out
   fi
 
-  sed -i "1d" testcase.out
+#  sed -i "1d" testcase.out
 
   outputfile="${basename%%.*}.out"
   diff -b testcase.out "${dir}/${outputfile}"

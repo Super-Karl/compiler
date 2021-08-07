@@ -70,7 +70,7 @@ then
       ./testcase < testcase.in > testcase.out
       echo $? >> testcase.out
     else
-      ./test > testcase.out
+      ./testcase > testcase.out
       echo $? >> testcase.out
     fi
 

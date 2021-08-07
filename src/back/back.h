@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include "../enum/enums.h"
 
 using namespace std;
@@ -54,6 +55,43 @@ namespace compiler::back {
 
         string getFullIns() { return fullIns; }
     };//基类
+
+    extern list<INS *> backlist;
+
+    class STR : public INS {
+    public:
+        STR(int reg, address addr) : INS(str) {
+            fullIns = "\tstr r" + to_string(reg) + ", " + addr.addr + "\n";
+        }
+
+        STR(int reg) : INS(str) {
+            if(reg>7){
+
+            }else
+            {
+                fullIns = "\tstr r" + to_string(reg) + ", [sp,#-4]!\n";
+            }
+        }
+    };
+
+    class LDR : public INS {
+    public:
+        LDR(int reg, address addr) : INS(ldr) {
+
+            fullIns = "\tldr r" + to_string(reg) + ", " + addr.addr + "\n";
+        }
+
+        LDR(int reg, int num) : INS(ldr) {
+            if (reg > 7) {
+                fullIns = "\tldr r" + to_string(9) + ",=" + to_string(num) + "\n";
+                backlist.push_back(new LDR(9, address("r12", (7 - reg) * 4)));
+            }
+            else
+            {
+                fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num) + "\n";
+            }
+        }
+    };
 
     class MACRO : public INS {
     public:
@@ -140,8 +178,9 @@ namespace compiler::back {
         B(string name) : INS(b) {
             fullIns = "\tb\t" + name + "\n";
         }
-        B(string s,string name) : INS(b) {
-            fullIns = "\tb"+s+"\t" + name + "\n";
+
+        B(string s, string name) : INS(b) {
+            fullIns = "\tb" + s + "\t" + name + "\n";
         }
     };
 
@@ -156,10 +195,22 @@ namespace compiler::back {
     class CMP : public INS {
     public:
         CMP(int reg, string b) : INS(cmp) {
+            if (reg > 7) {
+                backlist.push_back(new LDR(9, address("r12", (7 - reg) * 4)));
+                reg = 9;
+            }
             fullIns = "\tcmp\tr" + to_string(reg) + ",\t" + b + "\n";
         }
 
         CMP(int reg1, int reg2) : INS(cmp) {
+            if (reg1 > 7) {
+                backlist.push_back(new LDR(9, address("r12", (7 - reg1) * 4)));
+                reg1 = 9;
+            }
+            if (reg2 > 7) {
+                backlist.push_back(new LDR(10, address("r12", (7 - reg2) * 4)));
+                reg1 = 10;
+            }
             fullIns = "\tcmp\tr" + to_string(reg1) + ",\tr" + to_string(reg2) + "\n";
         }
     };
@@ -174,6 +225,10 @@ namespace compiler::back {
 
     class MOV : public INS {
     public:
+        MOV(string reg1, string reg2) : INS(mov16) {
+            fullIns = "\tmov\t" + reg1 + ", " + reg2 + "\n";
+        }
+
         MOV(int reg, int value) : INS(mov16) {
             fullIns = "\tmov\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
         }
@@ -189,27 +244,7 @@ namespace compiler::back {
         }
     };
 
-    class STR : public INS {
-    public:
-        STR(int reg, address addr) : INS(str) {
-            fullIns = "\tstr r" + to_string(reg) + ", " + addr.addr + "\n";
-        }
 
-        STR(int reg) : INS(str) {
-            fullIns = "\tstr r" + to_string(reg) + ", [sp,#-4]!\n";
-        }
-    };
-
-    class LDR : public INS {
-    public:
-        LDR(int reg, address addr) : INS(ldr) {
-            fullIns = "\tldr r" + to_string(reg) + ", " + addr.addr + "\n";
-        }
-
-        LDR(int reg, int num) : INS(ldr) {
-            fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num)+"\n";
-        }
-    };
 
     class MLA : public INS {
     public:
@@ -221,15 +256,47 @@ namespace compiler::back {
     class OP : public INS {
     public:
         OP(string op, int rd, int rn, int rm) : INS(option) {
-            fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
+            if (rn > 7) {
+                backlist.push_back(new LDR(9, address("r12", (7 - rn) * 4)));
+                rn = 9;
+            }
+            if (rm > 7) {
+                backlist.push_back(new LDR(10, address("r12", (7 - rm) * 4)));
+                rm = 10;
+            }
+            if (rd > 7) {
+                fullIns = "\t" + op + " r" + to_string(8) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
+                backlist.push_back(new STR(8, address("r12", (7 - rd) * 4)));
+            } else {
+                fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", r" + to_string(rm) + "\n";
+            }
         }
 
         OP(string op, int rd, string rn, int rm) : INS(option) {
-            fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", r" + to_string(rm) + "\n";
+            if (rm > 7) {
+                backlist.push_back(new LDR(10, address("r12", (7 - rm) * 4)));
+                rm = 10;
+            }
+            if (rd > 7) {
+                fullIns = "\t" + op + " r" + to_string(8) + ", " + rn + ", r" + to_string(rm) + "\n";
+                backlist.push_back(new STR(8, address("r12", (7 - rd) * 4)));
+            } else {
+                fullIns = "\t" + op + " r" + to_string(rd) + ", " + rn + ", r" + to_string(rm) + "\n";
+            }
         }
 
         OP(string op, int rd, int rn, string op2) : INS(option) {
+            if (rn > 7) {
+                backlist.push_back(new LDR(9, address("r12", (7 - rn) * 4)));
+                rn = 9;
+            }
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
+            if (rd > 7) {
+                fullIns = "\t" + op + " r" + to_string(8) + ", r" + to_string(rn) + ", " + op2 + "\n";
+                backlist.push_back(new STR(8, address("r12", (7 - rd) * 4)));
+            } else {
+                fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
+            }
         }
 
         OP(string op, string rd, string rn, string op2) : INS(option) {
@@ -239,13 +306,6 @@ namespace compiler::back {
 
     class PUSH : public INS {
     public:
-        /*PUSH(initializer_list<int> list) : INS(push) {
-            fullIns = "\tpush {r" + to_string(*(list.begin()));
-            for (auto i = list.begin(); i != list.end(); i++) {
-                fullIns = fullIns + ",r" + to_string(*i);
-            }
-            fullIns = fullIns + "}\n";
-        }*/
 
         PUSH(string list) : INS(push) {
             fullIns = "\tpush {" + list + "}\n";
@@ -254,13 +314,6 @@ namespace compiler::back {
 
     class POP : public INS {
     public:
-        /*POP(initializer_list<int> list) : INS(pop) {
-            fullIns = "\tpop {r" + to_string(*(list.begin()));
-            for (auto i = list.begin(); i != list.end(); i++) {
-                fullIns = fullIns + ",r" + to_string(*i);
-            }
-            fullIns = fullIns + "}";
-        }*/
 
         POP(string list) : INS(pop) {
             fullIns = "\tpop {" + list + "}\n";

@@ -168,6 +168,7 @@ namespace compiler::back {
                     temp.arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                 }
                 for (int i = static_cast<ArrayDeclare *>(array)->initVal->initValList.size() - 1; i >= 0; i--) {
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, static_cast<ArrayDeclare *>(array)->initVal->initValList[i]);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
@@ -285,6 +286,7 @@ namespace compiler::back {
     void generateFuncCall(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::FunctionCall *functionCall) {
         //处理参数
         if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
+            backlist.push_back(new MOV("r12","sp"));
             int reg = generateExp(vartable, backlist, functionCall->args->args[0]);
             backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
@@ -296,6 +298,7 @@ namespace compiler::back {
             backlist.push_back(new BL(functionCall->name->name));
             return;
         } else if (functionCall->name->name == "putarray") {
+            backlist.push_back(new MOV("r12","sp"));
             int reg1 = generateExp(vartable, backlist, functionCall->args->args[0]);
             backlist.push_back(new MOV(0, reg1, "reg2reg"));
             freeRegForCalExp(reg1);
@@ -332,6 +335,7 @@ namespace compiler::back {
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
                 } else {
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, arg);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
@@ -365,6 +369,7 @@ namespace compiler::back {
                     int id = whileCount++;
                     backlist.push_back(new Lable("while_con_" + to_string(id)));
                     //计算条件
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, static_cast<WhileStatement *>((*item))->cond);
                     backlist.push_back(new CMPBEQ("r" + to_string(reg), "#0", "while_end_" + to_string(id)));
                     freeRegForCalExp(reg);
@@ -383,6 +388,7 @@ namespace compiler::back {
                     int id = ifStatCount++;
                     backlist.push_back(new Lable("if_con_" + to_string(id)));
                     //计算条件
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, static_cast<IfStatement *>((*item))->cond);
                     backlist.push_back(new CMPBEQ("r" + to_string(reg), "#0", "if_else_" + to_string(id)));
                     freeRegForCalExp(reg);
@@ -427,6 +433,7 @@ namespace compiler::back {
                                 localVarSpace++;
                                 localVarCount++;
                                 //把右值放到r2
+                                backlist.push_back(new MOV("r12","sp"));
                                 int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                                 string name = subNode->name->name;
                                 vartable.push_back(VAR(name, 0, tableIndex++));
@@ -449,7 +456,9 @@ namespace compiler::back {
                 }
                 case AssignStmtType: {
                     if (static_cast<AssignStmt *>(*item)->name->nodetype == ArrayIdentifierType) {
+                        backlist.push_back(new MOV("r12","sp"));
                         int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
+                        backlist.push_back(new MOV("r12","sp"));
                         int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
                         backlist.push_back(new STR(reg2, address(reg1,0)));
                         freeRegForCalExp(reg1);
@@ -457,6 +466,7 @@ namespace compiler::back {
                         break;
                     } else {
                         string name = static_cast<AssignStmt *>(*item)->name->name;
+                        backlist.push_back(new MOV("r12","sp"));
                         int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
                         //判断全局变量还是局部变量
                         int index = tableFind(vartable, name);
@@ -477,6 +487,7 @@ namespace compiler::back {
                 }
                 case ReturnStatementType: {
                     if (static_cast<ReturnStatement *>((*item))->returnExp != nullptr) {
+                        backlist.push_back(new MOV("r12","sp"));
                         int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((*item))->returnExp);
                         if (reg != 0) {
                             backlist.push_back(new MOV(0, reg, "reg2reg"));
@@ -515,6 +526,7 @@ namespace compiler::back {
                 int id = whileCount++;
                 backlist.push_back(new Lable("while_con_" + to_string(id)));
                 //计算条件
+                backlist.push_back(new MOV("r12","sp"));
                 int reg = generateExp(vartable, backlist, static_cast<WhileStatement *>((stmt))->cond);
                 backlist.push_back(new CMPBEQ("r" + to_string(reg), "#0", "while_end_" + to_string(id)));
                 freeRegForCalExp(reg);
@@ -533,6 +545,7 @@ namespace compiler::back {
                 int id = ifStatCount++;
                 backlist.push_back(new Lable("if_con_" + to_string(id)));
                 //计算条件
+                backlist.push_back(new MOV("r12","sp"));
                 int reg = generateExp(vartable, backlist, static_cast<IfStatement *>((stmt))->cond);
                 backlist.push_back(new CMPBEQ("r" + to_string(reg), "#0", "if_else_" + to_string(id)));
                 freeRegForCalExp(reg);
@@ -577,6 +590,7 @@ namespace compiler::back {
                             localVarSpace++;
                             localVarCount++;
                             //把右值放到r2
+                            backlist.push_back(new MOV("r12","sp"));
                             int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                             string name = subNode->name->name;
                             vartable.push_back(VAR(name, 0, tableIndex++));
@@ -599,7 +613,9 @@ namespace compiler::back {
             }
             case AssignStmtType: {
                 if (static_cast<AssignStmt *>(stmt)->name->nodetype == ArrayIdentifierType) {
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
                     backlist.push_back(new STR(reg2, address(reg1,0)));
                     freeRegForCalExp(reg1);
@@ -607,6 +623,7 @@ namespace compiler::back {
                     break;
                 } else {
                     string name = static_cast<AssignStmt *>(stmt)->name->name;
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
                     //判断全局变量还是局部变量
                     int index = tableFind(vartable, name);
@@ -627,6 +644,7 @@ namespace compiler::back {
             }
             case ReturnStatementType: {
                 if (static_cast<ReturnStatement *>((stmt))->returnExp != nullptr) {
+                    backlist.push_back(new MOV("r12","sp"));
                     int reg = generateExp(vartable, backlist, static_cast<ReturnStatement *>((stmt))->returnExp);
                     if (reg != 0) {
                         backlist.push_back(new MOV(0, reg, "reg2reg"));

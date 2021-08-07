@@ -10,7 +10,7 @@
 #include "../../mid/recordTable/RecordTable.h"
 #include <vector>
 
-#include "enum/enums.h"
+#include "../../enum/enums.h"
 
 using namespace std;
 

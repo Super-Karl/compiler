@@ -61,9 +61,9 @@ then
       continue
     fi
 
-    basename=${file##*/}
-    basename=${basename%%.*}
-    inputfile=""${basename}".in"
+    filename=${file##*/}
+    basename=${filename%.*}
+    inputfile="${basename}.in"
     if test -e "../testcase/${inputfile}"
     then
       cp "../testcase/${inputfile}" testcase.in
@@ -76,7 +76,7 @@ then
 
     sed -i '1d' testcase.out
 
-    outputfile=""${basename}".out"
+    outputfile="${basename}.out"
     echo "$outputfile"
     diff -b "../testcase/${outputfile}" testcase.out
 
@@ -108,7 +108,11 @@ then
     rm test.in
   fi
 
-  inputfile=""${inputFile%%.*}".in"
+  dir=$(dirname $inputFile)
+
+  basename=${inputFile##*/}
+
+  inputfile="${basename%%.*}.in"
 
   if test -e "test.out"
   then
@@ -124,17 +128,16 @@ then
     arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
   fi
 
-  inputfile=""${inputFile%%.*}".in"
-  if test -e "$inputfile"
+  if test -e "${inputfile}"
   then
-    cp "$inputfile" testcase.in
+    cp "${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
     echo $? >> testcase.out
   fi
 
-#  sed -i "1d" testcase.out
+  sed -i "1d" testcase.out
 
-  outputfile=""${inputfile%.*}".out"
+  outputfile="${basename%%.*}.out"
   diff -b testcase.out "${outputfile}"
 
   if test $? -eq 1

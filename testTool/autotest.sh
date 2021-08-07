@@ -52,7 +52,7 @@ then
       echo "testcase: ${file##*/} assembly fail"
       continue
     else
-      arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy
+      arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
     fi
 
     if test $? -eq 1
@@ -67,7 +67,7 @@ then
     if test -e "../testcase/${inputfile}"
     then
       cp "../testcase/${inputfile}" testcase.in
-      ./test < testcase.in > testcase.out
+      ./testcase < testcase.in > testcase.out
       echo $? >> testcase.out
     else
       ./test > testcase.out
@@ -76,9 +76,9 @@ then
 
     sed -i '1d' testcase.out
 
-    outputfile="${inputfile%%.*}.out"
+    outputfile="${base}.out"
 
-    diff -b "$outputfile" testcase.out
+    diff -b "../testcase/${outputfile}" testcase.out
 
     if test $? -eq 1
     then
@@ -119,7 +119,7 @@ then
   then
     echo "${inputFile} assembly fail"
   else
-    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy
+    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
   fi
 
   inputfile="${inputFile%%.*}.in"
@@ -127,7 +127,7 @@ then
   if test -e inputfile
   then
     cp inputfile testcase.in
-    ./test < testcase.in >testcase.out
+    ./testcase < testcase.in >testcase.out
     echo $? >> testcase.out
   fi
 
@@ -135,7 +135,7 @@ then
 
   outputfile="${inputfile%%.*}.out"
 
-  diff -b testcase.out "../testcase/${outputfile}"
+  diff -b testcase.out "${outputfile}"
 
   if test $? -eq 1
   then

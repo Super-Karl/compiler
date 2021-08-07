@@ -119,7 +119,7 @@ then
   then
     echo "${inputFile} assembly fail"
   else
-    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy  fi
+    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy
   fi
 
   inputfile="${inputFile%%.*}.in"
@@ -135,7 +135,7 @@ then
 
   outputfile="${inputfile%%.*}.out"
 
-  diff -b test.out "../testcase/${outputfile}"
+  diff -b testcase.out "../testcase/${outputfile}"
 
   if test $? -eq 1
   then

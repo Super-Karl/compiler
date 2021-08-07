@@ -27,6 +27,8 @@ then
     cd ../testTool || exit
   fi
 
+  total=0
+  success=0
 
   cd ../testTool || exit
   for file in ../testcase/*.sy
@@ -61,61 +63,70 @@ then
       continue
     fi
 
-    basename=${file##*/}
-    basename=${basename%%.*}
-    inputfile=""${basename}".in"
+    filename=${file##*/}
+    basename=${filename%.*}
+    inputfile="${basename}.in"
     if test -e "../testcase/${inputfile}"
     then
       cp "../testcase/${inputfile}" testcase.in
       ./testcase < testcase.in > testcase.out
+      echo -e "\n" testcase.out
       echo $? >> testcase.out
+      sed '/^\s*$/d' testcase.out
+      sed '/^[  ]*$/d' testcase.out
     else
       ./testcase > testcase.out
+      echo -e "\n" > testcase.out
       echo $? >> testcase.out
+      sed '/^\s*$/d' testcase.out
+      sed '/^[  ]*$/d' testcase.out
     fi
 
-    sed -i '1d' testcase.out
+#    sed -i '1d' testcase.out
 
-    outputfile=""${basename}".out"
-    echo "$outputfile"
-    diff -b "../testcase/${outputfile}" testcase.out
+    outputfile="${basename}.out"
+    diff -b -q "../testcase/${outputfile}" testcase.out
 
-    if test $? -eq 1
-    then
-      echo "test ${file##*/} assembly error"
-    else
-      echo "test ${file##*/} pass"
-    fi
+#    if test $? -eq 1
+#    then
+#      echo "test ${file##*/} assembly error"
+#    else
+#      echo "test ${file##*/} pass"
+#    fi
 
   done
 
 elif test "$1" == "-s"
 then
   inputFile="$2"
-  if test -e "test.s"
+  if test -e "testcase.s"
   then
-  rm test.s
+  rm testcase.s
   fi
 
-  if test -e "test.sy"
+  if test -e "testcase.sy"
   then
-  rm test.sy
+  rm testcase.sy
   fi
-  cp "$inputFile" test.sy
+  cp "${inputFile}" testcase.sy
 
-  if test -e "test.in"
+  if test -e "testcase.in"
   then
-    rm test.in
-  fi
-
-  inputfile=""${inputFile%%.*}".in"
-
-  if test -e "test.out"
-  then
-    rm test.out
+    rm testcase.in
   fi
 
-  ../build/compiler -S -o test.s test.sy
+  dir=$(dirname "$inputFile")
+
+  basename=${inputFile##*/}
+
+  inputfile="${basename%%.*}.in"
+
+  if test -e "testcase.out"
+  then
+    rm testcase.out
+  fi
+
+  ../build/compiler -S -o testcase.s testcase.sy
 
   if test $? == 1
   then
@@ -124,25 +135,33 @@ then
     arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o testcase -static -L . -lsysy
   fi
 
-  inputfile=""${inputFile%%.*}".in"
-  if test -e "$inputfile"
+  if test -e "${dir}/${inputfile}"
   then
-    cp "$inputfile" testcase.in
+    cp "${dir}/${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
-    echo $? >> testcase.out
+    echo -e "\n" > testcase.out
+    echo $? >>testcase.out
+    sed '/^\s*$/d' testcase.out
+    sed '/^[  ]*$/d' testcase.out
+  else
+    ./testcase >testcase.out
+    echo -e "\n" > testcase.out
+    echo $? >>testcase.out
+    sed '/^\s*$/d' testcase.out
+    sed '/^[  ]*$/d' testcase.out
   fi
 
 #  sed -i "1d" testcase.out
 
-  outputfile=""${inputfile%.*}".out"
-  diff -b testcase.out "${outputfile}"
+  outputfile="${basename%%.*}.out"
+  diff -b testcase.out "${dir}/${outputfile}"
 
-  if test $? -eq 1
-  then
-    echo -e "test ${inputFile##/*} fail"
-  else
-    echo -e "test ${inputFile##/*} pass"
-  fi
+#  if test $? -eq 1
+#  then
+#    echo -e "test ${inputFile##/*} fail"
+#  else
+#    echo -e "test ${inputFile##/*} pass"
+#  fi
 
 #build项目
 elif test "$1" == "-b"

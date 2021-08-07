@@ -108,12 +108,14 @@ then
     rm test.in
   fi
 
+  inputfile="${inputFile%%.*}.in"
+
   if test -e "test.out"
   then
     rm test.out
   fi
 
-  ../build/compiler -S -o test.s "${inputFile}"
+  ../build/compiler -S -o test.s test.sy
 
   if test $? == 1
   then
@@ -124,9 +126,9 @@ then
 
   inputfile="${inputFile%%.*}.in"
 
-  if test -e inputfile
+  if test -e "$inputfile"
   then
-    cp inputfile testcase.in
+    cp "$inputfile" testcase.in
     ./testcase < testcase.in >testcase.out
     echo $? >> testcase.out
   fi

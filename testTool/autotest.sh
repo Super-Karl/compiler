@@ -57,12 +57,13 @@ then
 
     if test $? -eq 1
     then
-      echo "testcase ${file##/*} link fail"
+      echo "testcase ${file##*/} link fail"
       continue
     fi
 
-    basename=${base $file}
-    inputfile="${basename}"".in"
+    basename=${file##*/}
+    basename=${basename%%.*}
+    inputfile="${basename}.in"
     if test -e "../testcase/${inputfile}"
     then
       cp "${inputfile}" test.in
@@ -106,7 +107,7 @@ then
     arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy  fi
   fi
 
-  inputfile="${base inputFile}.in"
+  inputfile="${inputFile%%.*}.in"
 
   if test -e inputfile
   then

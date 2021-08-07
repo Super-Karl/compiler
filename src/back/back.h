@@ -394,7 +394,7 @@ namespace compiler::back{
             operation.print();
             std::fstream outfile;
             outfile.open("result.s", std::ios::app);
-            outfile<<"";
+            outfile<<" ";
             outfile.close();
             std::cout<<" ";
             operand.print();

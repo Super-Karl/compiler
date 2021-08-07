@@ -18,7 +18,7 @@ then
   echo "-h 查看帮助"
 elif test "$1" == "-a"
 then
-  if test ![-d "../build"]
+  if test [! -d "../build"]
   then
     mkdir ../build
     cd ../build || exit
@@ -45,15 +45,15 @@ then
     fi
     cp ../testcase/"${file##*/}" testcase.sy
     echo "testcase: ${file##*/}"
-    ../build/compiler -S -o ../testTool/testcase.s ../testTool/testcase.sy
+    ../build/compiler -S -o testcase.s testcase.sy
 
     if test $? -eq 1
     then
       echo "testcase: ${file##*/} assembly fail"
       continue
+    else
+      arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy
     fi
-
-    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy
 
     if test $? -eq 1
     then
@@ -65,13 +65,60 @@ then
     inputfile="${basename}"".in"
     if test -e "../testcase/${inputfile}"
     then
+      cp "${inputfile}" test.in
       echo "存在输入文件"
+      ./test < test.in > test.out
+
     fi
+
   done
+
+elif test "$1" == "-s"
+then
+  inputFile="$2"
+  if test -e "test.s"
+  then
+  rm test.s
+  fi
+
+  if test -e "test.sy"
+  then
+  rm test.sy
+  fi
+  cp "$inputFile" test.sy
+
+  if test -e "test.in"
+  then
+    rm test.in
+  fi
+
+  if test -e "test.out"
+  then
+    rm test.out
+  fi
+
+  ../build/compiler -S -o test.s test.sy
+
+  if test $? == 1
+  then
+    echo "${inputFile} assembly fail"
+  else
+    arm-linux-gnueabihf-gcc -x assembler testcase.s -Werror -o test -static -L . -lsysy  fi
+  fi
+
+  inputfile="${base inputFile}.in"
+
+  if test -e inputfile
+  then
+    cp inputfile test.in
+  fi
+
+  ./test
+
 #build项目
 elif test "$1" == "-b"
 then
-  if test ![-d "../build"]
+  if test [! -d "../build"]
   then
     mkdir ../build && cd ../build || exit
     cmake ..

@@ -131,7 +131,7 @@ then
     echo $? >> testcase.out
   fi
 
-  sed -i "1d" testcase.out
+#  sed -i "1d" testcase.out
 
   outputfile="${inputfile%%.*}.out"
 

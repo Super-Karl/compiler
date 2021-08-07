@@ -125,7 +125,7 @@ then
   fi
 
   inputfile="${inputFile%%.*}.in"
-
+  echo "$inputfile"
   if test -e "$inputfile"
   then
     cp "$inputfile" testcase.in

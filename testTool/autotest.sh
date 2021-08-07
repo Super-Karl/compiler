@@ -76,15 +76,15 @@ then
 
     sed -i '1d' testcase.out
 
-    outputfile="${base}.out"
+    outputfile="${basename}.out"
 
     diff -b "../testcase/${outputfile}" testcase.out
 
     if test $? -eq 1
     then
-      echo "test ${inputFile} fail"
+      echo "test ${file##*/} fail"
     else
-      echo "test ${inputFile} pass"
+      echo "test ${file##*/} pass"
     fi
 
   done

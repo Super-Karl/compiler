@@ -149,8 +149,7 @@ namespace compiler::back {
         //处理函数体
         generateBlock(vartable, backlist, func->body, -1);
         //处理没有return的函数
-        if(func->retType==268)
-        {
+        if (func->retType == 268) {
             backlist.push_back(new LDMIA());
         }
     }
@@ -224,7 +223,10 @@ namespace compiler::back {
             //取地址到regyomul
             regtomul = getCanUseRegForCalExp();
             if (index != -1 && getvar->ispointer) {
-                backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * vartable[index].index)));
+                int regt = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                backlist.push_back(new LDR(regtomul, address("fp", regt, "-")));
+                freeRegForCalExp(regt);
             } else if (index == -1) {
                 backlist.push_back(new MOV32(regtomul, name));
                 //backlist.push_back(new LDR(regtomul, name));
@@ -254,18 +256,19 @@ namespace compiler::back {
                     freeRegForCalExp(reg2);
                 }
             }
-            if (offset * 4 <= 65535) {
-                backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string(offset * 4)));
-            } else {
-                int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg1, offset * 4));
-                backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                freeRegForCalExp(reg1);
-            }
+
+            int reg11 = getCanUseRegForCalExp();
+            backlist.push_back(new LDR(reg11, offset * 4));
+            backlist.push_back(new OP("add", regtomul, regtomul, reg11));
+            freeRegForCalExp(reg11);
+
             int reg1 = getCanUseRegForCalExp();
             //取到数组的开始地址
             if (index != -1 && getvar->ispointer) {
-                backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
+                int regt = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                backlist.push_back(new LDR(reg1, address("fp", regt, "-")));
+                freeRegForCalExp(regt);
             } else if (index == -1) {
                 backlist.push_back(new MOV32(reg1, name));
                 //backlist.push_back(new LDR(reg1, name));
@@ -344,7 +347,9 @@ namespace compiler::back {
         if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
             return;
         }
-        backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(functionCall->args->args.size() * 4)));
+        int reg = getCanUseRegForCalExp();
+        backlist.push_back(new LDR(reg, functionCall->args->args.size() * 4));
+        backlist.push_back(new OP("add", "sp", "sp", reg));
     }
 
     //处理block
@@ -451,7 +456,7 @@ namespace compiler::back {
                     if (static_cast<AssignStmt *>(*item)->name->nodetype == ArrayIdentifierType) {
                         int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
                         int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name));
-                        backlist.push_back(new STR(reg2, address(reg1,0)));
+                        backlist.push_back(new STR(reg2, address(reg1, 0)));
                         freeRegForCalExp(reg1);
                         freeRegForCalExp(reg2);
                         break;
@@ -466,10 +471,13 @@ namespace compiler::back {
                             int reg1 = getCanUseRegForCalExp();
                             backlist.push_back(new MOV32(reg1, name));
                             //backlist.push_back(new LDR(reg1, name));
-                            backlist.push_back(new STR(reg, address(reg1,0)));
+                            backlist.push_back(new STR(reg, address(reg1, 0)));
                             freeRegForCalExp(reg1);
                         } else {
-                            backlist.push_back(new STR(reg, address("fp", -8 - 4 * vartable[index].index)));
+                            int regt = getCanUseRegForCalExp();
+                            backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                            backlist.push_back(new STR(reg, address("fp", regt, "-")));
+                            freeRegForCalExp(regt);
                         }
                         freeRegForCalExp(reg);
                         break;
@@ -494,7 +502,9 @@ namespace compiler::back {
             tableIndex--;
         }
         if (localVarSpace > 0) {
-            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
+            int reg = getCanUseRegForCalExp();
+            backlist.push_back(new LDR(reg, localVarSpace * 4));
+            backlist.push_back(new OP("add", "sp", "sp", reg));
         }
     }
 
@@ -601,7 +611,7 @@ namespace compiler::back {
                 if (static_cast<AssignStmt *>(stmt)->name->nodetype == ArrayIdentifierType) {
                     int reg2 = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
                     int reg1 = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name));
-                    backlist.push_back(new STR(reg2, address(reg1,0)));
+                    backlist.push_back(new STR(reg2, address(reg1, 0)));
                     freeRegForCalExp(reg1);
                     freeRegForCalExp(reg2);
                     break;
@@ -616,10 +626,13 @@ namespace compiler::back {
                         int reg1 = getCanUseRegForCalExp();
                         backlist.push_back(new MOV32(reg1, name));
                         //backlist.push_back(new LDR(reg1, name));
-                        backlist.push_back(new STR(reg, address(reg1,0)));
+                        backlist.push_back(new STR(reg, address(reg1, 0)));
                         freeRegForCalExp(reg1);
                     } else {
-                        backlist.push_back(new STR(reg, address("fp", -8 - 4 * vartable[index].index)));
+                        int regt = getCanUseRegForCalExp();
+                        backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                        backlist.push_back(new STR(reg, address("fp", regt, "-")));
+                        freeRegForCalExp(regt);
                     }
                     freeRegForCalExp(reg);
                     break;
@@ -643,7 +656,9 @@ namespace compiler::back {
             tableIndex--;
         }
         if (localVarSpace > 0) {
-            backlist.push_back(new OP("add", "sp", "sp", "#" + to_string(localVarSpace * 4)));
+            int reg = getCanUseRegForCalExp();
+            backlist.push_back(new LDR(reg, localVarSpace * 4));
+            backlist.push_back(new OP("add", "sp", "sp", reg));
         }
     }
 
@@ -677,10 +692,13 @@ namespace compiler::back {
                     backlist.push_back(new MOV32(reg, name));
                     //backlist.push_back(new LDR(reg, name));
                     //读到ldr reg,[reg]
-                    backlist.push_back(new LDR(reg, address(reg,0)));
+                    backlist.push_back(new LDR(reg, address(reg, 0)));
                 } else {
                     //读到ldr reg, [fp, #offset]
-                    backlist.push_back(new LDR(reg, address("fp", -8 - 4 * vartable[index].index)));
+                    int regt = getCanUseRegForCalExp();
+                    backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                    backlist.push_back(new LDR(reg, address("fp", regt, "-")));
+                    freeRegForCalExp(regt);
                 }
                 return reg;
             }
@@ -810,7 +828,7 @@ namespace compiler::back {
         switch (expression->op) {
             case SUB: {
                 int regnum = getCanUseRegForCalExp();
-                backlist.push_back(new MOV(regnum, 0));
+                backlist.push_back(new LDR(regnum, 0));
                 backlist.push_back(new OP("sub", reg, regnum, reg));
                 freeRegForCalExp(regnum);
                 break;
@@ -855,7 +873,10 @@ namespace compiler::back {
             //取地址到regyomul
             regtomul = getCanUseRegForCalExp();
             if (index != -1 && getvar->ispointer) {
-                backlist.push_back(new LDR(regtomul, address("fp", -8 - 4 * vartable[index].index)));
+                int regt = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                backlist.push_back(new LDR(regtomul, address("fp", regt, "-")));
+                freeRegForCalExp(regt);
             } else if (index == -1) {
                 backlist.push_back(new MOV32(regtomul, name));
                 //backlist.push_back(new LDR(regtomul, name));
@@ -885,18 +906,18 @@ namespace compiler::back {
                     freeRegForCalExp(reg2);
                 }
             }
-            if (offset * 4 <= 65535) {
-                backlist.push_back(new OP("add", regtomul, regtomul, "#" + to_string(offset * 4)));
-            } else {
-                int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg1, offset * 4));
-                backlist.push_back(new OP("add", regtomul, regtomul, reg1));
-                freeRegForCalExp(reg1);
-            }
+            int reg11 = getCanUseRegForCalExp();
+            backlist.push_back(new LDR(reg11, offset * 4));
+            backlist.push_back(new OP("add", regtomul, regtomul, reg11));
+            freeRegForCalExp(reg11);
+
             int reg1 = getCanUseRegForCalExp();
             //取到数组的开始地址
             if (index != -1 && getvar->ispointer) {
-                backlist.push_back(new LDR(reg1, address("fp", -8 - 4 * vartable[index].index)));
+                int regt = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                backlist.push_back(new LDR(reg1, address("fp", regt, "-")));
+                freeRegForCalExp(regt);
             } else if (index == -1) {
                 backlist.push_back(new MOV32(reg1, name));
                 //backlist.push_back(new LDR(reg1, name));

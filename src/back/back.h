@@ -25,12 +25,8 @@ namespace compiler::back {
     public:
         string addr;
 
-        address(string reg, int offset) {
-            if (offset == 0) {
-                addr = "[" + reg + "]";
-            } else {
-                addr = "[" + reg + ",#" + to_string(offset) + "]";
-            }
+        address(string reg, int reg1, string s) {
+            addr = "[" + reg + ","+ s + to_string(reg1) + "]";
         }
 
         address(int reg, int offset) {
@@ -174,9 +170,6 @@ namespace compiler::back {
 
     class MOV : public INS {
     public:
-        MOV(int reg, int value) : INS(mov16) {
-            fullIns = "\tmov\tr" + to_string(reg) + ", #" + to_string(value) + "\n";
-        }
 
         MOV(int reg, int reg2, string type) : INS(mov16) {
             if (type == "reg2reg") {
@@ -232,8 +225,8 @@ namespace compiler::back {
             fullIns = "\t" + op + " r" + to_string(rd) + ", r" + to_string(rn) + ", " + op2 + "\n";
         }
 
-        OP(string op, string rd, string rn, string op2) : INS(option) {
-            fullIns = "\t" + op + " " + rd + ", " + rn + ", " + op2 + "\n";
+        OP(string op, string rd, string rn, int reg) : INS(option) {
+            fullIns = "\t" + op + " " + rd + ", " + rn + ", r" + to_string(reg) + "\n";
         }
     };
 

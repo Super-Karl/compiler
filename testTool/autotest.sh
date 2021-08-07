@@ -75,6 +75,7 @@ then
       ./testcase > testcase.out
       echo -e "\n" > testcase.out
       echo $? >> testcase.out
+      sed '/^\s*$/d' testcase.out
       sed '/^[  ]*$/d' testcase.out
     fi
 
@@ -140,6 +141,7 @@ then
     ./testcase >testcase.out
     echo -e "\n" > testcase.out
     echo $? >>testcase.out
+    sed '/^\s*$/d' testcase.out
     sed '/^[  ]*$/d' testcase.out
   fi
 

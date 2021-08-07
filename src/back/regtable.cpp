@@ -16,6 +16,7 @@ namespace compiler::back {
     //推入寄存器表
     void pushregtable(){
         regtableStack.push(regtable);
+        clearRegTableForCalExp();
     }
 
     //弹出

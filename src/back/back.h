@@ -104,6 +104,11 @@ namespace compiler::back {
                       ".global\t" + name + "\n"
                                            ".type\t" + name + ",\t%function\n" +
                       name + ":\n";
+            if(name=="main"){
+                fullIns = fullIns+"\tmov32 r0, 10000\n"
+                                  "\tmov r12, sp\n"
+                                  "\tsub sp, sp, r0\n";
+            }
         }
     };
 

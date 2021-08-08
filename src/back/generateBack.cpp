@@ -715,7 +715,7 @@ namespace compiler::back {
                     if (regt > 7) {
                         backlist.push_back(new LDR(8, 8 + 4 * vartable[index].index));
                         backlist.push_back(new LDR(9, address("fp", 8, "-")));
-                        backlist.push_back(new STR(9, address("r12", -4 * (reg - 7))));
+                        backlist.push_back(new STR(9, address("r12", -4 * (regt - 7))));
                     } else {
                         backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
                         backlist.push_back(new LDR(reg, address("fp", regt, "-")));

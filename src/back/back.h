@@ -29,6 +29,10 @@ namespace compiler::back {
             addr = "[" + reg + "," + s + "r" + to_string(reg1) + "]";
         }
 
+        address(string reg, int reg1) {
+            addr = "[" + reg + ","  + to_string(reg1) + "]";
+        }
+
         address(int reg, int offset) {
             if (offset == 0) {
                 addr = "[r" + to_string(reg) + "]";

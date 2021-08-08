@@ -166,12 +166,9 @@ then
 #build项目
 elif test "$1" == "-b"
 then
-  if test [! -d "../build"]
-  then
-    mkdir ../build && cd ../build || exit
+    cd ../build || exit
     cmake ..
     make
     cd ../testTool || exit
-  fi
 
 fi

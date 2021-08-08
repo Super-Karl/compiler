@@ -685,7 +685,7 @@ namespace compiler::back {
                 int reg = getCanUseRegForCalExp();
                 if (reg > 7) {
                     backlist.push_back(new STR(0, address("r12", -4 * (reg - 7))));
-                }else{
+                } else {
                     backlist.push_back(new MOV(reg, 0, "reg2reg"));
                 }
                 return reg;
@@ -697,14 +697,13 @@ namespace compiler::back {
                 int index = tableFind(vartable, name);
                 if (index == -1) {
                     //全局变量
-                    if(reg>7){
+                    if (reg > 7) {
                         //取地址到ldr reg,=name
                         backlist.push_back(new MOV32(8, name));
                         //读到ldr reg,[reg]
                         backlist.push_back(new LDR(8, address(8, 0)));
                         backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
-                    }else
-                    {
+                    } else {
                         //取地址到ldr reg,=name
                         backlist.push_back(new MOV32(reg, name));
                         //读到ldr reg,[reg]
@@ -713,12 +712,11 @@ namespace compiler::back {
                 } else {
                     //读到ldr reg, [fp, #offset]
                     int regt = getCanUseRegForCalExp();
-                    if(regt>7){
+                    if (regt > 7) {
                         backlist.push_back(new LDR(8, 8 + 4 * vartable[index].index));
                         backlist.push_back(new LDR(9, address("fp", 8, "-")));
                         backlist.push_back(new STR(9, address("r12", -4 * (reg - 7))));
-                    }else
-                    {
+                    } else {
                         backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
                         backlist.push_back(new LDR(reg, address("fp", regt, "-")));
                     }
@@ -728,11 +726,10 @@ namespace compiler::back {
             }
             case ArrayIdentifierType: {
                 int reg = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression));
-                if(reg>7){
+                if (reg > 7) {
                     backlist.push_back(new LDR(8, address(reg, 0)));
                     backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
-                }else
-                {
+                } else {
                     backlist.push_back(new LDR(reg, address(reg, 0)));
                 }
                 return reg;
@@ -754,9 +751,20 @@ namespace compiler::back {
 
     int generateBinaryExp(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression) {
         int reg1 = generateExp(vartable, backlist, expression->leftExpr);
+        int rreg1 = reg1;
         int reg2;
+        int rreg2;
         if (expression->op != AND_OP && expression->op != OR_OP) {
             reg2 = generateExp(vartable, backlist, expression->rightExpr);
+            rreg2 = reg2;
+            if (reg1 > 7) {
+                backlist.push_back(new LDR(9, address("r12", -4 * (reg1 - 7))));
+                reg1 = 9;
+            }
+            if (reg2 > 7) {
+                backlist.push_back(new LDR(10, address("r12", -4 * (reg2 - 7))));
+                reg2 = 10;
+            }
         }
         switch (expression->op) {
             case ADD: {
@@ -777,6 +785,9 @@ namespace compiler::back {
             }
             case MOD: {
                 int regm = getCanUseRegForCalExp();
+                if (regm > 7) {
+                    regm = 8;
+                }
                 backlist.push_back(new OP("sdiv", regm, reg1, reg2));
                 backlist.push_back(new OP("mul", regm, regm, reg2));
                 backlist.push_back(new OP("sub", reg1, reg1, regm));
@@ -825,6 +836,15 @@ namespace compiler::back {
                 backlist.push_back(new MOV("eq", reg1, 0));
                 backlist.push_back(new B("eq", "and_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
+                rreg2 = reg2;
+                if (reg1 > 7) {
+                    backlist.push_back(new LDR(9, address("r12", -4 * (reg1 - 7))));
+                    reg1 = 9;
+                }
+                if (reg2 > 7) {
+                    backlist.push_back(new LDR(10, address("r12", -4 * (reg2 - 7))));
+                    reg2 = 10;
+                }
                 backlist.push_back(new OP("and", reg1, reg1, reg2));
                 backlist.push_back(new Lable("and_" + to_string(id)));
                 break;
@@ -835,6 +855,15 @@ namespace compiler::back {
                 backlist.push_back(new MOV("ne", reg1, 1));
                 backlist.push_back(new B("ne", "orr_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
+                rreg2 = reg2;
+                if (reg1 > 7) {
+                    backlist.push_back(new LDR(9, address("r12", -4 * (reg1 - 7))));
+                    reg1 = 9;
+                }
+                if (reg2 > 7) {
+                    backlist.push_back(new LDR(10, address("r12", -4 * (reg2 - 7))));
+                    reg2 = 10;
+                }
                 backlist.push_back(new OP("orr", reg1, reg1, reg2));
                 backlist.push_back(new Lable("orr_" + to_string(id)));
                 break;
@@ -849,15 +878,26 @@ namespace compiler::back {
                 cout << "未匹配运算符" << endl;
             }
         }
-        freeRegForCalExp(reg2);
-        return reg1;
+        freeRegForCalExp(rreg2);
+        if (rreg1 > 7) {
+            backlist.push_back(new STR(9, address("r12", -4 * (rreg1 - 7))));
+        }
+        return rreg1;
     }
 
     int generateUnaryExp(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression) {
         int reg = generateExp(vartable, backlist, expression->right);
+        int rreg = reg;
+        if (reg > 7) {
+            backlist.push_back(new LDR(9, address("r12", -4 * (reg - 7))));
+            reg = 9;
+        }
         switch (expression->op) {
             case SUB: {
                 int regnum = getCanUseRegForCalExp();
+                if (regnum > 7) {
+                    regnum = 8;
+                }
                 backlist.push_back(new LDR(regnum, 0));
                 backlist.push_back(new OP("sub", reg, regnum, reg));
                 freeRegForCalExp(regnum);
@@ -870,7 +910,10 @@ namespace compiler::back {
                 break;
             }
         }
-        return reg;
+        if (rreg > 7) {
+            backlist.push_back(new STR(9, address("r12", -4 * (rreg - 7))));
+        }
+        return rreg;
     }
 
     int getArrayArgAddress(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::ArrayIdentifier *expression) {

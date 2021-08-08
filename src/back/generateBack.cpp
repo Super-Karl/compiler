@@ -213,11 +213,23 @@ namespace compiler::back {
                 offset += static_cast<NumberExpression *>(expression->index.back())->value;
             else {
                 regtomul = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(expression->index.back())->value * 4));
+                if(regtomul>7){
+                    backlist.push_back(new LDR(8, static_cast<NumberExpression *>(expression->index.back())->value * 4));
+                    backlist.push_back(new STR(8, address("r12", -4 * (regtomul - 7))));
+                }else
+                {
+                    backlist.push_back(new LDR(regtomul, static_cast<NumberExpression *>(expression->index.back())->value * 4));
+                }
             }
         } else {
             regtomul = generateExp(vartable, backlist, expression->index.back());
-            backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
+            if(regtomul>7){
+                backlist.push_back(new LDR(8, address("r12", -4 * (regtomul - 7))));
+                backlist.push_back(new OP("lsl", 8, 8, "#2"));
+                backlist.push_back(new STR(8, address("r12", -4 * (regtomul - 7))));
+            }else{
+                backlist.push_back(new OP("lsl", regtomul, regtomul, "#2"));
+            }
         }
         //计算地址
         if (allNum) {
@@ -225,61 +237,146 @@ namespace compiler::back {
             regtomul = getCanUseRegForCalExp();
             if (index != -1 && getvar->ispointer) {
                 int regt = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
-                backlist.push_back(new LDR(regtomul, address("fp", regt, "-")));
+                if(regt>7){
+                    backlist.push_back(new LDR(8, 8 + 4 * vartable[index].index));
+                    if(regtomul>7){
+                        backlist.push_back(new LDR(9, address("fp", 8, "-")));
+                        backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+                    }else{
+                        backlist.push_back(new LDR(regtomul, address("fp", 8, "-")));
+                    }
+                }else{
+                    backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                    if(regtomul>7){
+                        backlist.push_back(new LDR(8, address("fp", regt, "-")));
+                        backlist.push_back(new STR(8, address("r12", -4 * (regtomul - 7))));
+                    }else{
+                        backlist.push_back(new LDR(regtomul, address("fp", regt, "-")));
+                    }
+                }
+
                 freeRegForCalExp(regt);
             } else if (index == -1) {
-                backlist.push_back(new MOV32(regtomul, name));
+                if(regtomul>7){
+                    backlist.push_back(new MOV32(8, name));
+                    backlist.push_back(new STR(8, address("r12", -4 * (regtomul - 7))));
+                }else{
+                    backlist.push_back(new MOV32(regtomul, name));
+                }
                 //backlist.push_back(new LDR(regtomul, name));
             } else {
-                int reg1 = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg1, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", regtomul, "fp", reg1));
-                freeRegForCalExp(reg1);
+                    if(regtomul>7){
+                        backlist.push_back(new LDR(8, 4 * getvar->index + 8));
+                        backlist.push_back(new OP("sub", 9, "fp", 8));
+                        backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+                    }else
+                    {
+                        backlist.push_back(new LDR(8, 4 * getvar->index + 8));
+                        backlist.push_back(new OP("sub", regtomul, "fp", 8));
+                    }
             }
-            int reg = getCanUseRegForCalExp();
-            backlist.push_back(new LDR(reg, 4 * offset));
-            backlist.push_back(new OP("add", regtomul, regtomul, reg));
-            freeRegForCalExp(reg);
+            backlist.push_back(new LDR(8, 4 * offset));
+            if(regtomul>7){
+                backlist.push_back(new LDR(9, address("r12", -4 * (regtomul - 7))));
+                backlist.push_back(new OP("add", 9, 9, 8));
+                backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+            }else{
+                backlist.push_back(new OP("add", regtomul, regtomul, 8));
+            }
         } else {
             //计算地址偏移量到regtomul
             for (int i = 1; i < getvar->arrayIndex.size(); i++) {
                 if (expression->index[i - 1]->nodetype != NumberExpressionType) {
                     int reg1 = generateExp(vartable, backlist, expression->index[i - 1]);
-                    int reg2 = getCanUseRegForCalExp();
                     int leftIndex = 1;
                     for (int j = i; j < getvar->arrayIndex.size(); j++) {
                         leftIndex = leftIndex * getvar->arrayIndex[j];
                     }
-                    backlist.push_back(new LDR(reg2, leftIndex * 4));
-                    backlist.push_back(new MLA(regtomul, reg1, reg2, regtomul));
+                    backlist.push_back(new LDR(8, leftIndex * 4));
+                    if(reg1>7){
+                        if(regtomul>7){
+                            backlist.push_back(new LDR(9, address("r12", -4 * (regtomul - 7))));
+                            backlist.push_back(new LDR(10, address("r12", -4 * (reg1 - 7))));
+                            backlist.push_back(new MLA(9, 10, 8, 9));
+                            backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+                        }else
+                        {
+                            backlist.push_back(new LDR(10, address("r12", -4 * (reg1 - 7))));
+                            backlist.push_back(new MLA(regtomul, 10, 8, regtomul));
+                        }
+                    }else{
+                        if(regtomul>7){
+                            backlist.push_back(new LDR(9, address("r12", -4 * (regtomul - 7))));
+                            backlist.push_back(new MLA(9, reg1, 8, 9));
+                            backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+                        }else
+                        {
+                            backlist.push_back(new MLA(regtomul, reg1, 8, regtomul));
+                        }
+                    }
+
                     freeRegForCalExp(reg1);
-                    freeRegForCalExp(reg2);
                 }
             }
 
-            int reg11 = getCanUseRegForCalExp();
-            backlist.push_back(new LDR(reg11, offset * 4));
-            backlist.push_back(new OP("add", regtomul, regtomul, reg11));
-            freeRegForCalExp(reg11);
+            backlist.push_back(new LDR(8, offset * 4));
+            if(regtomul>7){
+                backlist.push_back(new LDR(9, address("r12", -4 * (regtomul - 7))));
+                backlist.push_back(new OP("add", 9, 9, 8));
+                backlist.push_back(new STR(9, address("r12", -4 * (regtomul - 7))));
+            }else{
+                backlist.push_back(new OP("add", regtomul, regtomul, 8));
+            }
+
 
             int reg1 = getCanUseRegForCalExp();
             //取到数组的开始地址
             if (index != -1 && getvar->ispointer) {
-                int regt = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
-                backlist.push_back(new LDR(reg1, address("fp", regt, "-")));
-                freeRegForCalExp(regt);
+                backlist.push_back(new LDR(8, 8 + 4 * vartable[index].index));
+                if(reg1>7){
+                    backlist.push_back(new LDR(9, address("fp", 8, "-")));
+                    backlist.push_back(new STR(9, address("r12", -4 * (reg1 - 7))));
+                }else{
+                    backlist.push_back(new LDR(reg1, address("fp", 8, "-")));
+                }
+
             } else if (index == -1) {
-                backlist.push_back(new MOV32(reg1, name));
-                //backlist.push_back(new LDR(reg1, name));
+                if(reg1>7){
+                    backlist.push_back(new MOV32(8, name));
+                    backlist.push_back(new STR(8, address("r12", -4 * (reg1 - 7))));
+                }else{
+                    backlist.push_back(new MOV32(reg1, name));
+                }
             } else {
-                int reg2 = getCanUseRegForCalExp();
-                backlist.push_back(new LDR(reg2, 4 * getvar->index + 8));
-                backlist.push_back(new OP("sub", reg1, "fp", reg2));
-                freeRegForCalExp(reg2);
+                backlist.push_back(new LDR(9, 4 * getvar->index + 8));
+                if(reg1>7){
+                    backlist.push_back(new OP("sub", 8, "fp", 9));
+                    backlist.push_back(new STR(8, address("r12", -4 * (reg1 - 7))));
+                }else{
+                    backlist.push_back(new OP("sub", reg1, "fp", 9));
+                }
             }
-            backlist.push_back(new OP("add", regtomul, reg1, regtomul));
+            if(regtomul>7){
+                if(reg1>7){
+                    backlist.push_back(new LDR(9, address("r12", -4 * (reg1 - 7))));
+                    backlist.push_back(new LDR(10, address("r12", -4 * (regtomul - 7))));
+                    backlist.push_back(new OP("add", 10, 9, 10));
+                    backlist.push_back(new STR(10, address("r12", -4 * (regtomul - 7))));
+                }else{
+                    backlist.push_back(new LDR(10, address("r12", -4 * (regtomul - 7))));
+                    backlist.push_back(new OP("add", 10, reg1, 10));
+                    backlist.push_back(new STR(10, address("r12", -4 * (regtomul - 7))));
+                }
+            }
+            else{
+                if(reg1>7){
+                    backlist.push_back(new LDR(9, address("r12", -4 * (reg1 - 7))));
+                    backlist.push_back(new OP("add", regtomul, 9, regtomul));
+                }else{
+                    backlist.push_back(new OP("add", regtomul, reg1, regtomul));
+                }
+            }
+
             freeRegForCalExp(reg1);
         }
         return regtomul;

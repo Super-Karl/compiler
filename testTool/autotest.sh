@@ -139,16 +139,16 @@ then
   then
     cp "${dir}/${inputfile}" testcase.in
     ./testcase < testcase.in >testcase.out
-    echo -e "\n" > testcase.out
+#    echo -e "\n" > testcase.out
     echo $? >>testcase.out
-    sed '/^\s*$/d' testcase.out
-    sed '/^[  ]*$/d' testcase.out
+#    sed '/^\s*$/d' testcase.out
+#    sed '/^[  ]*$/d' testcase.out
   else
     ./testcase >testcase.out
-    echo -e "\n" > testcase.out
+#    echo -e "\n" > testcase.out
     echo $? >>testcase.out
-    sed '/^\s*$/d' testcase.out
-    sed '/^[  ]*$/d' testcase.out
+#    sed '/^\s*$/d' testcase.out
+#    sed '/^[  ]*$/d' testcase.out
   fi
 
 #  sed -i "1d" testcase.out
@@ -166,12 +166,9 @@ then
 #build项目
 elif test "$1" == "-b"
 then
-  if test [! -d "../build"]
-  then
-    mkdir ../build && cd ../build || exit
+    cd ../build || exit
     cmake ..
     make
     cd ../testTool || exit
-  fi
 
 fi

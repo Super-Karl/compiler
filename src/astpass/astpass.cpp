@@ -134,6 +134,7 @@ namespace compiler::astpassir {
 
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
 //        std::cout << "开始优化ast" << std::endl;
+        Hash topDec;
         //遍历根节点中的Block,建立哈希表
         for (auto node:root->codeBlock) {
             if (node->nodetype == DeclareStatementType) {
@@ -151,17 +152,23 @@ namespace compiler::astpassir {
                             FirstPassArray(subNode, constTbale);
                             break;
                         }
+                        case VarDeclareType:{
+                            static_cast<VarDeclare *>(subNode)->value = new NumberExpression(0);
+                            topDec[static_cast<VarDeclare *>(subNode)->name->name] = 0;
+                            break;
+                        }
                         case VarDeclareWithInitType: {
-                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExpr(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale);
+                            static_cast<VarDeclareWithInit *>(subNode)->value = FirstPassExprTop(static_cast<VarDeclareWithInit *>(subNode)->value, constTbale, topDec);
                             int result;
                             if (caluExpersion(static_cast<VarDeclareWithInit *>(subNode)->value, result)) {
                                 delete static_cast<VarDeclareWithInit *>(subNode)->value;
                                 static_cast<VarDeclareWithInit *>(subNode)->value = new NumberExpression(result);
+                                topDec[static_cast<VarDeclare *>(subNode)->name->name] = result;
                             }
                             break;
                         }
                         case ConstDeclareType: {
-                            static_cast<ConstDeclare *>(subNode)->value = FirstPassExpr(static_cast<ConstDeclare *>(subNode)->value, constTbale);
+                            static_cast<ConstDeclare *>(subNode)->value = FirstPassExprTop(static_cast<ConstDeclare *>(subNode)->value, constTbale, topDec);
                             //替换完后加入到hashtable中
                             int result;
                             if (caluExpersion(static_cast<ConstDeclare *>(subNode)->value, result)) {
@@ -485,6 +492,53 @@ namespace compiler::astpassir {
             }
             case UnaryExpressionType: {
                 static_cast<UnaryExpression *>(expr)->right = FirstPassExpr(static_cast<UnaryExpression *>(expr)->right, constTbale);
+                break;
+            }
+        }
+        int result;
+        if (caluExpersion(expr, result)) {
+            delete expr;
+            return new NumberExpression(result);
+        } else {
+            return expr;
+        }
+    }
+
+    compiler::front::ast::Expression *FirstPassExprTop(compiler::front::ast::Expression *expr, Hash constTbale, Hash topDec) {
+        switch (expr->nodetype) {
+            case ArrayIdentifierType: {
+                auto Id = static_cast<ArrayIdentifier *>(expr);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExprTop((*i), constTbale,topDec);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+//                        std::cout << "数组下标志不能计算";
+                    }
+                }
+                break;
+            }
+            case IdentifierType: {
+                string Name = static_cast<Identifier *>(expr)->name;
+                if (constTbale.count(Name) > 0) {
+                    delete expr;
+                    return new NumberExpression(constTbale[Name]);
+                }
+                if(topDec.count(Name)>0){
+                    delete expr;
+                    return new NumberExpression(topDec[Name]);
+                }
+                break;
+            }
+            case BinaryExpressionType: {
+                static_cast<BinaryExpression *>(expr)->rightExpr = FirstPassExprTop(static_cast<BinaryExpression *>(expr)->rightExpr, constTbale,topDec);
+                static_cast<BinaryExpression *>(expr)->leftExpr = FirstPassExprTop(static_cast<BinaryExpression *>(expr)->leftExpr, constTbale,topDec);
+                break;
+            }
+            case UnaryExpressionType: {
+                static_cast<UnaryExpression *>(expr)->right = FirstPassExprTop(static_cast<UnaryExpression *>(expr)->right, constTbale,topDec);
                 break;
             }
         }

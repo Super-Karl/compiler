@@ -99,6 +99,7 @@ namespace compiler {
 
         class VarDeclare : public Declare {
         public:
+            Expression *value;
 
             VarDeclare(Identifier *name, AstNodeType type = VarDeclareType) : Declare(name, type) {};
 

@@ -668,12 +668,7 @@ namespace compiler::back {
         switch (expression->nodetype) {
             case NumberExpressionType : {
                 int reg = getCanUseRegForCalExp();
-                if (reg > 7) {
-                    backlist.push_back(new LDR(8, static_cast<NumberExpression *>(expression)->value));
-                    backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
-                } else {
-                    backlist.push_back(new LDR(reg, static_cast<NumberExpression *>(expression)->value));
-                }
+                backlist.push_back(new LDR(reg, static_cast<NumberExpression *>(expression)->value));
                 return reg;
             }
             case FunctionCallType: {

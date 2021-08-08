@@ -725,13 +725,19 @@ namespace compiler::back {
                 return reg;
             }
             case ArrayIdentifierType: {
+                backlist.push_back(new PUSH("r1-r10"));
+                pushregtable();
                 int reg = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression));
-                if (reg > 7) {
+                backlist.push_back(new MOV(0,reg,"reg2reg"));
+                popregtable();
+                backlist.push_back(new POP("r1-r10"));
+                /*if (reg > 7) {
                     backlist.push_back(new LDR(8, address(reg, 0)));
                     backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
                 } else {
                     backlist.push_back(new LDR(reg, address(reg, 0)));
-                }
+                }*/
+                backlist.push_back(new LDR(0, address(reg, 0)));
                 return reg;
             }
             case BinaryExpressionType: {

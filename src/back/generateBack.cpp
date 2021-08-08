@@ -107,6 +107,7 @@ namespace compiler::back {
                             backlist.push_back(new GLOBALARRAY(name, temp->arrayValue));
                             break;
                         }
+                        case ConstDeclareType:
                         case VarDeclareWithInitType: {
                             int value = 0;
                             string name = subNode->name->name;
@@ -428,6 +429,7 @@ namespace compiler::back {
                                 generateBackArray(vartable, backlist, subNode);
                                 break;
                             }
+                            case ConstDeclareType:
                             case VarDeclareWithInitType: {
                                 localVarSpace++;
                                 localVarCount++;
@@ -583,6 +585,7 @@ namespace compiler::back {
                             generateBackArray(vartable, backlist, subNode);
                             break;
                         }
+                        case ConstDeclareType:
                         case VarDeclareWithInitType: {
                             localVarSpace++;
                             localVarCount++;

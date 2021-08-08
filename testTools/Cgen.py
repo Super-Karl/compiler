@@ -238,6 +238,7 @@ def GlobalArrayDef(l):
 
 def GlobalVarDef(l):
     print(f"int {CtypeName(l[0])}",end='')
+    variableSet.add(CtypeName(l[0]))
     if len(l) > 2 :
         print("=",l[1],end=';\n')
     else:

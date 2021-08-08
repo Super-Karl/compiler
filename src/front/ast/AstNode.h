@@ -99,6 +99,7 @@ namespace compiler {
 
         class VarDeclare : public Declare {
         public:
+            Expression *value;
 
             VarDeclare(Identifier *name, AstNodeType type = VarDeclareType) : Declare(name, type) {};
 
@@ -138,7 +139,7 @@ namespace compiler {
 
             ArrayInitVal *initVal;
 
-            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal();};
+            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal(); };
 
             ~ArrayDeclare();
 

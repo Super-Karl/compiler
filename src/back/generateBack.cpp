@@ -683,7 +683,11 @@ namespace compiler::back {
                 popregtable();
                 backlist.push_back(new POP("r1-r10"));
                 int reg = getCanUseRegForCalExp();
-                backlist.push_back(new MOV(reg, 0, "reg2reg"));
+                if (reg > 7) {
+                    backlist.push_back(new STR(0, address("r12", -4 * (reg - 7))));
+                }else{
+                    backlist.push_back(new MOV(reg, 0, "reg2reg"));
+                }
                 return reg;
             }
             case IdentifierType: {
@@ -693,23 +697,44 @@ namespace compiler::back {
                 int index = tableFind(vartable, name);
                 if (index == -1) {
                     //全局变量
-                    //取地址到ldr reg,=name
-                    backlist.push_back(new MOV32(reg, name));
-                    //backlist.push_back(new LDR(reg, name));
-                    //读到ldr reg,[reg]
-                    backlist.push_back(new LDR(reg, address(reg, 0)));
+                    if(reg>7){
+                        //取地址到ldr reg,=name
+                        backlist.push_back(new MOV32(8, name));
+                        //读到ldr reg,[reg]
+                        backlist.push_back(new LDR(8, address(8, 0)));
+                        backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
+                    }else
+                    {
+                        //取地址到ldr reg,=name
+                        backlist.push_back(new MOV32(reg, name));
+                        //读到ldr reg,[reg]
+                        backlist.push_back(new LDR(reg, address(reg, 0)));
+                    }
                 } else {
                     //读到ldr reg, [fp, #offset]
                     int regt = getCanUseRegForCalExp();
-                    backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
-                    backlist.push_back(new LDR(reg, address("fp", regt, "-")));
+                    if(regt>7){
+                        backlist.push_back(new LDR(8, 8 + 4 * vartable[index].index));
+                        backlist.push_back(new LDR(9, address("fp", 8, "-")));
+                        backlist.push_back(new STR(9, address("r12", -4 * (reg - 7))));
+                    }else
+                    {
+                        backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));
+                        backlist.push_back(new LDR(reg, address("fp", regt, "-")));
+                    }
                     freeRegForCalExp(regt);
                 }
                 return reg;
             }
             case ArrayIdentifierType: {
                 int reg = getArrayIdentAddress(vartable, backlist, static_cast<ArrayIdentifier *>(expression));
-                backlist.push_back(new LDR(reg, address(reg, 0)));
+                if(reg>7){
+                    backlist.push_back(new LDR(8, address(reg, 0)));
+                    backlist.push_back(new STR(8, address("r12", -4 * (reg - 7))));
+                }else
+                {
+                    backlist.push_back(new LDR(reg, address(reg, 0)));
+                }
                 return reg;
             }
             case BinaryExpressionType: {

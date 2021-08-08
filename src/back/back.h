@@ -30,7 +30,7 @@ namespace compiler::back {
         }
 
         address(string reg, int reg1) {
-            addr = "[" + reg + ","  + to_string(reg1) + "]";
+            addr = "[" + reg + ",#"  + to_string(reg1) + "]";
         }
 
         address(int reg, int offset) {

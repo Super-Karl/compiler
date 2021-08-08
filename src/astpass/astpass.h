@@ -25,8 +25,6 @@ namespace compiler::astpassir {
 
     compiler::front::ast::Expression *FirstPassExpr(compiler::front::ast::Expression *expr, Hash constTbale);
 
-    compiler::front::ast::Expression *FirstPassExprTop(compiler::front::ast::Expression *expr, Hash constTbale, Hash topDec);
-
     vector<compiler::front::ast::Expression *> FirstPassArrayLinelize(int sizeIndex, vector<compiler::front::ast::Expression *> &index, vector<compiler::front::ast::Expression *> &values);
 }
 

@@ -114,12 +114,17 @@ namespace compiler::mid::ir {
   void printOpName(OperatorName op, char sp,bool notEnd) {
     if (notEnd && sp == '\n')
       std::cout << '\t';
+    std::string label = op.name == ""?"":"_tmp";
     switch (op.type) {
       case Type::Imm:
         std::cout << op.value << sp;
         break;
       case Type::Var:
-        std::cout << op.name << sp;
+
+        if (op.defName=="")
+          std::cout << op.name <<label<< sp;
+        else
+          std::cout << op.name << '_' <<op.defName<<sp;
         break;
       case Type::Void:
         break;

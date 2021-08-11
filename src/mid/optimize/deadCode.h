@@ -11,6 +11,8 @@
 namespace compiler::mid::pass {
   using namespace compiler::mid::ir;
 
+  void deadCodeElimination(IR *ir);
+
   void deadCodeElimination(AssignIR *assign);
 
   void deadCodeElimination(FunDefIR *funDef);

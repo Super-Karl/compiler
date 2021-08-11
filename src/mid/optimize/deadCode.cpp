@@ -32,5 +32,14 @@ namespace compiler::mid::pass {
 
   void pass::deadCodeElimination(LoadIR *load) {
   }
+  void pass::deadCodeElimination(StoreIR *store) {
+  }
+  void pass::deadCodeElimination(IRList &ir) {
+    for (auto i : ir)
+      deadCodeElimination(i);
+  }
+  void deadCodeElimination(IR *ir) {
+
+  }
 
 };// namespace compiler::mid::pass

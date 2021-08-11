@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
   compiler::astpassir::FirstPassRoot(root, constTbale);
 
   auto ir = compiler::controller::generator::genIR(root);
-  compiler::controller::generator::printIR(ir);
+  //compiler::controller::generator::printIR(ir);
   auto arm = compiler::back::genarm::genBack(ir);
     ofstream outfile;
     string outputfile=argv[3];
@@ -33,7 +33,5 @@ int main(int argc, char **argv) {
   for(auto var:arm){
       outfile<<var->print();
   }
-    outfile.close();
-  cout<<argv[3];
   return 0;
 }

@@ -133,7 +133,7 @@ namespace compiler::astpassir {
   }
 
   void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale) {
-    std::cout << "开始优化ast" << std::endl;
+    //std::cout << "开始优化ast" << std::endl;
     //遍历根节点中的Block,建立哈希表
     for (auto node:root->codeBlock) {
       if (node->nodetype == DeclareStatementType) {

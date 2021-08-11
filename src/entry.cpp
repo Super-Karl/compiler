@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <unordered_map>
 #include <map>
-#include <fstream>
 
 using namespace std;
 
@@ -21,27 +20,20 @@ int main(int argc, char **argv) {
     if(input==nullptr){
         cout<<"输出文件错误";
     }
-  //auto *argParser = new compiler::controller::ArgParser(argc, argv);
-
   auto *root = compiler::controller::generator::generate(input);
-
-//  root->print();
   Hash constTbale;
   compiler::astpassir::FirstPassRoot(root, constTbale);
 
   auto ir = compiler::controller::generator::genIR(root);
-  //if (argParser->printIR)freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
   auto arm = compiler::back::genarm::genBack(ir);
-  std::fstream file( "testcase.s", std::ios::out );
     ofstream outfile;
     string outputfile=argv[3];
+    outfile.open(outputfile);
   for(auto var:arm){
-
       outfile<<var->print();
-
-      //std::cout<<var->print();
   }
     outfile.close();
+  cout<<argv[3];
   return 0;
 }

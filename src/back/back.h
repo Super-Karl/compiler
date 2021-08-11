@@ -171,10 +171,10 @@ namespace compiler::back{
         LABEL(std::string name):LabelName(name){};
         LABEL(){};
         std::string print(){
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<LabelName;
-            outfile.close();
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<LabelName;
+            //outfile.close();
             return LabelName;
         }
     };
@@ -210,13 +210,13 @@ namespace compiler::back{
             std::string print(){
                 std::string word;
                 word+=printInstruction(OffsetInstr);
-                std::fstream outfile;
-                outfile.open("testcase.s", std::ios::app);
+                //std::fstream //outfile;
+                //outfile.open("testcase.s", std::ios::app);
                 if(OffsetNum!=0){
-                outfile<<" #"<<OffsetNum;
+                //outfile<<" #"<<OffsetNum;
                 word+=(" #"+std::to_string(OffsetNum));
                 }
-                outfile.close();
+                //outfile.close();
                 return word;
             }
     };
@@ -246,15 +246,15 @@ namespace compiler::back{
         }
         std::string print(){
             std::string word;
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
-                outfile<<RegName;
+                //outfile<<RegName;
                 word+=RegName;
                 word+=printSuffix(suffix);
                 word+=offsetoperate.print();
             }
-            outfile.close();
+            //outfile.close();
             return word;
         }
 
@@ -269,17 +269,17 @@ namespace compiler::back{
         Indirect_Reg(int num,int Offset=0);
         std::string print(){
             std::string word;
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
-                outfile<<"["<<RegName;
+                //outfile<<"["<<RegName;
                 word+=("["+RegName);
             }
-                outfile<<",#"<<Offset;
+                //outfile<<",#"<<Offset;
                 word+=(",#"+std::to_string(Offset));
-            outfile<<"]";
+            //outfile<<"]";
             word+="]";
-            outfile.close();
+            //outfile.close();
             return word;
         }
     };
@@ -293,11 +293,11 @@ namespace compiler::back{
         }
         std::string print(){
             std::string word;
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<"#"<<value;
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<"#"<<value;
             word+=("#"+std::to_string(value));
-            outfile.close();
+            //outfile.close();
             return word;
         }
 
@@ -312,11 +312,11 @@ namespace compiler::back{
         }
         std::string print(){
             std::string word;
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<value;
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<value;
             word+=value;
-            outfile.close();
+            //outfile.close();
             return word;
         }
     };
@@ -346,18 +346,18 @@ namespace compiler::back{
             if(OPERAND1!= nullptr)
                 word+=OPERAND1->print();
             if(OPERAND2!= nullptr){
-                std::fstream outfile;
-                outfile.open("testcase.s", std::ios::app);
-                outfile<<",";
-                outfile.close();
+                //std::fstream //outfile;
+                //outfile.open("testcase.s", std::ios::app);
+                //outfile<<",";
+                //outfile.close();
                 word+=",";
                 word+=OPERAND2->print();
             }
             if(OPERAND3!= nullptr){
-                std::fstream outfile;
-                outfile.open("testcase.s", std::ios::app);
-                outfile<<",";
-                outfile.close();
+                //std::fstream //outfile;
+                //outfile.open("testcase.s", std::ios::app);
+                //outfile<<",";
+                //outfile.close();
                 word+=",";
                 word+=OPERAND3->print();
             }
@@ -396,34 +396,34 @@ namespace compiler::back{
             std::string word;
             word+=label.print();
             if(label.LabelName!=""){
-                std::fstream outfile;
-                outfile.open("testcase.s", std::ios::app);
-                outfile<<": ";
-                outfile.close();
+                //std::fstream //outfile;
+                //outfile.open("testcase.s", std::ios::app);
+                //outfile<<": ";
+                //outfile.close();
                 word+=": ";
             }
             else{
-                std::fstream outfile;
-                outfile.open("testcase.s", std::ios::app);
-                outfile<<"    ";
-                outfile.close();
+                //std::fstream //outfile;
+                //outfile.open("testcase.s", std::ios::app);
+                //outfile<<"    ";
+                //outfile.close();
                 word+="    ";
             }
             word+=operation.print();
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" ";
-            outfile.close();
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" ";
+            //outfile.close();
             word+=" ";
             word+=operand.print();
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" ";
-            outfile.close();
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" ";
+            //outfile.close();
             word+=" ";
             word+=b_label.print();
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<std::endl;
-            outfile.close();
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<std::endl;
+            //outfile.close();
             word+='\n';
             return word;
         }
@@ -440,11 +440,11 @@ namespace compiler::back{
         std::string print(){
             std::string word;
             word+=printEQUKeywords(equkeywords);
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
             word+='\n';
-            outfile<<std::endl;
-            outfile.close();
+            //outfile<<std::endl;
+            //outfile.close();
             return word;
         }
     };
@@ -460,17 +460,17 @@ namespace compiler::back{
         std::string print(){
             std::string word;
             word+=printEQUKeywords(equKeywords);
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" ";
-            outfile.close();
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" ";
+            //outfile.close();
             word+=" ";
             word+=label.print();
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<std::endl;
-            outfile.close();
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<std::endl;
+            //outfile.close();
             word+='\n';
-            outfile.close();
+            //outfile.close();
             return word;
         }
     };
@@ -485,13 +485,13 @@ namespace compiler::back{
         std::string print(){
             std::string word;
             word+=printEQUKeywords(equKeywords);
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" "<<value;
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" "<<value;
             word+=(" "+std::to_string(value));
-            outfile<<std::endl;
+            //outfile<<std::endl;
             word+='\n';
-            outfile.close();
+            //outfile.close();
             return word;
         }
     };
@@ -508,20 +508,20 @@ namespace compiler::back{
         std::string print(){
             std::string word;
             word+=printEQUKeywords(equkeywords);
-            std::fstream outfile;
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" ";
-            outfile.close();
+            //std::fstream //outfile;
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" ";
+            //outfile.close();
             word+=" ";
             word+=label.print();
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<" ";
-            outfile.close();
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<" ";
+            //outfile.close();
             word+=" ";
             printType(type);
-            outfile.open("testcase.s", std::ios::app);
-            outfile<<std::endl;
-            outfile.close();
+            //outfile.open("testcase.s", std::ios::app);
+            //outfile<<std::endl;
+            //outfile.close();
             word+='\n';
             return word;
         }

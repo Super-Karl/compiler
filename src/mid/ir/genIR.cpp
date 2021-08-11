@@ -4,6 +4,7 @@
 #include "parser.hpp"
 #include <assert.h>
 #include <iostream>
+#include <math.h>
 
 using namespace compiler::mid::ir;
 namespace compiler::front::ast {
@@ -769,12 +770,25 @@ namespace compiler::front::ast {
 
 }// namespace compiler::front::ast
 
+bool is2Power(int x) {
+  double ans = log2(x);
+  return (int) ans == ans;
+}
+
+int log2(int x) {
+  int times = -1;
+  while (x > 0) {
+    x /= 2;
+    times++;
+  }
+  return times;
+}
 
 /*
  *evalOp
  */
-
 namespace compiler::front::ast {
+
   OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
     return {this->value, Type::Imm};
   }
@@ -828,7 +842,7 @@ namespace compiler::front::ast {
     /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
 
-    AssignIR *assign;
+    AssignIR *assign = nullptr;
     switch (this->op) {
       case ADD:
         assign = new AssignIR(OperatorCode::Add, dest, left, right);
@@ -838,14 +852,27 @@ namespace compiler::front::ast {
         assign = new AssignIR(OperatorCode::Sub, dest, left, right);
         ir.push_back(assign);
         break;
-      case MUL:
-        assign = new AssignIR(OperatorCode::Mul, dest, left, right);
+      case MUL: {
+        auto leftNum = dynamic_cast<NumberExpression *>(leftExpr);
+        auto rightNum = dynamic_cast<NumberExpression *>(rightExpr);
+        if (leftNum && is2Power(leftNum->value)) {
+          assign = new AssignIR(OperatorCode::Sal, dest, right, OperatorName(log2(leftNum->value), Type::Imm));
+        } else if (rightNum && is2Power(rightNum->value))
+          assign = new AssignIR(OperatorCode::Sal, dest, left, OperatorName(log2(rightNum->value), Type::Imm));
+        else
+          assign = new AssignIR(OperatorCode::Mul, dest, left, right);
         ir.push_back(assign);
         break;
-      case DIV:
-        assign = new AssignIR(OperatorCode::Div, dest, left, right);
+      }
+      case DIV: {
+        auto rightNum = dynamic_cast<NumberExpression *>(rightExpr);
+        if (rightNum && is2Power(rightNum->value))
+          assign = new AssignIR(OperatorCode::Sar, dest, left, OperatorName(log2(rightNum->value), Type::Imm));
+        else
+          assign = new AssignIR(OperatorCode::Div, dest, left, right);
         ir.push_back(assign);
         break;
+      }
       case MOD:
         assign = new AssignIR(OperatorCode::Mod, dest, left, right);
         ir.push_back(assign);

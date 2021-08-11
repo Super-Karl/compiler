@@ -8,6 +8,16 @@
 using namespace compiler::mid::ir;
 namespace compiler::front::ast {
   void AST::genIR(IRList &ir, RecordTable *record) {
+    //注册sysy的库函数
+    record->setFunRet({"getint", ElemType::INT});
+    record->setFunRet({"getch", ElemType::INT});
+    record->setFunRet({"getarray", ElemType::INT});
+    record->setFunRet({"putint", ElemType::VOID});
+    record->setFunRet({"putch", ElemType::VOID});
+    record->setFunRet({"putarray", ElemType::VOID});
+    record->setFunRet({"_sysy_starttime", ElemType::VOID});
+    record->setFunRet({"_sysy_stoptime", ElemType::VOID});
+
     for (auto i : codeBlock)
       i->genIR(ir, record);
   }
@@ -239,10 +249,10 @@ namespace compiler::front::ast {
       if (!record->isInLoop()) {
         try {
           varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-          var->addVarUse(varUse);
+          //          var->addVarUse(varUse);
         } catch (...) {
           varUse = VarRedefChain(assign->dest.name, 0);
-          var->addVarUse(varUse);
+          //          var->addVarUse(varUse);
         }
       }
       varUse = VarRedefChain(assign->dest.name, 0);

@@ -38,8 +38,10 @@ int main(int argc, char **argv) {
   cout<<endl<<endl<<endl;
   auto arm = compiler::back::genarm::genBack(ir);
   std::fstream file( "testcase.s", std::ios::out );
+
   for(auto var:arm){
-      std::cout<<var->print();
+      outfile<<var->print();
+      //std::cout<<var->print();
   }
   return 0;
 }

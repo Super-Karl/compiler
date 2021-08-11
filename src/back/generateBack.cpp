@@ -358,6 +358,10 @@ namespace compiler::back {
         int localVarSpace = 0;
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
+                case BlockType:{
+                    generateBlock(vartable, backlist, static_cast<Block *>(*item), nowWhileId);
+                    break;
+                }
                 case BreakStatemetType: {
                     backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
                     break;

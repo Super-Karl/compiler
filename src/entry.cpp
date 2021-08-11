@@ -21,9 +21,6 @@ int main(int argc, char **argv) {
     if(input==nullptr){
         cout<<"输出文件错误";
     }
-    ofstream outfile;
-    string outputfile=argv[3];
-    outfile.open(outputfile);
   //auto *argParser = new compiler::controller::ArgParser(argc, argv);
 
   auto *root = compiler::controller::generator::generate(input);
@@ -38,6 +35,8 @@ int main(int argc, char **argv) {
   auto arm = compiler::back::genarm::genBack(ir);
   std::fstream file( "testcase.s", std::ios::out );
   for(auto var:arm){
+      ofstream outfile;
+      string outputfile=argv[3];
       outfile<<var->print();
       outfile.close();
       //std::cout<<var->print();

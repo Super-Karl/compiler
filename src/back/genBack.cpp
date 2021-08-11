@@ -171,9 +171,17 @@ namespace compiler::back::genarm{
                     }
                     //函数返回部分
                     compiler::mid::ir::RetIR *retInstr=dynamic_cast<compiler::mid::ir::RetIR *>(funcBody);
-                    if(funcallInstr!=nullptr){
-                        op = new compiler::back::OPERATION(compiler::back::Instruction::BL);
+                    if(retInstr!=nullptr){
+                        if(retInstr->retVal.type==compiler::mid::ir::Type::Imm) {
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                            auto r0 = new compiler::back::Direct_Reg("r0");
+                            auto Imm = new compiler::back::ImmNum(retInstr->retVal.value);
+                            auto OPERAND1 = new compiler::back::OPERAND(r0, Imm);
+                            auto sentence1 = new compiler::back::Instr_Sentence(*op, *OPERAND1);
+                            auto op2=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                            auto r14=new  compiler::back::Direct_Reg("r14");
 
+                        }
 
                     }
                     //函数if导致的跳转

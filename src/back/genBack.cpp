@@ -46,6 +46,7 @@ namespace compiler::back::genarm{
             int startStackSize=0;
             int curStack=0;
             int arraySize=0;
+            int returnflag=0;//监测是否返回过
             vector<int> LDRlr;
             map<string,string> usedReg;//变量和寄存器的映射关系
             vector<string> Regs;//使用过的寄存器
@@ -172,17 +173,43 @@ namespace compiler::back::genarm{
                     //函数返回部分
                     compiler::mid::ir::RetIR *retInstr=dynamic_cast<compiler::mid::ir::RetIR *>(funcBody);
                     if(retInstr!=nullptr){
-                        if(retInstr->retVal.type==compiler::mid::ir::Type::Imm) {
-                            op = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
-                            auto r0 = new compiler::back::Direct_Reg("r0");
-                            auto Imm = new compiler::back::ImmNum(retInstr->retVal.value);
-                            auto OPERAND1 = new compiler::back::OPERAND(r0, Imm);
-                            auto sentence1 = new compiler::back::Instr_Sentence(*op, *OPERAND1);
-                            auto op2=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
-                            auto r14=new  compiler::back::Direct_Reg("r14");
+                        if(returnflag==0) {
+                            returnflag=1;
+                            if (retInstr->retVal.type == compiler::mid::ir::Type::Imm) {
+                                op = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto r0 = new compiler::back::Direct_Reg("r0");
+                                auto Imm = new compiler::back::ImmNum(retInstr->retVal.value);
+                                auto OPERAND1 = new compiler::back::OPERAND(r0, Imm);
+                                auto sentence1 = new compiler::back::Instr_Sentence(*op, *OPERAND1);
+                                armList.push_back(sentence1);
 
+                                auto op2 = new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                                auto r14 = new compiler::back::Direct_Reg("lr");
+                                auto sp0 = new compiler::back::Indirect_Reg("sp", 0);
+                                auto OPERAND2 = new compiler::back::OPERAND(r14, sp0);
+                                auto sentence2 = new compiler::back::Instr_Sentence(*op2, *OPERAND2);
+                                armList.push_back(sentence2);
+
+                                auto op3 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+                                auto sp = new compiler::back::Direct_Reg("sp");
+                                auto imm4 = new compiler::back::ImmNum(4);
+                                auto OPERAND3 = new compiler::back::OPERAND(sp, sp, imm4);
+                                auto sentence3 = new compiler::back::Instr_Sentence(*op3, *OPERAND3);
+                                armList.push_back(sentence3);
+
+                                auto op4 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto pc = new compiler::back::Direct_Reg("pc");
+                                auto OPERAND4 = new compiler::back::OPERAND(pc, r14);
+                                auto sentence4 = new compiler::back::Instr_Sentence(*op4, *OPERAND4);
+                                armList.push_back(sentence4);
+
+                                auto op5 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto imm0 = new compiler::back::ImmNum(0);
+                                auto OPERAND5 = new compiler::back::OPERAND(r14, imm0);
+                                auto sentence5 = new compiler::back::Instr_Sentence(*op5, *OPERAND5);
+                                armList.push_back(sentence5);
+                            }
                         }
-
                     }
                     //函数if导致的跳转
                     compiler::mid::ir::JmpIR *jumpInstr=dynamic_cast<compiler::mid::ir::JmpIR *>(funcBody);

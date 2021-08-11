@@ -518,7 +518,7 @@ namespace compiler::back{
             //outfile<<" ";
             //outfile.close();
             word+=" ";
-            printType(type);
+            word+=printType(type);
             //outfile.open("testcase.s", std::ios::app);
             //outfile<<std::endl;
             //outfile.close();

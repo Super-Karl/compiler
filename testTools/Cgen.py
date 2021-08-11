@@ -211,8 +211,22 @@ def vnot(op):
 def nop(i):
     """nop"""
     pass
-
-
+def sal(l):
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}<<{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}<<{CtypeName(l[2])};")
+    res = CtypeName(l[0])
+def sar(l):
+    global res ,variableSet
+    if not CtypeName(l[0]) in variableSet:
+        print(f"int {CtypeName(l[0])}={CtypeName(l[1])}>>{CtypeName(l[2])};")
+        variableSet.add(CtypeName(l[0]))
+    else:
+        print(f"{CtypeName(l[0])}={CtypeName(l[1])}>>{CtypeName(l[2])};")
+    res = CtypeName(l[0])
 def load(l):
     """load()"""
     print(f"int {CtypeName(l[0])}={CtypeName(l[2][:-1])}[{CtypeName(l[1],ctr=False)}];")
@@ -270,6 +284,8 @@ opMap = {
     "Nop":nop,
     "Load": load,
     "Store":store,
+    "Sal":sal,
+    "Sar":sar,
     ".GlobalArray":GlobalArrayDef,
     ".Global":GlobalVarDef,
 }

@@ -696,6 +696,9 @@ namespace compiler::front::ast {
    * */
   void Expression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp) {
     try {
+      if (record->isInLoop()){
+        throw runtime_error("");
+      }
       if (this->eval(record)) {
         ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
       } else {
@@ -740,6 +743,9 @@ namespace compiler::front::ast {
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
     } else {
       try {
+        if (record->isInLoop()){
+          throw runtime_error("");
+        }
         if (this->eval(record)) {
           ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
         } else {

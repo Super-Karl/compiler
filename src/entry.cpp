@@ -35,12 +35,11 @@ int main(int argc, char **argv) {
   auto ir = compiler::controller::generator::genIR(root);
   //if (argParser->printIR)freopen("gen.ir","w",stdout);
   compiler::controller::generator::printIR(ir);
-  cout<<endl<<endl<<endl;
   auto arm = compiler::back::genarm::genBack(ir);
   std::fstream file( "testcase.s", std::ios::out );
-
   for(auto var:arm){
       outfile<<var->print();
+      outfile.close();
       //std::cout<<var->print();
   }
   return 0;

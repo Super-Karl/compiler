@@ -143,6 +143,9 @@ namespace compiler::back {
             } else if (arg->nodetype == ArrayIdentifierType) {
                 VAR temp = VAR(arg->name, 0, i - 2 - argsize);
                 temp.ispointer = 1;
+                for(int j=0; j< static_cast<ArrayIdentifier*>(arg)->index.size();j++){
+                    temp.arrayIndex.push_back(static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(arg)->index[j])->value);
+                }
                 vartable.push_back(temp);//value -1表示为指针
             }
         }

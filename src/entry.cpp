@@ -24,7 +24,9 @@ int main(int argc, char **argv) {
     //root->print();
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root,constTbale);
-//    root->print();
+    if(argc>6){
+        root->print();
+    }
 
     //生成后端
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);

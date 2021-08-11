@@ -520,10 +520,11 @@ namespace compiler::front::ast {
     auto newTable = new RecordTable(record);
     newTable->setInLoop(true);
 
-    auto loopLabel = new LabelIR(".LLoop" + std::to_string(newTable->getID()));
-    auto endLoopLabel = new LabelIR(".LEndLoop" + std::to_string(newTable->getID()));
-    auto testLabel = new LabelIR(".LTestLoop" + std::to_string(newTable->getID()));
-    auto continueLabel = new LabelIR(".LContinue"+std::to_string(newTable->getID()));
+    int num = newTable->getID();
+    auto loopLabel = new LabelIR(".LLoop" + std::to_string(num));
+    auto endLoopLabel = new LabelIR(".LEndLoop" + std::to_string(num));
+    auto testLabel = new LabelIR(".LTest" + std::to_string(num));
+    auto continueLabel = new LabelIR(".LContinue"+std::to_string(num));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
     IRList condIr, loopIR;
     cond->ConditionAnalysis(condIr, newTable, loopLabel, endLoopLabel, true);
@@ -565,8 +566,8 @@ namespace compiler::front::ast {
       if (pIR) {
         try {
           auto tmp = phiLoop.at(pIR->dest.defName);
-          phiLoopMov.emplace_back(new PhiIR(pIR->dest.name, tmp));
-          AntiPhiLoopMov.emplace_back(new PhiIR(tmp, pIR->dest.name));
+          phiLoopMov.emplace_back(new AssignIR(pIR->dest.name, tmp,OperatorCode::PhiMov));
+          AntiPhiLoopMov.emplace_back(new AssignIR(tmp, pIR->dest.name,OperatorCode::PhiMov));
           phiLoop.erase(pIR->dest.defName);
         } catch (out_of_range) {
         }

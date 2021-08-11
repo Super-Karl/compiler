@@ -109,7 +109,7 @@ namespace compiler::mid::ir {
         std::cout << "Alloca ";
         break;
       case OperatorCode::PhiMov:
-        std::cout << "PhiMov";
+        std::cout << "PhiMov ";
         break;
     }
   }

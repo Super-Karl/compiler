@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include "controller/controller.h"
 //using parser::ast;
 
@@ -16,13 +17,56 @@ extern int yylex_destroy();
 #define YYDEBUG 1
 #define YYERROR_VERBOSE true
 
+int hexV[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 void yyerror(const char *s){
     printf("line %d : error: %s\n", yyget_lineno(),s);
     yylex_destroy();
     if (!yydebug)
         std::exit(1);
 }
-
+int hex2int(const char* s){
+    int num = 0;
+    int i = 0;
+    while(s[i]!='\0'){
+        num = num * 16 + hexV[s[i]];
+        i++;
+    }
+    return num;
+}
+int oct2int(const char* s){
+    int num = 0;
+    int i = 0;
+    while(s[i]!='\0'){
+        num = num * 10 + s[i] - '0';
+        i++;
+    }
+}
+int s2i(const char* s){
+    int i = 0;
+    bool neg = 1;
+    int num =0;
+    if (s[i]=='-'){
+        neg = -1;
+    }
+    if (s[i]== '+'){
+        i++;
+    }
+    if (s[i]=='0'){
+        i++;
+        if (s[i]=='x'){
+            return hex2int(s+i+1) * neg;
+        }
+        else if (s[i]!='\0'){
+            return oct2int(s+i) * neg;
+        }
+        else return 0;
+    }
+    while(s[i]!='\0'){
+        num = num * 10 + s[i] - '0';
+        i++;
+    }
+    return num*neg;
+}
 %}
 
 %union {
@@ -276,7 +320,7 @@ RelOP:LT
     |GE
     ;
 
-Number: NUM {$$ = new front::ast::NumberExpression(std::stoi(*$1,0,0));}
+Number: NUM {$$ = new front::ast::NumberExpression(s2i($1->c_str()));}
     ;
 
 Ident: IDENTIFIER {$$ = new front::ast::Identifier(*$1);}

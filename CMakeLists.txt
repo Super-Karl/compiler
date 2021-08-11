@@ -16,6 +16,6 @@ include_directories(src)
 file(GLOB_RECURSE srcs src/*.cpp)
 
 add_executable(compiler
-        ${srcs})
+        ${srcs} src/back/genback.h)
         #${BISON_Parser_OUTPUTS}
         #${FLEX_Scanner_OUTPUTS})

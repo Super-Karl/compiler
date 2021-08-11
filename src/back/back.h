@@ -9,6 +9,7 @@
 #define COMPILER_BACK_H
 #include <iostream>
 #include <vector>
+#include <string>
 #include <fstream>
 namespace compiler::back{
     //TODO:并没有加汇编语言程序中表达式和运算符的部分(因为我使用的时候一直在报错,所以并不明白他干了什么)
@@ -70,7 +71,7 @@ namespace compiler::back{
         TEQ,
         TST
     };//TODO 加上除法(没有除法?)
-    void printInstruction(Instruction instr);
+    std::string printInstruction(Instruction instr);
     enum class BarCode{
         //生成的条件码
         NOP,
@@ -90,7 +91,7 @@ namespace compiler::back{
         LE,
         AL,
     };
-    void printBarcode(BarCode barCode);
+    std::string printBarcode(BarCode barCode);
     enum class Suffix{
         //指令的后缀,只有!和 S两种
         SNOP,
@@ -98,7 +99,7 @@ namespace compiler::back{
         e_mark//指!
     };
     //加点或符号会标错,所以用其他符号先代替
-    void printSuffix(Suffix suffix);
+    std::string printSuffix(Suffix suffix);
     enum class EQUKeywords{
         //定义伪操作
        nop,
@@ -143,14 +144,14 @@ namespace compiler::back{
        unreq,
        pool
     };
-    void printEQUKeywords(EQUKeywords equKeywords);
+    std::string printEQUKeywords(EQUKeywords equKeywords);
     //前面应该加上%
     enum class TYPE{
         NOP,
         object,
         function
     };
-    void printType(TYPE type);
+    std::string printType(TYPE type);
     enum class stmType{
         NOP,
         IA,
@@ -162,19 +163,19 @@ namespace compiler::back{
         FA,
         EA
     };
-    void printstmType(stmType stmtype);
+    std::string printstmType(stmType stmtype);
     //现在是标号域
     class LABEL{
     public:
         std::string LabelName;
         LABEL(std::string name):LabelName(name){};
         LABEL(){};
-        void print(){
+        std::string print(){
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<LabelName;
-            std::cout<<LabelName;
             outfile.close();
+            return LabelName;
         }
     };
 
@@ -189,10 +190,12 @@ namespace compiler::back{
         OPERATION(Instruction instr):instruction(instr){};
         OPERATION(Instruction instruction1,stmType stmtype1):stmtype(stmtype1),instruction(instruction1){};
         OPERATION(){};
-        void print(){
-            printInstruction(instruction);
-            printBarcode(barcode);
-            printstmType(stmtype);
+        std::string print(){
+            std::string word;
+            word+=printInstruction(instruction);
+            word+=printBarcode(barcode);
+            word+=printstmType(stmtype);
+            return word;
         }
     };
 
@@ -204,15 +207,17 @@ namespace compiler::back{
             int OffsetNum;
             OffsetOperate(){};
             OffsetOperate(Instruction instr,int num):OffsetInstr(instr),OffsetNum(num){};
-            void print(){
-                printInstruction(OffsetInstr);
+            std::string print(){
+                std::string word;
+                word+=printInstruction(OffsetInstr);
                 std::fstream outfile;
                 outfile.open("testcase.s", std::ios::app);
                 if(OffsetNum!=0){
                 outfile<<" #"<<OffsetNum;
-                std::cout<<" #"<<OffsetNum;
+                word+=(" #"+std::to_string(OffsetNum));
                 }
                 outfile.close();
+                return word;
             }
     };
     //操作数类
@@ -222,7 +227,7 @@ namespace compiler::back{
      virtual OperateNum *getThis(){
          return this;
      }
-     virtual void print(){};
+     virtual std::string print(){};
     };
     //定义操作数,包括变量,常量,寄存器,表达式
     //定义寄存器类(包括直接访问寄存器 R0,间接访问寄存器[R0])
@@ -239,16 +244,18 @@ namespace compiler::back{
         Direct_Reg *getThis() override {
             return this;
         }
-        void print(){
+        std::string print(){
+            std::string word;
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
                 outfile<<RegName;
-                std::cout<<RegName;
-                printSuffix(suffix);
-                offsetoperate.print();
+                word+=RegName;
+                word+=printSuffix(suffix);
+                word+=offsetoperate.print();
             }
             outfile.close();
+            return word;
         }
 
     };
@@ -260,18 +267,20 @@ namespace compiler::back{
         //TODO 完成这两个类的构造,并不确定是否需要这个
         Indirect_Reg(std::string name,int Offset1=0):RegName(name),Offset(Offset1){};
         Indirect_Reg(int num,int Offset=0);
-        void print(){
+        std::string print(){
+            std::string word;
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
                 outfile<<"["<<RegName;
-                std::cout<<"["<<RegName;
+                word+=("["+RegName);
             }
                 outfile<<",#"<<Offset;
-                std::cout<<",#"<<Offset;
+                word+=(",#"+std::to_string(Offset));
             outfile<<"]";
-            std::cout<<"]";
+            word+="]";
             outfile.close();
+            return word;
         }
     };
 
@@ -282,12 +291,14 @@ namespace compiler::back{
         ImmNum *getThis() override{
             return this;
         }
-        void print(){
+        std::string print(){
+            std::string word;
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<"#"<<value;
-            std::cout<<"#"<<value;
+            word+=("#"+std::to_string(value));
             outfile.close();
+            return word;
         }
 
     };
@@ -299,21 +310,25 @@ namespace compiler::back{
         ConstNum *getThis() override{
             return this;
         }
-        void print(){
+        std::string print(){
+            std::string word;
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<value;
-            std::cout<<value;
+            word+=value;
             outfile.close();
+            return word;
         }
     };
     class NumList:public OperateNum{
     public:
         std::vector<Direct_Reg> regs;
         NumList(std::vector<Direct_Reg> regs1):regs(regs1){};
-        void  print(){
+        std::string  print(){
+            std::string word;
             for(auto val:regs){
-                val.print();
+                word+=val.print();
+                return word;
             }
         }
     };
@@ -326,25 +341,27 @@ namespace compiler::back{
         OperateNum *OPERAND3=nullptr;
         //OPERAND(){};
         OPERAND(OperateNum *operand1 = nullptr,OperateNum *operand2 = nullptr,OperateNum *operand3= nullptr):OPERAND1(operand1),OPERAND2(operand2),OPERAND3(operand3){};
-        void print(){
+        std::string print(){
+            std::string word;
             if(OPERAND1!= nullptr)
-                OPERAND1->print();
+                word+=OPERAND1->print();
             if(OPERAND2!= nullptr){
                 std::fstream outfile;
                 outfile.open("testcase.s", std::ios::app);
                 outfile<<",";
                 outfile.close();
-                std::cout<<",";
-                OPERAND2->print();
+                word+=",";
+                word+=OPERAND2->print();
             }
             if(OPERAND3!= nullptr){
                 std::fstream outfile;
                 outfile.open("testcase.s", std::ios::app);
                 outfile<<",";
                 outfile.close();
-                std::cout<<",";
-                OPERAND3->print();
+                word+=",";
+                word+=OPERAND3->print();
             }
+            return word;
         }
     };
 //三大部分构造完毕,注释域不用管
@@ -355,7 +372,7 @@ namespace compiler::back{
         virtual Sentence  *getThis(){
             return this;
         }
-        virtual void print(){};
+        virtual std::string print(){};
     };
     //正常指令的类型
     class Instr_Sentence:public Sentence{
@@ -375,38 +392,40 @@ namespace compiler::back{
         Instr_Sentence *getThis() override{
             return this;
         }
-        void print(){
-            label.print();
+        std::string print(){
+            std::string word;
+            word+=label.print();
             if(label.LabelName!=""){
                 std::fstream outfile;
                 outfile.open("testcase.s", std::ios::app);
                 outfile<<": ";
                 outfile.close();
-                std::cout<<": ";
+                word+=": ";
             }
             else{
                 std::fstream outfile;
                 outfile.open("testcase.s", std::ios::app);
                 outfile<<"    ";
                 outfile.close();
-                std::cout<<"    ";
+                word+="    ";
             }
-            operation.print();
+            word+=operation.print();
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
-            std::cout<<" ";
-            operand.print();
+            word+=" ";
+            word+=operand.print();
             outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
-            std::cout<<" ";
-            b_label.print();
+            word+=" ";
+            word+=b_label.print();
             outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
-            std::cout<<std::endl;
+            word+='\n';
+            return word;
         }
     };
     //伪指令类型(因为伪指令的形式比较多,想写在一起,也有合并的可能,但是目前先写开)
@@ -418,18 +437,19 @@ namespace compiler::back{
         BlockDeclaration *getThis() override{
             return this;
         }
-        void print(){
-            printEQUKeywords(equkeywords);
+        std::string print(){
+            std::string word;
+            word+=printEQUKeywords(equkeywords);
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
-            std::cout<<std::endl;
+            word+='\n';
             outfile<<std::endl;
             outfile.close();
+            return word;
         }
     };
     //变量类型声明(全局/局部)
     class VarDeclaration:public Sentence{
-        //写的有问题存疑?
     public:
         EQUKeywords equKeywords;
         LABEL label;
@@ -437,19 +457,21 @@ namespace compiler::back{
         VarDeclaration *getThis() override{
             return this;
         }
-        void print(){
-            printEQUKeywords(equKeywords);
+        std::string print(){
+            std::string word;
+            word+=printEQUKeywords(equKeywords);
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
-            std::cout<<" ";
-            label.print();
+            word+=" ";
+            word+=label.print();
             outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
-            std::cout<<std::endl;
+            word+='\n';
             outfile.close();
+            return word;
         }
     };
     class Varvalue:public Sentence{
@@ -460,15 +482,17 @@ namespace compiler::back{
         Varvalue *getThis() override{
             return this;
         }
-        void print(){
-            printEQUKeywords(equKeywords);
+        std::string print(){
+            std::string word;
+            word+=printEQUKeywords(equKeywords);
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<" "<<value;
-            std::cout<<" "<<value;
+            word+=(" "+std::to_string(value));
             outfile<<std::endl;
-            std::cout<<std::endl;
+            word+='\n';
             outfile.close();
+            return word;
         }
     };
     class TypeDeclaration:public  Sentence{
@@ -481,23 +505,25 @@ namespace compiler::back{
         TypeDeclaration *getThis() override{
             return this;
         }
-        void print(){
-            printEQUKeywords(equkeywords);
+        std::string print(){
+            std::string word;
+            word+=printEQUKeywords(equkeywords);
             std::fstream outfile;
             outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
-            std::cout<<" ";
-            label.print();
+            word+=" ";
+            word+=label.print();
             outfile.open("testcase.s", std::ios::app);
             outfile<<" ";
             outfile.close();
-            std::cout<<" ";
+            word+=" ";
             printType(type);
             outfile.open("testcase.s", std::ios::app);
             outfile<<std::endl;
             outfile.close();
-            std::cout<<std::endl;
+            word+='\n';
+            return word;
         }
     };
 }

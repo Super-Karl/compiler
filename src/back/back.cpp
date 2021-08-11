@@ -7,469 +7,481 @@
 #include <assert.h>
 
 namespace compiler::back{
-    void printInstruction(Instruction instr)
+    std::string printInstruction(Instruction instr)
     {
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s", std::ios::app);
         switch(instr){
             case Instruction::NOP:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case Instruction::ADC:
                 outfile<<"ADC";
-                std::cout<<"ADC";
+                word="ADC";
                 break;
             case Instruction::ADD:
                 outfile<<"ADD";
-                std::cout<<"ADD";
+                word="ADD";
                 break;
             case Instruction::AND:
                 outfile<<"AND";
-                std::cout<<"AND";
+                word="AND";
                 break;
             case Instruction::B:
                 outfile<<"B";
-                std::cout<<"B";
+                word="B";
                 break;
             case Instruction::BIC:
                 outfile<<"BIC";
-                std::cout<<"BIC";
+                word="BIC";
                 break;
             case Instruction::BL:
                 outfile<<"BL";
-                std::cout<<"BL";
+                word="BL";
                 break;
             case Instruction::BLX:
                 outfile<<"BLX";
-                std::cout<<"BLX";
+                word="BLX";
                 break;
             case Instruction::BX:
                 outfile<<"BX";
-                std::cout<<"BX";
+                word="BX";
                 break;
             case Instruction::CDP:
                 outfile<<"CDP";
-                std::cout<<"CDP";
+                word="CDP";
                 break;
             case Instruction::CMN:
                 outfile<<"CMN";
-                std::cout<<"CMN";
+                word="CMN";
                 break;
             case Instruction::CMP:
                 outfile<<"CMP";
-                std::cout<<"CMP";
+                word="CMP";
                 break;
             case Instruction::EOR:
                 outfile<<"EOR";
-                std::cout<<"EOR";
+                word="EOR";
                 break;
             case Instruction::LDR:
                 outfile<<"LDR";
-                std::cout<<"LDR";
+                word="LDR";
                 break;
             case Instruction::MCR:
                 outfile<<"MCR";
-                std::cout<<"MCR";
+                word="MCR";
                 break;
             case Instruction::MOV:
                 outfile<<"MOV";
-                std::cout<<"MOV";
+                word="MOV";
                 break;
             case Instruction::MRC:
                 outfile<<"MRC";
-                std::cout<<"MRC";
+                word="MRC";
                 break;
             case Instruction::MRS:
                 outfile<<"MRS";
-                std::cout<<"MRS";
+                word="MRS";
                 break;
             case Instruction::MSR:
                 outfile<<"MSR";
-                std::cout<<"MSR";
+                word="MSR";
                 break;
             case Instruction::MUL:
                 outfile<<"MUL";
-                std::cout<<"MUL";
+                word="MUL";
                 break;
             case Instruction::MLA:
                 outfile<<"MLA";
-                std::cout<<"MLA";
+                word="MLA";
                 break;
             case Instruction::MVN:
                 outfile<<"MVN";
-                std::cout<<"MVN";
+                word="MVN";
                 break;
             case Instruction::ORR:
                 outfile<<"ORR";
-                std::cout<<"ORR";
+                word="ORR";
                 break;
             case Instruction::RSB:
                 outfile<<"RSB";
-                std::cout<<"RSB";
+                word="RSB";
                 break;
             case Instruction::RSC:
                 outfile<<"RSC";
-                std::cout<<"RSC";
+                word="RSC";
                 break;
             case Instruction::SBC:
                 outfile<<"SBC";
-                std::cout<<"SBC";
+                word="SBC";
                 break;
             case Instruction::STC:
                 outfile<<"STC";
-                std::cout<<"STC";
+                word="STC";
                 break;
             case Instruction::STM:
                 outfile<<"STM";
-                std::cout<<"STM";
+                word="STM";
                 break;
             case Instruction::STR:
                 outfile<<"STR";
-                std::cout<<"STR";
+                word="STR";
                 break;
             case Instruction::SUB:
                 outfile<<"SUB";
-                std::cout<<"SUB";
+                word="SUB";
                 break;
             case Instruction::SWI:
                 outfile<<"SWI";
-                std::cout<<"SWI";
+                word="SWI";
                 break;
             case Instruction::SWP:
                 outfile<<"SWP";
-                std::cout<<"SWP";
+                word="SWP";
                 break;
             case Instruction::SDIV:
                 outfile<<"SDIV";
-                std::cout<<"SDIV";
+                word="SDIV";
                 break;
             case Instruction::TEQ:
                 outfile<<"TEQ";
-                std::cout<<"TEQ";
+                word="TEQ";
                 break;
         }
         outfile.close();
+        return word;
     }
-    void printBarcode(BarCode barCode)
+    std::string printBarcode(BarCode barCode)
     {
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s",std::ios::app);
         switch (barCode) {
             case BarCode::NOP:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case BarCode::EQ:
                 outfile<<"EQ";
-                std::cout<<"EQ";
+                word="EQ";
                 break;
             case BarCode::NE:
                 outfile<<"NE";
-                std::cout<<"NE";
+                word="NE";
                 break;
             case BarCode::CS:
                 outfile<<"CS";
-                std::cout<<"CS";
+                word="CS";
                 break;
             case BarCode::CC:
                 outfile<<"CC";
-                std::cout<<"CC";
+                word="CC";
                 break;
             case BarCode::MI:
                 outfile<<"MI";
-                std::cout<<"MI";
+                word="MI";
                 break;
             case BarCode::PL:
                 outfile<<"PL";
-                std::cout<<"PL";
+                word="PL";
                 break;
             case BarCode::VS:
                 outfile<<"VS";
-                std::cout<<"VS";
+                word="VS";
                 break;
             case BarCode::VC:
                 outfile<<"VC";
-                std::cout<<"VC";
+                word="VC";
                 break;
             case BarCode::HI:
                 outfile<<"HI";
-                std::cout<<"HI";
+                word="HI";
                 break;
             case BarCode::LS:
                 outfile<<"LS";
-                std::cout<<"LS";
+                word="LS";
                 break;
             case BarCode::LT:
                 outfile<<"LT";
-                std::cout<<"LT";
+                word="LT";
                 break;
             case BarCode::GT:
                 outfile<<"GT";
-                std::cout<<"GT";
+                word="GT";
                 break;
             case BarCode::LE:
                 outfile<<"LE";
-                std::cout<<"LE";
+                word="LE";
                 break;
             case BarCode::AL:
                 outfile<<"AL";
-                std::cout<<"AL";
+                word="AL";
                 break;
         }
         outfile.close();
+        return word;
     }
-    void printSuffix(Suffix suffix){
+    std::string printSuffix(Suffix suffix){
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s",std::ios::app);
 
         switch (suffix) {
             case Suffix::SNOP:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case Suffix::S:
                 outfile<<"S";
-                std::cout<<"S";
+                word="S";
                 break;
             case Suffix::e_mark:
                 outfile<<"!";
-                std::cout<<"!";
+                word="!";
                 break;
         }
         outfile.close();
+        return word;
     }
-    void printEQUKeywords(EQUKeywords equKeywords){
+    std::string printEQUKeywords(EQUKeywords equKeywords){
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s",std::ios::app);
         switch (equKeywords) {
             case EQUKeywords::nop:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case EQUKeywords::byte:
                 outfile<<".byte";
-                std::cout<<".byte";
+                word=".byte";
                 break;
             case EQUKeywords::hword:
                 outfile<<"hword";
-                std::cout<<".hword";
+                word=".hword";
                 break;
             case EQUKeywords::Eshort:
                 outfile<<".eshort";
-                std::cout<<".eshort";
+                word=".eshort";
                 break;
             case EQUKeywords::word:
                 outfile<<".word";
-                std::cout<<".word";
+                word=".word";
                 break;
             case EQUKeywords::Eint:
                 outfile<<".Eint";
-                std::cout<<".eint";
+                word=".eint";
                 break;
             case EQUKeywords::quad:
                 outfile<<".quad";
-                std::cout<<".quad";
+                word=".quad";
                 break;
             case EQUKeywords::Efloat:
                 outfile<<".Efloat";
-                std::cout<<".efloat";
+                word=".efloat";
                 break;
             case EQUKeywords::Edouble:
                 outfile<<".Edouble";
-                std::cout<<".edouble";
+                word=".edouble";
                 break;
             case EQUKeywords::ascii:
                 outfile<<".ascii";
-                std::cout<<".ascii";
+                word=".ascii";
                 break;
             case EQUKeywords::asciz:
                 outfile<<".asciz";
-                std::cout<<".asciz";
+                word=".asciz";
                 break;
             case EQUKeywords::zero:
                 outfile<<".zero";
-                std::cout<<".zero";
+                word=".zero";
                 break;
             case EQUKeywords::space:
                 outfile<<".sapce";
-                std::cout<<".space";
+                word=".space";
                 break;
             case EQUKeywords::code32:
                 outfile<<".code32";
-                std::cout<<".code32";
+                word=".code32";
                 break;
             case EQUKeywords::code16:
                 outfile<<".code16";
-                std::cout<<".code16";
+                word=".code16";
                 break;
             case EQUKeywords::fpu:
                 outfile<<".fpu";
-                std::cout<<".fpu";
+                word=".fpu";
                 break;
             case EQUKeywords::section:
                 outfile<<".section";
-                std::cout<<".section";
+                word=".section";
                 break;
             case EQUKeywords::text:
                 outfile<<".text";
-                std::cout<<".text";
+                word=".text";
                 break;
             case EQUKeywords::data:
                 outfile<<".data";
-                std::cout<<".data";
+                word=".data";
                 break;
             case EQUKeywords::bss:
                 outfile<<".bss";
-                std::cout<<".bss";
+                word=".bss";
                 break;
             case EQUKeywords::align:
                 outfile<<".align";
-                std::cout<<".align";
+                word=".align";
                 break;
             case EQUKeywords::type:
                 outfile<<".type";
-                std::cout<<".type";
+                word=".type";
                 break;
             case EQUKeywords::size:
                 outfile<<".size";
-                std::cout<<".size";
+                word=".size";
                 break;
             case EQUKeywords::org:
                 outfile<<".org";
-                std::cout<<".org";
+                word=".org";
                 break;
             case EQUKeywords::global:
                 outfile<<".global";
-                std::cout<<".global";
+                word=".global";
                 break;
             case EQUKeywords::include:
                 outfile<<".include";
-                std::cout<<".include";
+                word=".include";
                 break;
             case EQUKeywords::end:
                 outfile<<".end";
-                std::cout<<".end";
+                word=".end";
                 break;
             case EQUKeywords::_start:
                 outfile<<"_start";
-                std::cout<<"_start";
+                word="_start";
                 break;
             case EQUKeywords::macro:
                 outfile<<".macro";
-                std::cout<<".macro";
+                word=".macro";
                 break;
             case EQUKeywords::endm:
                 outfile<<".endm";
-                std::cout<<".endm";
+                word=".endm";
                 break;
             case EQUKeywords::exitm:
                 outfile<<".exitm";
-                std::cout<<".exitm";
+                word=".exitm";
                 break;
             case EQUKeywords::ifdef:
                 outfile<<".ifdef";
-                std::cout<<".ifdef";
+                word=".ifdef";
                 break;
             case EQUKeywords::Eelse:
                 outfile<<".Eelse";
-                std::cout<<".eelse";
+                word=".eelse";
                 break;
             case EQUKeywords::endif:
                 outfile<<".endif";
-                std::cout<<".endif";
+                word=".endif";
                 break;
             case EQUKeywords::rept:
                 outfile<<".rept";
-                std::cout<<".rept";
+                word=".rept";
                 break;
             case EQUKeywords::equ:
                 outfile<<".equ";
-                std::cout<<".equ";
+                word=".equ";
                 break;
             case EQUKeywords::list:
                 outfile<<".list";
-                std::cout<<".list";
+                word=".list";
                 break;
             case EQUKeywords::nolist:
                 outfile<<".nolist";
-                std::cout<<".nolist";
+                word=".nolist";
                 break;
             case EQUKeywords::req:
                 outfile<<".req";
-                std::cout<<".req";
+                word=".req";
                 break;
             case EQUKeywords::unreq:
                 outfile<<".unreq";
-                std::cout<<".unreq";
+                word=".unreq";
                 break;
             case EQUKeywords::pool:
                 outfile<<".pool";
-                std::cout<<".pool";
+                word=".pool";
                 break;
         }
         outfile.close();
+        return word;
     }
-    void printType(TYPE type){
+    std::string printType(TYPE type){
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s",std::ios::app);
         switch (type) {
             case TYPE::NOP:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case TYPE::object:
                 outfile<<"%object";
-                std::cout<<"%object";
+                word="%object";
                 break;
             case TYPE::function:
                 outfile<<"%function";
-                std::cout<<"%function";
+                word="%function";
                 break;
         }
         outfile.close();
+        return word;
     }
-    void printstmType(stmType stmtype){
+    std::string printstmType(stmType stmtype){
+        std::string word;
         std::fstream outfile;
         outfile.open("testcase.s",std::ios::app);
         switch (stmtype) {
             case stmType::NOP:
                 outfile<<"";
-                std::cout<<"";
+                word="";
                 break;
             case stmType::IA:
                 outfile<<"IA";
-                std::cout<<"IA";
+                word="IA";
                 break;
             case stmType::IB:
                 outfile<<"IB";
-                std::cout<<"IB";
+                word="IB";
                 break;
             case stmType::DA:
                 outfile<<"DA";
-                std::cout<<"DA";
+                word="DA";
                 break;
             case stmType::DB:
                 outfile<<"DB";
-                std::cout<<"DB";
+                word="DB";
                 break;
             case stmType::FD:
                 outfile<<"FD";
-                std::cout<<"FD";
+                word="FD";
                 break;
             case stmType::ED:
                 outfile<<"ED";
-                std::cout<<"ED";
+                word="ED";
                 break;
             case stmType::FA:
                 outfile<<"FA";
-                std::cout<<"FA";
+                word="FA";
                 break;
             case stmType::EA:
                 outfile<<"EA";
-                std::cout<<"EA";
+                word="EA";
                 break;
         }
         outfile.close();
+        return word;
     }
 }

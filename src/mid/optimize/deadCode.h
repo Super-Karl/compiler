@@ -1,3 +1,4 @@
+/*
 //
 // Created by wnx on 2021/8/11.
 //
@@ -36,3 +37,4 @@ namespace compiler::mid::pass {
   void deadCodeElimination(IRList &ir);
 }// namespace compiler::mid::pass
 #endif//COMPILER_DEADCODE_H
+*/

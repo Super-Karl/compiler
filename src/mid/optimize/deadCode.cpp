@@ -1,3 +1,4 @@
+/*
 //
 // Created by wnx on 2021/8/11.
 //
@@ -35,6 +36,7 @@ namespace compiler::mid::pass {
   void pass::deadCodeElimination(StoreIR *store) {
   }
   void pass::deadCodeElimination(IRList &ir) {
+
     for (auto i : ir)
       deadCodeElimination(i);
   }
@@ -42,4 +44,4 @@ namespace compiler::mid::pass {
 
   }
 
-};// namespace compiler::mid::pass
+};// namespace compiler::mid::pass*/

@@ -353,6 +353,7 @@ namespace compiler::back {
         int reg = getCanUseRegForCalExp();
         backlist.push_back(new LDR(reg, functionCall->args->args.size() * 4));
         backlist.push_back(new OP("add", "sp", "sp", reg));
+        freeRegForCalExp(reg);
     }
 
     //处理block
@@ -512,6 +513,7 @@ namespace compiler::back {
             int reg = getCanUseRegForCalExp();
             backlist.push_back(new LDR(reg, localVarSpace * 4));
             backlist.push_back(new OP("add", "sp", "sp", reg));
+            freeRegForCalExp(reg);
         }
     }
 
@@ -666,6 +668,7 @@ namespace compiler::back {
             int reg = getCanUseRegForCalExp();
             backlist.push_back(new LDR(reg, localVarSpace * 4));
             backlist.push_back(new OP("add", "sp", "sp", reg));
+            freeRegForCalExp(reg);
         }
     }
 

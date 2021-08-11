@@ -34,12 +34,14 @@ int main(int argc, char **argv) {
   compiler::controller::generator::printIR(ir);
   auto arm = compiler::back::genarm::genBack(ir);
   std::fstream file( "testcase.s", std::ios::out );
+    ofstream outfile;
+    string outputfile=argv[3];
   for(auto var:arm){
-      ofstream outfile;
-      string outputfile=argv[3];
+
       outfile<<var->print();
-      outfile.close();
+
       //std::cout<<var->print();
   }
+    outfile.close();
   return 0;
 }

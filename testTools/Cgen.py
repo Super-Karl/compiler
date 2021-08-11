@@ -264,6 +264,7 @@ opMap = {
     "Jeq": Jeq,
     "Not": vnot,
     "Mov":assign,
+    "PhiMov":assign,
     "Alloca":alloca,
     "Ret":ret,
     "Nop":nop,

@@ -473,13 +473,13 @@ namespace compiler::front::ast {
       if (pIR) {
         try {
           auto tmp = phiUpdate.at(pIR->dest.defName);
-          phiUpdateMov.emplace_back(new AssignIR(tmp, pIR->dest.name));
+          phiUpdateMov.emplace_back(new PhiIR(tmp, pIR->dest.name));
           phiUpdate.erase(pIR->dest.defName);
         } catch (out_of_range) {
         }
         try {
           auto tmp = phiRollBack.at(pIR->dest.defName);
-          phiRollBackMov.emplace_back(new AssignIR(pIR->dest.name, tmp));
+          phiRollBackMov.emplace_back(new PhiIR(pIR->dest.name, tmp));
           phiRollBack.erase(pIR->dest.defName);
         } catch (out_of_range) {
         }
@@ -520,14 +520,15 @@ namespace compiler::front::ast {
     auto newTable = new RecordTable(record);
     newTable->setInLoop(true);
 
-    auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    auto loopLabel = new LabelIR(".LLoop" + std::to_string(newTable->getID()));
+    auto endLoopLabel = new LabelIR(".LEndLoop" + std::to_string(newTable->getID()));
+    auto testLabel = new LabelIR(".LTestLoop" + std::to_string(newTable->getID()));
+    auto continueLabel = new LabelIR(".LContinue"+std::to_string(newTable->getID()));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
     IRList condIr, loopIR;
-    ir.push_back(new JmpIR(OperatorCode::Jmp, testLabel));
-    loopBlock->genIR(loopIR, newTable);
     cond->ConditionAnalysis(condIr, newTable, loopLabel, endLoopLabel, true);
+    loopBlock->genIR(loopIR, newTable);
+
 
     IRList phiLoopMov, AntiPhiLoopMov;
     std::unordered_map<std::string, std::string> phiLoop;
@@ -564,28 +565,29 @@ namespace compiler::front::ast {
       if (pIR) {
         try {
           auto tmp = phiLoop.at(pIR->dest.defName);
-          phiLoopMov.emplace_back(new AssignIR(pIR->dest.name, tmp));
-          AntiPhiLoopMov.emplace_back(new AssignIR(tmp, pIR->dest.name));
+          phiLoopMov.emplace_back(new PhiIR(pIR->dest.name, tmp));
+          AntiPhiLoopMov.emplace_back(new PhiIR(tmp, pIR->dest.name));
           phiLoop.erase(pIR->dest.defName);
         } catch (out_of_range) {
         }
       }
     }
+    ir.emplace_back(new JmpIR(mid::ir::OperatorCode::Jmp,testLabel));
     ir.push_back(loopLabel);
-    //ir.push_back(testLabel);
     for (auto &item : loopIR) {
       ir.push_back(item);
     }
+    ir.push_back(continueLabel);
     for (auto &item : AntiPhiLoopMov) {
       ir.push_back(item);
     }
     ir.push_back(testLabel);
-    for (auto &item : phiLoopMov) {
-      ir.push_back(item);
-    }
     for (auto &item : condIr) {
       ir.push_back(item);
     }
+    //ir.push_back(testLabel);
+
+    //ir.emplace_back(new JmpIR(OperatorCode::Jmp,loopLabel));
 
     ir.push_back(endLoopLabel);
     RecordTable::popLabelPair();

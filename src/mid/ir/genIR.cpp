@@ -828,7 +828,7 @@ namespace compiler::front::ast {
       }
     } catch (...) {
     }
-    OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
+    OperatorName dest = OperatorName("%" + to_string(record->getID())), left, right;
 
     int RelOP[8] = {AND_OP, OR_OP, LT, LE, GE, GT, NE, EQ};
     for (int i = 0; i < 8; i++) {

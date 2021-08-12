@@ -145,9 +145,17 @@ namespace compiler::back::genarm{
                         armList.push_back(sentence);//这个push的是BL
                         //函数后恢复现场
                         compiler::back::OPERATION *operationR0 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
-                        compiler::back::OperateNum *destR0 = new compiler::back::Direct_Reg("r0");
+                        compiler::back::OperateNum *dest = nullptr;
+                        if(funcallInstr->retType==compiler::mid::ir::ElemType::INT){
+                            //函数返回值为int
+                            //cout<<allocReg(usedReg);
+                            dest =  convertVarToReg(funcallInstr->retOp,usedReg,Regs,funcallInstr->retOp);
+                        }
+                        else{
+                            dest = new compiler::back::Direct_Reg("r0");
+                        }
                         compiler::back::OperateNum *sourceR0 = new compiler::back::Direct_Reg("r0");
-                        compiler::back::OPERAND *operandR0=new compiler::back::OPERAND(destR0,sourceR0);
+                        compiler::back::OPERAND *operandR0=new compiler::back::OPERAND(dest,sourceR0);
                         compiler::back::Sentence  *sentenceR0=new compiler::back::Instr_Sentence(*operationR0,*operandR0);
 
                         compiler::back::OPERATION *operation0 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
@@ -205,7 +213,41 @@ namespace compiler::back::genarm{
 
                                 auto op5 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
                                 auto imm0 = new compiler::back::ImmNum(0);
-                                auto OPERAND5 = new compiler::back::OPERAND(r14, imm0);
+                                auto OPERAND5 = new compiler::back::OPERAND(r0, imm0);
+                                auto sentence5 = new compiler::back::Instr_Sentence(*op5, *OPERAND5);
+                                armList.push_back(sentence5);
+                            }
+                            else if (retInstr->retVal.type == compiler::mid::ir::Type::Var){
+                                op = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto reg = new compiler::back::Direct_Reg("r0");
+                                auto Imm = new compiler::back::Direct_Reg(findFromRegs(retInstr->retVal.name,usedReg));
+                                auto OPERAND1 = new compiler::back::OPERAND(reg, Imm);
+                                auto sentence1 = new compiler::back::Instr_Sentence(*op, *OPERAND1);
+                                armList.push_back(sentence1);
+
+                                auto op2 = new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                                auto r14 = new compiler::back::Direct_Reg("lr");
+                                auto sp0 = new compiler::back::Indirect_Reg("sp", 0);
+                                auto OPERAND2 = new compiler::back::OPERAND(r14, sp0);
+                                auto sentence2 = new compiler::back::Instr_Sentence(*op2, *OPERAND2);
+                                armList.push_back(sentence2);
+
+                                auto op3 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
+                                auto sp = new compiler::back::Direct_Reg("sp");
+                                auto imm4 = new compiler::back::ImmNum(4);
+                                auto OPERAND3 = new compiler::back::OPERAND(sp, sp, imm4);
+                                auto sentence3 = new compiler::back::Instr_Sentence(*op3, *OPERAND3);
+                                armList.push_back(sentence3);
+
+                                auto op4 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto pc = new compiler::back::Direct_Reg("pc");
+                                auto OPERAND4 = new compiler::back::OPERAND(pc, r14);
+                                auto sentence4 = new compiler::back::Instr_Sentence(*op4, *OPERAND4);
+                                armList.push_back(sentence4);
+
+                                auto op5 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto imm0 = new compiler::back::ImmNum(0);
+                                auto OPERAND5 = new compiler::back::OPERAND(reg, imm0);
                                 auto sentence5 = new compiler::back::Instr_Sentence(*op5, *OPERAND5);
                                 armList.push_back(sentence5);
                             }
@@ -329,7 +371,8 @@ namespace compiler::back::genarm{
         return armList;
     }
     compiler::back::OperateNum *  convertVarToReg(compiler::mid::ir::OperatorName source,map<string,string> &usedReg,vector<string> &Regs,compiler::mid::ir::OperatorName source1)
-    {
+    {//将操作数转换到寄存器                             ir中的操作数                           记录寄存器使用 情况的表          记录那些寄存器被使用了    记录前面的操作数
+
         string regName;
         compiler::back::OperateNum *armNum=nullptr;
         if(source.type==compiler::mid::ir::Type::Imm)//立即数类型
@@ -363,6 +406,7 @@ namespace compiler::back::genarm{
     }
     string allocReg(map<string,string> &usedReg)
     {
+        //分配寄存器
         int regNum=4;
         for(int i=0;i<7;i++)
         {
@@ -382,6 +426,7 @@ namespace compiler::back::genarm{
         }
     }
     bool findFromSecond(string name,map<string,string> usedReg){
+        //从寄存器名寻找
         int flag=0;
         map<string,string>::iterator iter;
         for (iter=usedReg.begin(); iter!=usedReg.end(); iter++){
@@ -396,6 +441,7 @@ namespace compiler::back::genarm{
     }
     string findFromRegs(string name,map<string,string> usedReg)
     {
+        //从变量名寻找
         auto iter=usedReg.find(name);
         if(iter != usedReg.end())
             return iter->second;
@@ -404,6 +450,7 @@ namespace compiler::back::genarm{
 
     compiler::back::Sentence* paramToReg(compiler::mid::ir::OperatorName arg,int i,map<string,string>usedReg,vector<string> Regs)
     {
+        //函数用
         //将参数转换到寄存器
         compiler::back::OPERATION *operation=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
         compiler::back::OperateNum * dest=new compiler::back::Direct_Reg("r"+to_string(i));
@@ -414,11 +461,13 @@ namespace compiler::back::genarm{
     }
     string handleIrFunName(string irname)
     {
+        //处理函数名
         irname.erase(remove(irname.begin(), irname.end(), '@'), irname.end());
         return irname;
     }
     int createStack(vector<compiler::back::Sentence *> &armList)
     {
+        //建栈
         compiler::back::OPERATION *operation = new compiler::back::OPERATION(compiler::back::Instruction::SUB);
         compiler::back::OperateNum *dest = new compiler::back::Direct_Reg("sp");
         compiler::back::OperateNum *source1 = new compiler::back::Direct_Reg("sp");

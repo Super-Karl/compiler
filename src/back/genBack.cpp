@@ -173,7 +173,7 @@ namespace compiler::back::genarm{
                             case compiler::mid::ir::OperatorCode::Cmp:{
                                 op=new compiler::back::OPERATION(compiler::back::Instruction::CMP);
                                 auto OPERAND1=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
-                                auto OPERAND2=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
+                                auto OPERAND2=convertVarToReg(irInstr->source2,usedReg,Regs,irInstr->source2);
                                 auto OPERAND=new compiler::back::OPERAND(OPERAND1,OPERAND2);
                                 auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
                                 armList.push_back(sentence);
@@ -325,6 +325,8 @@ namespace compiler::back::genarm{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::LS);
                         if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jge)
                             op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::GE);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jne)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::NE);
                             compiler::back::LABEL *b_label=new compiler::back::LABEL(jumpInstr->label);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*b_label);
                             armList.push_back(sentence);

@@ -169,11 +169,14 @@ namespace compiler::back::genarm{
                                 auto OPERAND6=new compiler::back::OPERAND(dest6,source6);
                                 auto sentence6=new compiler::back::Instr_Sentence(*op6,*OPERAND6);
                                 armList.push_back(sentence6);
-
-
-
-
-
+                            }
+                            case compiler::mid::ir::OperatorCode::Cmp:{
+                                op=new compiler::back::OPERATION(compiler::back::Instruction::CMP);
+                                auto OPERAND1=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
+                                auto OPERAND2=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
+                                auto OPERAND=new compiler::back::OPERAND(OPERAND1,OPERAND2);
+                                auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+                                armList.push_back(sentence);
                             }
 
                         }
@@ -309,10 +312,22 @@ namespace compiler::back::genarm{
                     //函数if导致的跳转
                     compiler::mid::ir::JmpIR *jumpInstr=dynamic_cast<compiler::mid::ir::JmpIR *>(funcBody);
                     if(jumpInstr!=nullptr){
-                        op = new compiler::back::OPERATION(compiler::back::Instruction::B);
-                        compiler::back::LABEL *b_label=new compiler::back::LABEL(jumpInstr->label);
-                        compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*b_label);
-                        armList.push_back(sentence);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jmp){
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B);}
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jg)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::HI);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jle)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::LS);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jeq)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::EQ);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jl)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::LS);
+                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jge)
+                            op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::GE);
+                            compiler::back::LABEL *b_label=new compiler::back::LABEL(jumpInstr->label);
+                            compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*b_label);
+                            armList.push_back(sentence);
+
                     }
                     compiler::mid::ir::LabelIR *labelInstr=dynamic_cast<compiler::mid::ir::LabelIR *>(funcBody);
                     if(labelInstr!=nullptr){

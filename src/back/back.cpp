@@ -223,6 +223,10 @@ namespace compiler::back{
                 ////outfile<<"AL";
                 word="AL";
                 break;
+            case BarCode::GE:
+                ////outfile<<"AL";
+                word="GE";
+                break;
         }
         ////outfile.close();
         return word;

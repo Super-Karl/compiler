@@ -405,9 +405,10 @@ namespace compiler::front::ast {
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto newTable = new RecordTable(record);
-    auto ifLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto elseLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto endLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    string id  = std::to_string(newTable->getID());
+    auto ifLabel = new LabelIR(".L_THEN_" + id);
+    auto elseLabel = new LabelIR(".L_ELSE_" + id);
+    auto endLabel = new LabelIR(".L_IF_END_" + id);
     cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
     BlockIR *trueIR = new BlockIR();
@@ -521,10 +522,10 @@ namespace compiler::front::ast {
     newTable->setInLoop(true);
 
     int num = newTable->getID();
-    auto loopLabel = new LabelIR(".LLoop" + std::to_string(num));
-    auto endLoopLabel = new LabelIR(".LEndLoop" + std::to_string(num));
-    auto testLabel = new LabelIR(".LTest" + std::to_string(num));
-    auto continueLabel = new LabelIR(".LContinue"+std::to_string(num));
+    auto loopLabel = new LabelIR(".L_Loop" + std::to_string(num));
+    auto endLoopLabel = new LabelIR(".L_EndLoop" + std::to_string(num));
+    auto testLabel = new LabelIR(".L_Test" + std::to_string(num));
+    auto continueLabel = new LabelIR(".L_Continue"+std::to_string(num));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
     IRList condIr, loopIR;
     cond->ConditionAnalysis(condIr, newTable, loopLabel, endLoopLabel, true);
@@ -591,6 +592,9 @@ namespace compiler::front::ast {
     //ir.emplace_back(new JmpIR(OperatorCode::Jmp,loopLabel));
 
     ir.push_back(endLoopLabel);
+    for (auto &item : phiLoopMov) {
+      ir.push_back(item);
+    }
     RecordTable::popLabelPair();
 
     newTable->setInLoop(false);

@@ -11,6 +11,13 @@ then
     echo "-h 查看帮助"
     echo "-d 测试本目录下的testcase.sy文件"
     echo "-b 编译项目"
+elif test $1 == "-c"
+then
+    echo '#include"sysylib.h"' > testcase.c
+    cat testcase.sy >> testcase.c
+    gcc testcase.c -o testcase
+    ./testcase < test.in
+    echo $?
 elif test "$1" == "-b"
 then
     cd ..

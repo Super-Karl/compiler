@@ -325,9 +325,6 @@ namespace compiler::back::genarm{
                             op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::LS);
                         if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jge)
                             op = new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::GE);
-                        if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jne)
-                            op=new compiler::back::OPERATION(compiler::back::Instruction::B,compiler::back::BarCode::NE);
-
                             compiler::back::LABEL *b_label=new compiler::back::LABEL(jumpInstr->label);
                             compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*b_label);
                             armList.push_back(sentence);

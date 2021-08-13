@@ -312,6 +312,7 @@ namespace compiler::back::genarm{
                     //函数if导致的跳转
                     compiler::mid::ir::JmpIR *jumpInstr=dynamic_cast<compiler::mid::ir::JmpIR *>(funcBody);
                     if(jumpInstr!=nullptr){
+                        returnflag=0;
                         if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jmp){
                             op = new compiler::back::OPERATION(compiler::back::Instruction::B);}
                         if(jumpInstr->action==compiler::mid::ir::OperatorCode::Jg)
@@ -331,6 +332,7 @@ namespace compiler::back::genarm{
                     }
                     compiler::mid::ir::LabelIR *labelInstr=dynamic_cast<compiler::mid::ir::LabelIR *>(funcBody);
                     if(labelInstr!=nullptr){
+                        returnflag=0;
                         compiler::back::LABEL *label=new compiler::back::LABEL(labelInstr->label);
                         compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*label);
                         armList.push_back(sentence);

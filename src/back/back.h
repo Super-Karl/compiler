@@ -69,7 +69,8 @@ namespace compiler::back{
         SWP,
         SDIV,//说是除法(?)
         TEQ,
-        TST
+        TST,
+        MOV32
     };//TODO 加上除法(没有除法?)
     std::string printInstruction(Instruction instr);
     enum class BarCode{

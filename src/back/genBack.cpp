@@ -123,7 +123,7 @@ namespace compiler::back::genarm{
                                 break;
                             }
                             case compiler::mid::ir::OperatorCode::Mod:{
-                                auto op1=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto op1=new compiler::back::OPERATION(compiler::back::Instruction::MOV32);
                                 auto dest1=new compiler::back::Direct_Reg("r0");
                                 auto source1=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
                                 auto OPERAND1=new compiler::back::OPERAND(dest1,source1);
@@ -137,7 +137,7 @@ namespace compiler::back::genarm{
                                 auto sentence4=new compiler::back::Instr_Sentence(*op4,*OPERAND4);
                                 armList.push_back(sentence4);
 
-                                auto op2=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto op2=new compiler::back::OPERATION(compiler::back::Instruction::MOV32);
                                 auto dest2=new compiler::back::Direct_Reg("r1");
                                 auto source2=convertVarToReg(irInstr->source2,usedReg,Regs,irInstr->source2);
                                 auto OPERAND2=new compiler::back::OPERAND(dest2,source2);

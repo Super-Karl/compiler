@@ -149,6 +149,10 @@ namespace compiler::back{
                 ////outfile<<"TEQ";
                 word="TEQ";
                 break;
+            case Instruction::MOV32:
+                ////outfile<<"";
+                word="MOV32";
+                break;
         }
         ////outfile.close();
         return word;

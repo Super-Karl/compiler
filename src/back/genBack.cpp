@@ -122,6 +122,59 @@ namespace compiler::back::genarm{
                                 armList.push_back(sentence);
                                 break;
                             }
+                            case compiler::mid::ir::OperatorCode::Mod:{
+                                auto op1=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto dest1=new compiler::back::Direct_Reg("r0");
+                                auto source1=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
+                                auto OPERAND1=new compiler::back::OPERAND(dest1,source1);
+                                auto sentence1=new compiler::back::Instr_Sentence(*op1,*OPERAND1);
+                                armList.push_back(sentence1);
+
+                                auto op4=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                                auto dest4=new compiler::back::Direct_Reg("r0");
+                                auto source4=new compiler::back::Indirect_Reg("r0",0);
+                                auto OPERAND4=new compiler::back::OPERAND(dest4,source4);
+                                auto sentence4=new compiler::back::Instr_Sentence(*op4,*OPERAND4);
+                                armList.push_back(sentence4);
+
+                                auto op2=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto dest2=new compiler::back::Direct_Reg("r1");
+                                auto source2=convertVarToReg(irInstr->source2,usedReg,Regs,irInstr->source2);
+                                auto OPERAND2=new compiler::back::OPERAND(dest2,source2);
+                                auto sentence2=new compiler::back::Instr_Sentence(*op2,*OPERAND2);
+                                armList.push_back(sentence2);
+
+                                auto op5=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                                auto dest5=new compiler::back::Direct_Reg("r1");
+                                auto source5=new compiler::back::Indirect_Reg("r1",0);
+                                auto OPERAND5=new compiler::back::OPERAND(dest5,source5);
+                                auto sentence5=new compiler::back::Instr_Sentence(*op5,*OPERAND5);
+                                armList.push_back(sentence5);
+
+                                auto op3=new compiler::back::OPERATION(compiler::back::Instruction::BL);
+                                auto blabel3=new compiler::back::LABEL("__aeabi_idivmod");
+                                auto sentence3=new compiler::back::Instr_Sentence(*op3,*blabel3);
+                                armList.push_back(sentence3);
+
+                                auto op7=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto dest7=convertVarToReg(irInstr->dest,usedReg,Regs,irInstr->dest);
+                                auto source7=new compiler::back::Direct_Reg("r1");
+                                auto OPERAND7=new compiler::back::OPERAND(dest7,source7);
+                                auto sentence7=new compiler::back::Instr_Sentence(*op7,*OPERAND7);
+                                armList.push_back(sentence7);
+
+                                auto op6=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto dest6=new compiler::back::Direct_Reg("r0");
+                                auto source6=convertVarToReg(irInstr->dest,usedReg,Regs,irInstr->dest);
+                                auto OPERAND6=new compiler::back::OPERAND(dest6,source6);
+                                auto sentence6=new compiler::back::Instr_Sentence(*op6,*OPERAND6);
+                                armList.push_back(sentence6);
+
+
+
+
+
+                            }
 
                         }
                     }
@@ -267,6 +320,7 @@ namespace compiler::back::genarm{
                         compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*label);
                         armList.push_back(sentence);
                     }
+                    //分配空间数组
                     compiler::mid::ir::AllocaIR *allocaIr=dynamic_cast<compiler::mid::ir::AllocaIR *>(funcBody);
                     if(allocaIr!=nullptr){
                         funCallFlag=1;
@@ -380,14 +434,16 @@ namespace compiler::back::genarm{
         if(source.type==compiler::mid::ir::Type::Var){//寄存器类型
             if(source.name.find("%")!=-1)
                 if(findFromRegs(source.name,usedReg)!="") {//表中已存在
-                    //cout << source.name << "exists" << endl;
                     armNum = new compiler::back::Direct_Reg(findFromRegs(source.name, usedReg));
                 }
                 else{//表中不存在,进行寄存器分配
                     string regName=allocReg(usedReg);
+                    //if(Regs.size<7)
+                    //    regName=allocReg(usedReg);
+                    //else
+                    //    pushtostack
                     if(source1.name.find("$")==-1 && findFromSecond(source1.name,usedReg)==0){
-                        Regs.push_back(regName);
-                        //cout<<"paramter deleted"<<endl;
+                        Regs.push_back(regName);//防止参数被加入栈中
                     }
                     armNum=new compiler::back::Direct_Reg(regName);
                     usedReg.insert(map<string, string>::value_type(source.name, regName));
@@ -404,6 +460,8 @@ namespace compiler::back::genarm{
         }
         return armNum;
     }
+
+
     string allocReg(map<string,string> &usedReg)
     {
         //分配寄存器

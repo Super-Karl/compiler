@@ -256,7 +256,7 @@ namespace compiler::back::genarm{
 
                                 auto op3 = new compiler::back::OPERATION(compiler::back::Instruction::ADD);
                                 auto sp = new compiler::back::Direct_Reg("sp");
-                                auto imm4 = new compiler::back::ImmNum(4);
+                                auto imm4 = new compiler::back::ImmNum(8);
                                 auto OPERAND3 = new compiler::back::OPERAND(sp, sp, imm4);
                                 auto sentence3 = new compiler::back::Instr_Sentence(*op3, *OPERAND3);
                                 armList.push_back(sentence3);

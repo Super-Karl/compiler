@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
     ofstream outfile;
     string outputfile=argv[3];
     outfile.open(outputfile);
+    outfile<<".macro	mov32,	reg,	val \n movw	\\reg,	#:lower16:\\val\n movt	\\reg,	#:upper16:\\val\n.endm\n.arch armv7ve\n";
     for(auto var:arm){
         outfile<<var->print();
     }

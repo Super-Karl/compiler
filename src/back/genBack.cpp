@@ -261,6 +261,8 @@ namespace compiler::back::genarm{
                                 auto OPERAND3 = new compiler::back::OPERAND(sp, sp, imm4);
                                 auto sentence3 = new compiler::back::Instr_Sentence(*op3, *OPERAND3);
                                 armList.push_back(sentence3);
+                                returnaddpos.push_back(armList.size()-1);
+
 
                                 auto op4 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
                                 auto pc = new compiler::back::Direct_Reg("pc");

@@ -31,6 +31,7 @@ namespace compiler::back::genarm{
 
     void stackPop(vector<compiler::back::Sentence *> &armList,int curStack,string reg);
 
+    void pushToStack(map<string,string> &usedReg,vector<compiler::back::Sentence *> &armList,int cursor,compiler::mid::ir::OperatorName source);
 }
 #define COMPILER_GENBACK_H
 

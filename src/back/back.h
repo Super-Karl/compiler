@@ -205,7 +205,7 @@ namespace compiler::back{
     class OffsetOperate{
         public:
             Instruction OffsetInstr;
-            int OffsetNum;
+            int OffsetNum=0;
             OffsetOperate(){};
             OffsetOperate(Instruction instr,int num):OffsetInstr(instr),OffsetNum(num){};
             std::string print(){
@@ -246,7 +246,7 @@ namespace compiler::back{
             return this;
         }
         std::string print(){
-            std::string word;
+            std::string word="";
             //std::fstream //outfile;
             //outfile.open("testcase.s", std::ios::app);
             if(RegName!=""){
@@ -352,6 +352,7 @@ namespace compiler::back{
                 //outfile<<",";
                 //outfile.close();
                 word+=",";
+                //std::cout<<word;
                 word+=OPERAND2->print();
             }
             if(OPERAND3!= nullptr){

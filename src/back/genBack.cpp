@@ -7,9 +7,10 @@
 #include<vector>
 #include <algorithm>
 namespace compiler::back::genarm{
+    vector<compiler::back::Sentence *> armList;
     vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     {
-        vector<compiler::back::Sentence *> armList;
+
         for (auto val : ir)//ir的每一个块
         {
             compiler::mid::ir::GlobalData *global=dynamic_cast<compiler::mid::ir::GlobalData *>(val);
@@ -47,7 +48,8 @@ namespace compiler::back::genarm{
             int curStack=0;
             int arraySize=0;
             int returnflag=0;//监测是否返回过
-            vector<int> returnaddpos;
+            int beginpos;
+            vector<int> returnaddpos;//return sp sp , (size)的位置
             vector<int> LDRlr;
             map<string,string> usedReg;//变量和寄存器的映射关系
             vector<string> Regs;//使用过的寄存器
@@ -85,9 +87,12 @@ namespace compiler::back::genarm{
                                 compiler::back::OperateNum  *dest =convertVarToReg(irInstr->dest,usedReg,Regs,irInstr->source1);
                                 //转换source1
                                 auto arm_num1=convertVarToReg(irInstr->source1,usedReg,Regs,irInstr->source1);
+                                //cout<<dest->print();
                                 compiler::back::OPERAND *operand = new compiler::back::OPERAND(dest,arm_num1);
                                 compiler::back::Sentence *sentence = new compiler::back::Instr_Sentence(*op,*operand);
                                 armList.push_back(sentence);
+                                if(Regs.size()>=8)
+                                    swap(armList[armList.size()-1],armList[armList.size()-2]);
                                 break;
                             }
                             case compiler::mid::ir::OperatorCode::Sub:{
@@ -459,24 +464,30 @@ namespace compiler::back::genarm{
 
         string regName;
         compiler::back::OperateNum *armNum=nullptr;
-        if(source.type==compiler::mid::ir::Type::Imm)//立即数类型
+        if(source.type==compiler::mid::ir::Type::Imm){//立即数类型
             armNum=new compiler::back::ImmNum(source.value);
+            return armNum;
+        }
         if(source.type==compiler::mid::ir::Type::Var){//寄存器类型
             if(source.name.find("%")!=-1)
                 if(findFromRegs(source.name,usedReg)!="") {//表中已存在
                     armNum = new compiler::back::Direct_Reg(findFromRegs(source.name, usedReg));
+                    return armNum;
                 }
                 else{//表中不存在,进行寄存器分配
-                    string regName=allocReg(usedReg);
-                    //if(Regs.size<7)
-                    //    regName=allocReg(usedReg);
-                    //else
-                    //    pushtostack
+                    string regName;//=allocReg(usedReg);
+                    int cursor=Regs.size();
+                    if(Regs.size()>=7){
+                        pushToStack(usedReg,armList,cursor,source);
+                    }
+                    regName=allocReg(usedReg);
                     if(source1.name.find("$")==-1 && findFromSecond(source1.name,usedReg)==0){
                         Regs.push_back(regName);//防止参数被加入栈中
                     }
                     armNum=new compiler::back::Direct_Reg(regName);
+                    cout<<armNum->print();
                     usedReg.insert(map<string, string>::value_type(source.name, regName));
+                    return armNum;
                 }
             else if(source.name.find("$")!=-1){
                 string name;
@@ -485,10 +496,11 @@ namespace compiler::back::genarm{
                 if(source.name=="$2")name="r2";
                 if(source.name=="$3")name="r3";
                 armNum=new compiler::back::Direct_Reg(name);
+                return armNum;
             }
-            else if(source.name.find("@")!=-1){}
+            else if(source.name.find("@")!=-1){
+            }
         }
-        return armNum;
     }
 
 
@@ -496,7 +508,7 @@ namespace compiler::back::genarm{
     {
         //分配寄存器
         int regNum=4;
-        for(int i=0;i<7;i++)
+        for(int i=0;i<8;i++)
         {
             int flag=0;
             map<string,string>::iterator iter;
@@ -509,6 +521,8 @@ namespace compiler::back::genarm{
                 }
             }
             if(flag==1)regNum++;
+            else if(flag==1 && i==7)
+                return "r1";
             else
                 return regName;
         }
@@ -597,6 +611,16 @@ namespace compiler::back::genarm{
         compiler::back::Sentence *declare2=new compiler::back::TypeDeclaration(compiler::back::EQUKeywords::type,*funcName,compiler::back::TYPE::function);
         armList.push_back(declare1);
         armList.push_back(declare2);
+    }
+    void pushToStack(map<string,string> &usedReg,vector<compiler::back::Sentence *> &armList,int cursor,compiler::mid::ir::OperatorName source){
+        int num=(cursor-7)*4;
+        auto dest=new compiler::back::Direct_Reg("r11");
+        auto opnum=new compiler::back::Indirect_Reg("sp",num);
+        auto op=new compiler::back::OPERATION(compiler::back::Instruction::STR);
+        auto OPERAND=new compiler::back::OPERAND(dest,opnum);
+        auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+        armList.push_back(sentence);
+        usedReg.insert(map<string, string>::value_type(source.name,"[sp,#"+to_string(num)+"]"));
     }
 
 }

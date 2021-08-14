@@ -15,6 +15,7 @@ using namespace std;
 
 using Hash = std::unordered_map<string, int>;
 int main(int argc, char **argv) {
+    auto *argParser = new compiler::controller::ArgParser(argc, argv);
     string inputfile=argv[4];
     FILE *input =fopen(argv[4],"r");
     if(input==nullptr){

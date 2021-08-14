@@ -9,6 +9,7 @@
 namespace compiler::back::genarm{
     vector<compiler::back::Sentence *> armList;
     int nums;//这个是函数中的栈的值,但是前面并没有设定,所以直接在这里进行记录
+    int paramNum=0;
     vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     {
 
@@ -197,14 +198,41 @@ namespace compiler::back::genarm{
                         compiler::back::Sentence *sentence=new compiler::back::Instr_Sentence(*op,*jump_label);
                         int i=0;
                         for(auto param:funcallInstr->argList){
-                            armList.push_back(paramToReg(param,i,usedReg,Regs));
+                            if(param.type==compiler::mid::ir::Type::Var)
+                                armList.push_back(paramToReg(param,i,usedReg,Regs));
+                            else
+                            {
+                                if(i<4){
+                                auto op=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                auto operand1=new compiler::back::Direct_Reg("r"+to_string(i));
+                                auto operand2=new compiler::back::ImmNum(param.value);
+                                auto OPERAND=new compiler::back::OPERAND(operand1,operand2);
+                                auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+                                armList.push_back(sentence);
+                                }
+                                else{
+                                    auto op=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                                    auto operand1=new compiler::back::Direct_Reg("r11");
+                                    auto operand2=new compiler::back::ImmNum(param.value);
+                                    auto OPERAND=new compiler::back::OPERAND(operand1,operand2);
+                                    auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+                                    auto op1=new compiler::back::OPERATION(compiler::back::Instruction::STR);
+                                    auto operand11=new compiler::back::Direct_Reg("r11");
+                                    auto operand21=new compiler::back::Indirect_Reg("sp",4*curStack);
+                                    auto OPERAND1=new compiler::back::OPERAND(operand11,operand21);
+                                    auto sentence1=new compiler::back::Instr_Sentence(*op1,*OPERAND1);
+                                    curStack++;
+                                    armList.push_back(sentence);
+                                    armList.push_back(sentence1);
+                                }
+                            }
                             i++;
                         }
                         for(auto reg:Regs){
                             stackPushBack(armList,curStack,reg);
                             curStack++;
                         }
-                        curStack=0;
+                        //curStack=0;
                         armList.push_back(sentence);//这个push的是BL
                         //函数后恢复现场
                         compiler::back::OPERATION *operationR0 = new compiler::back::OPERATION(compiler::back::Instruction::MOV);
@@ -497,9 +525,28 @@ namespace compiler::back::genarm{
             else if(source.name.find("$")!=-1){
                 string name;
                 if(source.name=="$0")name="r0";
-                if(source.name=="$1")name="r1";
-                if(source.name=="$2")name="r2";
-                if(source.name=="$3")name="r3";
+                else if(source.name=="$1")name="r1";
+                else if(source.name=="$2")name="r2";
+                else if(source.name=="$3")name="r3";
+                else{
+                    auto op=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                    auto operand1=new compiler::back::Direct_Reg("r11");
+                    auto operand2=new compiler::back::Indirect_Reg("sp",(paramNum+1)*4);
+                    paramNum++;
+                    auto OPERAND=new compiler::back::OPERAND(operand1,operand2);
+                    auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+                    armList.push_back(sentence);
+                    /*
+                    auto op1=new compiler::back::OPERATION(compiler::back::Instruction::MOV);
+                    auto operand11=new compiler::back::Direct_Reg(allocReg(usedReg));
+                    auto operand21=new compiler::back::Direct_Reg("r11");
+                    auto OPERAND1=new compiler::back::OPERAND(operand11,operand21);
+                    auto sentence1=new compiler::back::Instr_Sentence(*op1,*OPERAND1);
+                    armList.push_back(sentence1);
+                    */
+                    armNum=new compiler::back::Direct_Reg("r11");
+                    return armNum;
+                }
                 armNum=new compiler::back::Direct_Reg(name);
                 return armNum;
             }

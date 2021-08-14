@@ -78,3 +78,23 @@
 |load|%op1 = %op2内存转载到寄存器|load %op1 %op2 |
 |label| |label labelName |
 |nop| | |
+
+### testTool的使用
+因为生成的是arm汇编,所以自动测试脚本只能在arm的docker或者arm的linux机器上运行
+
+**使用**
+
+1. 查看帮助
+```shell
+./test.sh -h
+```
+
+2. 测试所有样例
+```shell
+./test.sh -a
+```
+
+3. 测试单个样例
+```shell
+./test.sh -a file
+```

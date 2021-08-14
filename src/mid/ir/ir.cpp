@@ -108,18 +108,26 @@ namespace compiler::mid::ir {
       case OperatorCode::Alloca:
         std::cout << "Alloca ";
         break;
+      case OperatorCode::PhiMov:
+        std::cout << "PhiMov ";
+        break;
     }
   }
 
   void printOpName(OperatorName op, char sp,bool notEnd) {
     if (notEnd && sp == '\n')
       std::cout << '\t';
+    std::string label = op.name == ""?"":"_tmp";
     switch (op.type) {
       case Type::Imm:
         std::cout << op.value << sp;
         break;
       case Type::Var:
-        std::cout << op.name << sp;
+
+        if (op.defName=="")
+          std::cout << op.name << sp;
+        else
+          std::cout << op.name << sp;
         break;
       case Type::Void:
         break;

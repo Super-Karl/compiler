@@ -73,6 +73,7 @@ namespace compiler::mid::ir {
     Nop,
     Mov,
     Alloca,
+    PhiMov
   };
   void printOpCode(OperatorCode op);
   void printOpName(OperatorName op, char sp = '\n', bool = true);
@@ -300,6 +301,17 @@ namespace compiler::mid::ir {
       for (auto i : block){
         i->print();
       }
+    }
+  };
+  class PhiIR:public IR{
+  public:
+    OperatorName dest;
+    OperatorName op1;
+    PhiIR(OperatorName dest,OperatorName op1):dest(dest), op1(op1){}
+    void print() override{
+      std::cout<<"\tPhiMov ";
+      printOpName(dest,' ');
+      printOpName(op1,'\n', false);
     }
   };
 }// namespace compiler::mid::ir

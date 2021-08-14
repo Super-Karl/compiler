@@ -24,15 +24,8 @@ int main(int argc, char **argv) {
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root, constTbale);
 
-    auto ir = compiler::controller::generator::genIR(root);
-    compiler::controller::generator::printIR(ir);
-    auto arm = compiler::back::genarm::genBack(ir);
-    ofstream outfile;
-    string outputfile=argv[3];
-    outfile.open(outputfile);
-    //outfile<<".macro	mov32,	reg,	val \n movw	\\reg,	#:lower16:\\val\n movt	\\reg,	#:upper16:\\val\n.endm\n.arch armv7ve\n";
-    for(auto var:arm){
-        outfile<<var->print();
-    }
-    return 0;
+  auto ir = compiler::controller::generator::genIR(root);
+  if (argParser->printIR)freopen("gen.ir","w",stdout);
+  compiler::controller::generator::printIR(ir);
+  return 0;
 }

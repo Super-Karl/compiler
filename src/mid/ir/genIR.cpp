@@ -4,10 +4,21 @@
 #include "../../front/parser/parser.hpp"
 #include <assert.h>
 #include <iostream>
+#include <math.h>
 
 using namespace compiler::mid::ir;
 namespace compiler::front::ast {
   void AST::genIR(IRList &ir, RecordTable *record) {
+    //注册sysy的库函数
+    record->setFunRet({"getint", ElemType::INT});
+    record->setFunRet({"getch", ElemType::INT});
+    record->setFunRet({"getarray", ElemType::INT});
+    record->setFunRet({"putint", ElemType::VOID});
+    record->setFunRet({"putch", ElemType::VOID});
+    record->setFunRet({"putarray", ElemType::VOID});
+    record->setFunRet({"_sysy_starttime", ElemType::VOID});
+    record->setFunRet({"_sysy_stoptime", ElemType::VOID});
+
     for (auto i : codeBlock)
       i->genIR(ir, record);
   }
@@ -239,8 +250,10 @@ namespace compiler::front::ast {
       if (!record->isInLoop()) {
         try {
           varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+          //          var->addVarUse(varUse);
         } catch (...) {
           varUse = VarRedefChain(assign->dest.name, 0);
+          //          var->addVarUse(varUse);
         }
       }
       varUse = VarRedefChain(assign->dest.name, 0);
@@ -248,53 +261,53 @@ namespace compiler::front::ast {
     }
   }
 
-//  void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
-//    auto var = record->searchVar(this->name->name);
-//    if (var->isArray) {
-//      auto source = rightExpr->evalOp(ir, record);
-//
-//      dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
-//
-//      //尝试计算下标
-//      std::vector<int> index;
-//      try {
-//        for (auto i : name->getIndex())
-//          index.push_back(i->eval(record));
-//      } catch (...) {
-//      }
-//      VarRedefChain varUse;
-//
-//      if (!index.empty()) {
-//        try {
-//          varUse = VarRedefChain("", this->rightExpr->eval(record), true);
-//          var->addVarUse(varUse, index);
-//        } catch (...) {
-//          varUse = VarRedefChain("", 0, false);
-//          var->addVarUse(varUse, index);
-//        }
-//      }
-//
-//    } else {
-//      auto assign = new AssignIR();
-//      assign->source1 = rightExpr->evalOp(ir, record);
-//      assign->operatorCode = OperatorCode::Mov;
-//      assign->dest = OperatorName("%" + to_string(record->getID()));
-//      assign->dest.defName = this->name->name;
-//      ir.push_back(assign);
-//
-//      //更新符号表
-//      VarRedefChain varUse;
-//      if (!record->isInLoop()) {
-//        try {
-//          varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
-//          var->addVarUse(varUse);
-//        } catch (...) {
-//          varUse = VarRedefChain(assign->dest.name, 0);
-//          var->addVarUse(varUse);
-//        }
-//      }
-//    }
-//  }
+  //  void AssignStmt::genIR(mid::ir::IRList &ir, RecordTable *record) {
+  //    auto var = record->searchVar(this->name->name);
+  //    if (var->isArray) {
+  //      auto source = rightExpr->evalOp(ir, record);
+  //
+  //      dynamic_cast<ArrayIdentifier *>(this->name)->storeRuntime(ir, record, source);
+  //
+  //      //尝试计算下标
+  //      std::vector<int> index;
+  //      try {
+  //        for (auto i : name->getIndex())
+  //          index.push_back(i->eval(record));
+  //      } catch (...) {
+  //      }
+  //      VarRedefChain varUse;
+  //
+  //      if (!index.empty()) {
+  //        try {
+  //          varUse = VarRedefChain("", this->rightExpr->eval(record), true);
+  //          var->addVarUse(varUse, index);
+  //        } catch (...) {
+  //          varUse = VarRedefChain("", 0, false);
+  //          var->addVarUse(varUse, index);
+  //        }
+  //      }
+  //
+  //    } else {
+  //      auto assign = new AssignIR();
+  //      assign->source1 = rightExpr->evalOp(ir, record);
+  //      assign->operatorCode = OperatorCode::Mov;
+  //      assign->dest = OperatorName("%" + to_string(record->getID()));
+  //      assign->dest.defName = this->name->name;
+  //      ir.push_back(assign);
+  //
+  //      //更新符号表
+  //      VarRedefChain varUse;
+  //      if (!record->isInLoop()) {
+  //        try {
+  //          varUse = VarRedefChain(assign->dest.name, rightExpr->eval(record), true);
+  //          var->addVarUse(varUse);
+  //        } catch (...) {
+  //          varUse = VarRedefChain(assign->dest.name, 0);
+  //          var->addVarUse(varUse);
+  //        }
+  //      }
+  //    }
+  //  }
 
   //完成
   void FunctionDefine::genIR(mid::ir::IRList &ir, RecordTable *record) {
@@ -392,20 +405,21 @@ namespace compiler::front::ast {
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
     auto newTable = new RecordTable(record);
-    auto ifLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto elseLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto endLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    string id  = std::to_string(newTable->getID());
+    auto ifLabel = new LabelIR(".L_THEN_" + id);
+    auto elseLabel = new LabelIR(".L_ELSE_" + id);
+    auto endLabel = new LabelIR(".L_IF_END_" + id);
     cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
     ir.push_back(ifLabel);
-    BlockIR* trueIR = new BlockIR();
-    BlockIR* falseIR = new BlockIR();
+    BlockIR *trueIR = new BlockIR();
+    BlockIR *falseIR = new BlockIR();
     trueBlock->genIR(trueIR->block, newTable);
-    elseBlock->genIR(falseIR->block,newTable);
-    std::unordered_map<std::string,std::string> phiRollBack;
+    elseBlock->genIR(falseIR->block, newTable);
+    std::unordered_map<std::string, std::string> phiRollBack;
     IRList phiRollBackMov;
-    for (auto it = trueIR->block.begin();it!=trueIR->block.end();it++){
-      auto pIR = dynamic_cast<AssignIR*>(*it);
-      VarInfo* tmp;
+    for (auto it = trueIR->block.begin(); it != trueIR->block.end(); it++) {
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      VarInfo *tmp;
       if (pIR) {
         try {
           tmp = record->searchVar(pIR->dest.defName);
@@ -414,13 +428,13 @@ namespace compiler::front::ast {
         }
         try {
           phiRollBack.at(pIR->dest.defName);
-        }catch (...){
-          auto & varDefNameList = tmp->varUse[0];
+        } catch (...) {
+          auto &varDefNameList = tmp->varUse[0];
           std::string name;
-          for (auto it = varDefNameList.begin();it!=varDefNameList.end();it++){
-            if (it->defName == pIR->dest.name){
+          for (auto it = varDefNameList.begin(); it != varDefNameList.end(); it++) {
+            if (it->defName == pIR->dest.name) {
               it++;
-              if (it == varDefNameList.end()){
+              if (it == varDefNameList.end()) {
                 throw runtime_error("???");
               }
               name = it->defName;
@@ -436,8 +450,8 @@ namespace compiler::front::ast {
         }
       }
     }
-    std::unordered_map<std::string,std::string> phiUpdate;
-    for (auto it = falseIR->block.rbegin();it!=falseIR->block.rend();it++){
+    std::unordered_map<std::string, std::string> phiUpdate;
+    for (auto it = falseIR->block.rbegin(); it != falseIR->block.rend(); it++) {
       auto temp = *it;
       auto pIR = dynamic_cast<AssignIR *>(*it);
       if (pIR) {
@@ -446,42 +460,41 @@ namespace compiler::front::ast {
         } catch (...) {
           continue;
         }
-        try{
+        try {
           auto tmp = phiUpdate.at(pIR->dest.defName);
-        }catch(out_of_range){
+        } catch (out_of_range) {
           phiUpdate[pIR->dest.defName] = pIR->dest.name;
         }
       }
     }
-    std::list<IR*> phiUpdateMov;
-    for (auto it = trueIR->block.rbegin();it != trueIR->block.rend();it++){
+    std::list<IR *> phiUpdateMov;
+    for (auto it = trueIR->block.rbegin(); it != trueIR->block.rend(); it++) {
       auto temp = *it;
       auto pIR = dynamic_cast<AssignIR *>(*it);
       if (pIR) {
         try {
           auto tmp = phiUpdate.at(pIR->dest.defName);
-          phiUpdateMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
+          phiUpdateMov.emplace_back(new PhiIR(tmp, pIR->dest.name));
           phiUpdate.erase(pIR->dest.defName);
-        }
-        catch(out_of_range){
+        } catch (out_of_range) {
         }
         try {
           auto tmp = phiRollBack.at(pIR->dest.defName);
-          phiRollBackMov.emplace_back(new AssignIR(pIR->dest.name,tmp));
+          phiRollBackMov.emplace_back(new PhiIR(pIR->dest.name, tmp));
           phiRollBack.erase(pIR->dest.defName);
-        }catch(out_of_range){
+        } catch (out_of_range) {
         }
       }
     }
     for (auto item : trueIR->block) {
       ir.push_back(item);
     }
-    for (auto item: phiUpdateMov){
+    for (auto item : phiUpdateMov) {
       ir.push_back(item);
     }
     ir.push_back(new JmpIR(OperatorCode::Jmp, endLabel));
     ir.push_back(elseLabel);
-    for (auto item: phiRollBackMov){
+    for (auto item : phiRollBackMov) {
       ir.push_back(item);
     }
     for (auto item : falseIR->block) {
@@ -508,35 +521,37 @@ namespace compiler::front::ast {
     auto newTable = new RecordTable(record);
     newTable->setInLoop(true);
 
-    auto loopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto endLoopLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
-    auto testLabel = new LabelIR(".L" + std::to_string(newTable->getID()));
+    int num = newTable->getID();
+    auto loopLabel = new LabelIR(".L_Loop" + std::to_string(num));
+    auto endLoopLabel = new LabelIR(".L_EndLoop" + std::to_string(num));
+    auto testLabel = new LabelIR(".L_Test" + std::to_string(num));
+    auto continueLabel = new LabelIR(".L_Continue"+std::to_string(num));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
-    IRList condIr,loopIR;
-    ir.push_back(new JmpIR(OperatorCode::Jmp,testLabel));
-    loopBlock->genIR(loopIR,newTable);
-    cond->ConditionAnalysis(condIr,newTable,loopLabel,endLoopLabel,true);
+    IRList condIr, loopIR;
+    cond->ConditionAnalysis(condIr, newTable, loopLabel, endLoopLabel, true);
+    loopBlock->genIR(loopIR, newTable);
 
-    IRList phiLoopMov,AntiPhiLoopMov;
-    std::unordered_map<std::string,std::string> phiLoop;
-    for (auto it = loopIR.begin();it!=loopIR.end();it++){
-      auto pIR = dynamic_cast<AssignIR*>(*it);
-      VarInfo* tmp;
+
+    IRList phiLoopMov, AntiPhiLoopMov;
+    std::unordered_map<std::string, std::string> phiLoop;
+    for (auto it = loopIR.begin(); it != loopIR.end(); it++) {
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      VarInfo *tmp;
       if (pIR) {
         try {
           tmp = record->searchVar(pIR->dest.defName);
-        }catch (...){
+        } catch (...) {
           continue;
         }
         try {
           phiLoop.at(pIR->dest.defName);
-        }catch (...){
-          auto & varDefNameList = tmp->varUse[0];
+        } catch (...) {
+          auto &varDefNameList = tmp->varUse[0];
           std::string name;
-          for (auto it = varDefNameList.begin();it!=varDefNameList.end();it++){
-            if (it->defName == pIR->dest.name){
+          for (auto it = varDefNameList.begin(); it != varDefNameList.end(); it++) {
+            if (it->defName == pIR->dest.name) {
               it++;
-              if (it == varDefNameList.end()){
+              if (it == varDefNameList.end()) {
                 throw runtime_error("???");
               }
               name = it->defName;
@@ -547,35 +562,39 @@ namespace compiler::front::ast {
         }
       }
     }
-    for (auto it = loopIR.rbegin();it!=loopIR.rend();it++){
-      auto pIR = dynamic_cast<AssignIR*>(*it);
-      if (pIR){
-        try{
+    for (auto it = loopIR.rbegin(); it != loopIR.rend(); it++) {
+      auto pIR = dynamic_cast<AssignIR *>(*it);
+      if (pIR) {
+        try {
           auto tmp = phiLoop.at(pIR->dest.defName);
-          phiLoopMov.emplace_back(new AssignIR(pIR->dest.name,tmp));
-          AntiPhiLoopMov.emplace_back(new AssignIR(tmp,pIR->dest.name));
+          phiLoopMov.emplace_back(new AssignIR(pIR->dest.name, tmp,OperatorCode::PhiMov));
+          AntiPhiLoopMov.emplace_back(new AssignIR(tmp, pIR->dest.name,OperatorCode::PhiMov));
           phiLoop.erase(pIR->dest.defName);
-        }catch(out_of_range){
+        } catch (out_of_range) {
         }
       }
     }
+    ir.emplace_back(new JmpIR(mid::ir::OperatorCode::Jmp,testLabel));
     ir.push_back(loopLabel);
-    //ir.push_back(testLabel);
-    for (auto &item: loopIR){
+    for (auto &item : loopIR) {
       ir.push_back(item);
     }
-    for (auto &item: AntiPhiLoopMov){
+    ir.push_back(continueLabel);
+    for (auto &item : AntiPhiLoopMov) {
       ir.push_back(item);
     }
     ir.push_back(testLabel);
-    for (auto &item:phiLoopMov){
+    for (auto &item : condIr) {
       ir.push_back(item);
     }
-    for (auto &item: condIr){
-      ir.push_back(item);
-    }
+    //ir.push_back(testLabel);
+
+    //ir.emplace_back(new JmpIR(OperatorCode::Jmp,loopLabel));
 
     ir.push_back(endLoopLabel);
+    for (auto &item : phiLoopMov) {
+      ir.push_back(item);
+    }
     RecordTable::popLabelPair();
 
     newTable->setInLoop(false);
@@ -682,6 +701,9 @@ namespace compiler::front::ast {
    * */
   void Expression::ConditionAnalysis(IRList &ir, RecordTable *record, LabelIR *ifLabel, LabelIR *elLabel, bool trueJmp) {
     try {
+      if (record->isInLoop()){
+        throw runtime_error("");
+      }
       if (this->eval(record)) {
         ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
       } else {
@@ -726,6 +748,9 @@ namespace compiler::front::ast {
       rightExpr->ConditionAnalysis(ir, record, ifLabel, elLabel, true);
     } else {
       try {
+        if (record->isInLoop()){
+          throw runtime_error("");
+        }
         if (this->eval(record)) {
           ir.emplace_back(new JmpIR(OperatorCode::Jmp, ifLabel));
         } else {
@@ -756,12 +781,25 @@ namespace compiler::front::ast {
 
 }// namespace compiler::front::ast
 
+bool is2Power(int x) {
+  double ans = log2(x);
+  return (int) ans == ans;
+}
+
+int log2(int x) {
+  int times = -1;
+  while (x > 0) {
+    x /= 2;
+    times++;
+  }
+  return times;
+}
 
 /*
  *evalOp
  */
-
 namespace compiler::front::ast {
+
   OperatorName NumberExpression::evalOp(IRList &ir, RecordTable *record) {
     return {this->value, Type::Imm};
   }
@@ -794,7 +832,7 @@ namespace compiler::front::ast {
       }
     } catch (...) {
     }
-    OperatorName dest = OperatorName((record->getFarther() == nullptr ? "@" : "%") + to_string(record->getID())), left, right;
+    OperatorName dest = OperatorName("%" + to_string(record->getID())), left, right;
 
     int RelOP[8] = {AND_OP, OR_OP, LT, LE, GE, GT, NE, EQ};
     for (int i = 0; i < 8; i++) {
@@ -815,7 +853,7 @@ namespace compiler::front::ast {
     /*      left = OperatorName(leftExpr->evalOp(ir, record));
       right = OperatorName(rightExpr->evalOp(ir, record));*/
 
-    AssignIR *assign;
+    AssignIR *assign = nullptr;
     switch (this->op) {
       case ADD:
         assign = new AssignIR(OperatorCode::Add, dest, left, right);
@@ -825,14 +863,27 @@ namespace compiler::front::ast {
         assign = new AssignIR(OperatorCode::Sub, dest, left, right);
         ir.push_back(assign);
         break;
-      case MUL:
-        assign = new AssignIR(OperatorCode::Mul, dest, left, right);
+      case MUL: {
+        auto leftNum = dynamic_cast<NumberExpression *>(leftExpr);
+        auto rightNum = dynamic_cast<NumberExpression *>(rightExpr);
+        if (leftNum && is2Power(leftNum->value)) {
+          assign = new AssignIR(OperatorCode::Sal, dest, right, OperatorName(log2(leftNum->value), Type::Imm));
+        } else if (rightNum && is2Power(rightNum->value))
+          assign = new AssignIR(OperatorCode::Sal, dest, left, OperatorName(log2(rightNum->value), Type::Imm));
+        else
+          assign = new AssignIR(OperatorCode::Mul, dest, left, right);
         ir.push_back(assign);
         break;
-      case DIV:
-        assign = new AssignIR(OperatorCode::Div, dest, left, right);
+      }
+      case DIV: {
+        auto rightNum = dynamic_cast<NumberExpression *>(rightExpr);
+        if (rightNum && is2Power(rightNum->value))
+          assign = new AssignIR(OperatorCode::Sar, dest, left, OperatorName(log2(rightNum->value), Type::Imm));
+        else
+          assign = new AssignIR(OperatorCode::Div, dest, left, right);
         ir.push_back(assign);
         break;
+      }
       case MOD:
         assign = new AssignIR(OperatorCode::Mod, dest, left, right);
         ir.push_back(assign);

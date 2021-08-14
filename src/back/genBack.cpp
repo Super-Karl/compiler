@@ -552,7 +552,7 @@ namespace compiler::back::genarm{
         auto iter=usedReg.find(name);
         if(iter != usedReg.end()){
             string name=iter->second;
-            if(name.find("R")!=-1)
+            if(name.find("r")!=-1)
                 return iter->second;
             else{
                 //TODO 这里也需要swap

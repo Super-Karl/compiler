@@ -8,6 +8,7 @@
 #include <algorithm>
 namespace compiler::back::genarm{
     vector<compiler::back::Sentence *> armList;
+    int nums;//这个是函数中的栈的值,但是前面并没有设定,所以直接在这里进行记录
     vector<compiler::back::Sentence *> genBack(compiler::mid::ir::IRList ir)
     {
 
@@ -226,6 +227,8 @@ namespace compiler::back::genarm{
                         compiler::back::OPERAND *operand0=new compiler::back::OPERAND(dest0,source0);
                         compiler::back::Sentence  *sentence0=new compiler::back::Instr_Sentence(*operation0,*operand0);
                         armList.push_back(sentenceR0);
+                        if(Regs.size()>=7)
+                            swap(armList[armList.size()-1],armList[armList.size()-2]);
                         armList.push_back(sentence0);
                         for(auto reg:Regs){
                             stackPop(armList,curStack,reg);
@@ -252,6 +255,7 @@ namespace compiler::back::genarm{
                                 auto OPERAND1 = new compiler::back::OPERAND(r0, Imm);
                                 auto sentence1 = new compiler::back::Instr_Sentence(*op, *OPERAND1);
                                 armList.push_back(sentence1);
+
 
                                 auto op2 = new compiler::back::OPERATION(compiler::back::Instruction::LDR);
                                 auto r14 = new compiler::back::Direct_Reg("lr");
@@ -453,6 +457,7 @@ namespace compiler::back::genarm{
                     auto sentence3 = new compiler::back::Instr_Sentence(*op3, *OPERAND3);
                     armList[val]=sentence3;
                 }
+                cout<<usedReg.size();
                 Regs.clear();
                 usedReg.clear();
             }
@@ -485,7 +490,7 @@ namespace compiler::back::genarm{
                         Regs.push_back(regName);//防止参数被加入栈中
                     }
                     armNum=new compiler::back::Direct_Reg(regName);
-                    cout<<armNum->print();
+                    //cout<<armNum->print();
                     usedReg.insert(map<string, string>::value_type(source.name, regName));
                     return armNum;
                 }
@@ -545,8 +550,21 @@ namespace compiler::back::genarm{
     {
         //从变量名寻找
         auto iter=usedReg.find(name);
-        if(iter != usedReg.end())
-            return iter->second;
+        if(iter != usedReg.end()){
+            string name=iter->second;
+            if(name.find("R")!=-1)
+                return iter->second;
+            else{
+                //TODO 这里也需要swap
+                auto op=new compiler::back::OPERATION(compiler::back::Instruction::LDR);
+                auto operand1=new compiler::back::Direct_Reg("r11");
+                auto operand2=new compiler::back::Direct_Reg(iter->second);
+                auto OPERAND=new compiler::back::OPERAND(operand1,operand2);
+                auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
+                armList.push_back(sentence);
+                return "r11";
+            }
+        }
         else return "";
     }
 
@@ -621,6 +639,7 @@ namespace compiler::back::genarm{
         auto sentence=new compiler::back::Instr_Sentence(*op,*OPERAND);
         armList.push_back(sentence);
         usedReg.insert(map<string, string>::value_type(source.name,"[sp,#"+to_string(num)+"]"));
+        nums=num;
     }
 
 }

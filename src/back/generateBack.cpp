@@ -248,6 +248,7 @@ namespace compiler::back {
             freeRegForCalExp(reg);
         } else {
             //计算地址偏移量到regtomul
+            regtomul = getCanUseRegForCalExp();
             for (int i = 1; i < getvar->arrayIndex.size(); i++) {
                 if (expression->index[i - 1]->nodetype != NumberExpressionType) {
                     int reg1 = generateExp(vartable, backlist, expression->index[i - 1]);
@@ -967,6 +968,7 @@ namespace compiler::back {
             freeRegForCalExp(reg);
         } else {
             //计算地址偏移量到regtomul
+            regtomul = getCanUseRegForCalExp();
             for (int i = 1; i <= expression->index.size(); i++) {
                 if (expression->index[i - 1]->nodetype != NumberExpressionType) {
                     int reg1 = generateExp(vartable, backlist, expression->index[i - 1]);

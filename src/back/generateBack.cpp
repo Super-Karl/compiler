@@ -527,7 +527,11 @@ namespace compiler::back {
         }
         for (int i = 0; i < localVarCount; i++) {
             vartable.pop_back();
-            tableIndex--;
+            if (!vartable.empty()) {
+                tableIndex = vartable.back().index + 1;
+            } else {
+                tableIndex = 0;
+            }
         }
         if (localVarSpace > 0) {
             int reg = getCanUseRegForCalExp();
@@ -699,7 +703,11 @@ namespace compiler::back {
         }
         for (int i = 0; i < localVarCount; i++) {
             vartable.pop_back();
-            tableIndex--;
+            if (!vartable.empty()) {
+                tableIndex = vartable.back().index + 1;
+            } else {
+                tableIndex = 0;
+            }
         }
         if (localVarSpace > 0) {
             int reg = getCanUseRegForCalExp();

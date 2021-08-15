@@ -380,6 +380,12 @@ namespace compiler::back {
                     break;
                 }
                 case ContinueStatementType: {
+                    if (whileLocal.top() > 0) {
+                        int reg = getCanUseRegForCalExp();
+                        backlist.push_back(new LDR(reg, whileLocal.top() * 4));
+                        backlist.push_back(new OP("add", "sp", "sp", reg));
+                        freeRegForCalExp(reg);
+                    }
                     backlist.push_back(new B("while_con_" + to_string(nowWhileId)));
                     break;
                 }
@@ -547,6 +553,12 @@ namespace compiler::back {
                 break;
             }
             case ContinueStatementType: {
+                if (whileLocal.top() > 0) {
+                    int reg = getCanUseRegForCalExp();
+                    backlist.push_back(new LDR(reg, whileLocal.top() * 4));
+                    backlist.push_back(new OP("add", "sp", "sp", reg));
+                    freeRegForCalExp(reg);
+                }
                 backlist.push_back(new B("while_con_" + to_string(nowWhileId)));
                 break;
             }

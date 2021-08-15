@@ -316,9 +316,10 @@ namespace compiler::back {
             return;
         } else {
             for (auto arg: functionCall->args->args) {
+                int isarray = 0;
+                int index;
                 if(arg->nodetype == ArrayIdentifierType){
                     int ispoint = 0;
-                    int index;
                     index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
                     if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
                         if(globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size()> static_cast<ArrayIdentifier*>(arg)->index.size()){
@@ -334,12 +335,32 @@ namespace compiler::back {
                         int reg = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(arg));
                         backlist.push_back(new STR(reg));
                         freeRegForCalExp(reg);
-                    }else{
-                        int reg = generateExp(vartable, backlist, arg);
-                        backlist.push_back(new STR(reg));
-                        freeRegForCalExp(reg);
+                        continue;
                     }
-                }else {
+                }
+                if (arg->nodetype == IdentifierType) {
+                    index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
+                    if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                        isarray = 1;
+                    }
+                    if (index != -1 && vartable[index].isarray) {
+                        isarray = 1;
+                    }
+                }
+                if (isarray) {
+                    int reg = getCanUseRegForCalExp();
+                    if (index == -1) {
+                        backlist.push_back(new MOV32(reg, static_cast<Identifier *>(arg)->name));
+                        //backlist.push_back(new LDR(reg, static_cast<Identifier *>(arg)->name));
+                    } else {
+                        int reg1 = getCanUseRegForCalExp();
+                        backlist.push_back(new LDR(reg1, 4 * vartable[index].index + 8));
+                        backlist.push_back(new OP("sub", reg, "fp", reg1));
+                        freeRegForCalExp(reg1);
+                    }
+                    backlist.push_back(new STR(reg));
+                    freeRegForCalExp(reg);
+                } else {
                     int reg = generateExp(vartable, backlist, arg);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);

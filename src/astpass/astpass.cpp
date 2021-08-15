@@ -236,6 +236,10 @@ namespace compiler::astpassir {
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale) {
         for (auto item = node->blockItem.begin(); item != node->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
+                case BlockType:{
+                    FirstPassNode(static_cast<Block *>(*item), constTbale);
+                    break;
+                }
                 case DeclareStatementType: {
                     for (auto subNode:static_cast<DeclareStatement *>(*item)->declareList) {
                         switch (subNode->nodetype) {

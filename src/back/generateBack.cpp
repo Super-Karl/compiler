@@ -41,6 +41,8 @@ namespace compiler::back {
 
     int orCount = 0;
 
+    stack<int> whileLocal;
+
     int tableFind(vector<VAR> &vartable, string name) {
         for (int i = vartable.size() - 1; i >= 0; i--) {
             if (vartable[i].name == name) {
@@ -63,6 +65,7 @@ namespace compiler::back {
 //                "----------------------------------\n";
 
         backlist.push_back(new MACRO());
+        whileLocal.push(0);
         for (auto block:root->codeBlock) {
             if (block->nodetype == FunctionDefineType) {
                 FunctionDefine *func = static_cast<FunctionDefine *>(block);
@@ -367,6 +370,12 @@ namespace compiler::back {
                     break;
                 }
                 case BreakStatemetType: {
+                    if (whileLocal.top() > 0) {
+                        int reg = getCanUseRegForCalExp();
+                        backlist.push_back(new LDR(reg, whileLocal.top() * 4));
+                        backlist.push_back(new OP("add", "sp", "sp", reg));
+                        freeRegForCalExp(reg);
+                    }
                     backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
                     break;
                 }
@@ -383,11 +392,13 @@ namespace compiler::back {
                     freeRegForCalExp(reg);
                     backlist.push_back(new Lable("while_body_" + to_string(id)));
                     //while体
+                    whileLocal.push(0);
                     if (static_cast<WhileStatement *>(*item)->loopBlock->nodetype == BlockType) {
                         generateBlock(vartable, backlist, static_cast<Block *>(static_cast<WhileStatement *>(*item)->loopBlock), id);
                     } else {
                         generateStmt(vartable, backlist, static_cast<WhileStatement *>(*item)->loopBlock, id);
                     }
+                    whileLocal.pop();
                     backlist.push_back(new B("while_con_" + to_string(id)));
                     backlist.push_back(new Lable("while_end_" + to_string(id)));
                     break;
@@ -433,12 +444,14 @@ namespace compiler::back {
                             case ArrayDeclareWithInitType: {
                                 localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
                                 localVarCount++;
+                                whileLocal.top() = whileLocal.top() + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
                                 generateBackArray(vartable, backlist, subNode);
                                 break;
                             }
                             case VarDeclareWithInitType: {
                                 localVarSpace++;
                                 localVarCount++;
+                                whileLocal.top()++;
                                 //把右值放到r2
                                 int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                                 string name = subNode->name->name;
@@ -451,6 +464,7 @@ namespace compiler::back {
                             case VarDeclareType: {
                                 localVarSpace++;
                                 localVarCount++;
+                                whileLocal.top()++;
                                 string name = subNode->name->name;
                                 vartable.push_back(VAR(name, 0, tableIndex++));
                                 backlist.push_back(new STR(0));
@@ -523,6 +537,12 @@ namespace compiler::back {
         int localVarCount = 0;
         switch ((stmt)->nodetype) {
             case BreakStatemetType: {
+                if (whileLocal.top() > 0) {
+                    int reg = getCanUseRegForCalExp();
+                    backlist.push_back(new LDR(reg, whileLocal.top() * 4));
+                    backlist.push_back(new OP("add", "sp", "sp", reg));
+                    freeRegForCalExp(reg);
+                }
                 backlist.push_back(new B("while_end_" + to_string(nowWhileId)));
                 break;
             }
@@ -539,11 +559,13 @@ namespace compiler::back {
                 freeRegForCalExp(reg);
                 backlist.push_back(new Lable("while_body_" + to_string(id)));
                 //while体
+                whileLocal.push(0);
                 if (static_cast<WhileStatement *>(stmt)->loopBlock->nodetype == BlockType) {
                     generateBlock(vartable, backlist, static_cast<Block *>(static_cast<WhileStatement *>(stmt)->loopBlock), id);
                 } else {
                     generateStmt(vartable, backlist, static_cast<WhileStatement *>(stmt)->loopBlock, id);
                 }
+                whileLocal.pop();
                 backlist.push_back(new B("while_con_" + to_string(id)));
                 backlist.push_back(new Lable("while_end_" + to_string(id)));
                 break;
@@ -588,6 +610,7 @@ namespace compiler::back {
                         case ArrayDeclareType:
                         case ArrayDeclareWithInitType: {
                             localVarSpace = localVarSpace + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
+                            whileLocal.top() = whileLocal.top() + static_cast<ArrayDeclare *>(subNode)->initVal->initValList.size();
                             localVarCount++;
                             generateBackArray(vartable, backlist, subNode);
                             break;
@@ -595,6 +618,7 @@ namespace compiler::back {
                         case VarDeclareWithInitType: {
                             localVarSpace++;
                             localVarCount++;
+                            whileLocal.top()++;
                             //把右值放到r2
                             int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
                             string name = subNode->name->name;
@@ -607,6 +631,7 @@ namespace compiler::back {
                         case VarDeclareType: {
                             localVarSpace++;
                             localVarCount++;
+                            whileLocal.top();
                             string name = subNode->name->name;
                             vartable.push_back(VAR(name, 0, tableIndex++));
                             backlist.push_back(new STR(0));

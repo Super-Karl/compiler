@@ -945,6 +945,7 @@ namespace compiler::back {
         }
         //计算地址
         int regtomul = getCanUseRegForCalExp();
+        backlist.push_back(new LDR(regtomul, 0));
         if (allNum) {
             //取地址到regyomul
             //regtomul = getCanUseRegForCalExp();

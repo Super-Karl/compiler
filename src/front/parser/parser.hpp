@@ -91,7 +91,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 28 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+#line 72 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
 
     int token;
     compiler::front::ast::Identifier* ident;

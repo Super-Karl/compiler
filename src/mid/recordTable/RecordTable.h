@@ -7,6 +7,7 @@
 
 #include "mid/ir/ir.h"
 #include <list>
+#include <map>
 #include <stack>
 #include <unordered_map>
 #include <utility>
@@ -38,7 +39,7 @@ namespace compiler::mid::ir {
     std::string arrayName;//只有数组会使用这个标识符
     std::vector<int> shape;
     std::vector<std::list<VarRedefChain>> varUse;//TODO试图用varRedefChain 表示变量的def链,use变量的时候实际使用的是def list的顶层
-
+    int uid;
     VarInfo(std::string name, int value, bool canAssign = false, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inShape, std::vector<int> &inValue, bool canAssign = true, bool isConst = false);
     VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst = false);
@@ -56,8 +57,40 @@ namespace compiler::mid::ir {
 
     void addVarUse(VarRedefChain var, std::vector<int> index = {});
   };
-
+  class RecordTable;
   //全局的记录表,用来记录sy程序中变量的use
+  class BlockLabel{
+    bool inIf;
+  };
+  class Definition{
+  public:
+    std::string name;
+    BlockLabel blockLabel;
+    std::vector<IR*>::iterator position;
+    Definition(std::string name,BlockLabel blockLabel):name(name),blockLabel(blockLabel){}
+    Definition()=default;
+  };
+  class Stream {
+  public:
+    std::string defName;
+    std::list<Definition> defChain;
+    int uid;
+    static int id;
+
+    Stream();
+    void addUse(std::string,BlockLabel ,std::vector<IR*>::iterator);
+    Definition getTop();
+  };
+  class Bundle {
+  public:
+    std::map<int,Stream> varDefs;
+    Bundle() = default;
+    void addUse(std::string name ,BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record);
+    void addVar(std::string defName,std::string name, BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record);
+    std::map<int,Stream>::iterator find(int);
+    std::map<int,Stream>::iterator end();
+    std::map<int,Stream>::iterator begin();
+  };
   class RecordTable {
   private:
     std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
@@ -67,9 +100,13 @@ namespace compiler::mid::ir {
 //    bool inIf = false;
     std::unordered_map<std::string, ElemType> funDecl;
     static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
-
   public:
-    RecordTable(RecordTable *rt = nullptr) : father(rt){};
+    Bundle bundle;
+    RecordTable(RecordTable *rt = nullptr) : father(rt){
+                                                 if (rt!= nullptr){
+                                                   bundle = (rt->bundle);
+                                                 }
+                                             };
     VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
     void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
     static void pushLabelPair(LabelIR *, LabelIR *);

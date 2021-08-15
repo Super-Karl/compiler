@@ -138,3 +138,49 @@ namespace compiler::mid::ir {
     return labelPairs.top();
   }
 }// namespace compiler::mid::ir
+
+namespace compiler::mid::ir{
+  int Stream::id = 0;
+  void Stream::addUse(std::string name,BlockLabel label,std::vector<IR*>::iterator it){
+    Definition def;
+    def.blockLabel = label;
+    def.position = it;
+    def.name = name;
+  }
+  Stream::Stream() {
+    this->uid = id++;
+  }
+  Definition Stream::getTop() {
+    return defChain.back();
+  }
+  void Bundle::addUse(std::string name ,BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record){
+    try {
+      VarInfo* varInfo = record->searchVar(name);
+      int uid = varInfo->uid;
+      Stream &stream = this->varDefs[uid];
+      stream.addUse(name,blockLabel,it);
+    }catch (...) {
+      throw std::runtime_error("Can not find var");
+    }
+  }
+  void Bundle::addVar(std::string defName,std::string name, BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record){
+    Stream stream;
+    int uid = stream.uid;
+    stream.defName = defName;
+    stream.addUse(name,blockLabel,it);
+    this->varDefs.insert(std::make_pair(uid,stream));
+  }
+  std::map<int,Stream>::iterator Bundle::find(int key){
+    return this->varDefs.find(key);
+  }
+  std::map<int,Stream>::iterator Bundle::end(){
+    return this->varDefs.end();
+  }
+  std::map<int,Stream>::iterator Bundle::begin(){
+    return this->varDefs.begin();
+  }
+
+  void mergeRecord(IRList &list1,Bundle bundle1,IRList &list2,Bundle bundle2){
+
+  }
+}//namespace compiler::mid::ir for Bundle

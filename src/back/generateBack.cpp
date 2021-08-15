@@ -921,7 +921,6 @@ namespace compiler::back {
     int getArrayArgAddress(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::ArrayIdentifier *expression) {
         string name = expression->name;
         int index = tableFind(vartable, name);
-        int regtomul;
         VAR *getvar;
         if (index == -1) {
             getvar = globalVartable[name];
@@ -944,9 +943,10 @@ namespace compiler::back {
             }
         }
         //计算地址
+        int regtomul = getCanUseRegForCalExp();
         if (allNum) {
             //取地址到regyomul
-            regtomul = getCanUseRegForCalExp();
+            //regtomul = getCanUseRegForCalExp();
             if (index != -1 && getvar->ispointer) {
                 int regt = getCanUseRegForCalExp();
                 backlist.push_back(new LDR(regt, 8 + 4 * vartable[index].index));

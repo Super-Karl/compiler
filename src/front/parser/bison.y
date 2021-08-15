@@ -37,9 +37,10 @@ int oct2int(const char* s){
     int num = 0;
     int i = 0;
     while(s[i]!='\0'){
-        num = num * 10 + s[i] - '0';
+        num = num * 8 + s[i] - '0';
         i++;
     }
+    return num;
 }
 int s2i(const char* s){
     int i = 0;

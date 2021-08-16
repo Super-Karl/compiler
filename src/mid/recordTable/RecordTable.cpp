@@ -20,6 +20,9 @@ namespace compiler::mid::ir {
   }
 
   void RecordTable::insertVar(std::string name, VarInfo *v) {
+    std::vector<IR*>::iterator it;
+    RecordTable *t = this;
+    this->bundle.addVar(name,v->getUseName(),BlockLabel(),it,this);
     varTable.insert({name, v});
   }
 
@@ -150,7 +153,7 @@ namespace compiler::mid::ir{
   Stream::Stream() {
     this->uid = id++;
   }
-  Definition Stream::getTop() {
+  Definition& Stream::getTop() {
     return defChain.back();
   }
   void Bundle::addUse(std::string name ,BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record){
@@ -170,6 +173,9 @@ namespace compiler::mid::ir{
     stream.addUse(name,blockLabel,it);
     this->varDefs.insert(std::make_pair(uid,stream));
   }
+  void Bundle::addStream(Stream &s) {
+    this->varDefs.insert(std::make_pair(s.uid,s));
+  }
   std::map<int,Stream>::iterator Bundle::find(int key){
     return this->varDefs.find(key);
   }
@@ -180,7 +186,64 @@ namespace compiler::mid::ir{
     return this->varDefs.begin();
   }
 
-  void mergeRecord(IRList &list1,Bundle bundle1,IRList &list2,Bundle bundle2){
+  Bundle mergeRecord(RecordTable *record,IRList &list1,Bundle &bundle1,IRList &list2,Bundle &bundle2){
+    Bundle bundle;
+    for (auto &item: bundle1){
+      int uid = item.first;
+      Stream stream1 = item.second;
+      auto it = bundle2.find(uid);
+      if (it == bundle2.end()){
+        continue;
+      }
 
+      Stream &stream2 = it->second;
+      if (stream1.getTop()!=stream2.getTop()){
+        auto phi = new AssignIR(OperatorName("%"+std::to_string(record->getID())),stream1.getTop().name,OperatorCode::PhiMov);
+        list1.push_back(phi);
+        list2.push_back(phi);
+        stream1.addUse(phi->dest.name,BlockLabel(),std::vector<IR*>::iterator());
+      }
+      bundle.addStream(stream1);
+    }
+    return bundle;
+  }
+  void mergeRecordSlave(RecordTable *record,IRList &list1,Bundle bundle1,IRList &list2,Bundle bundle2){
+    for (auto &item: bundle1){
+      int uid = item.first;
+      Stream stream1 = item.second;
+      auto it = bundle2.find(uid);
+      if (it == bundle2.end()){
+        continue;
+      }
+      Stream &stream2 = it->second;
+      if (stream1.getTop()!=stream2.getTop()){
+        auto phi = new AssignIR(OperatorName("%"+std::to_string(record->getID())),stream1.getTop().name,OperatorCode::PhiMov);
+        //list1.push_back(phi);
+        list2.push_back(phi);
+      }
+    }
+  }
+  Bundle mergeRecord(std::vector<Bundle> l,RecordTable* record){
+    Bundle Merged;
+    Bundle &bundle1 = l.front();
+    auto it = l.begin();
+
+    for (auto &item:bundle1){
+      bool flag = false;
+      int uid = item.first;
+      for (++it;it!=l.end();++it){
+        auto tmpIt = it->find(uid);
+        if (tmpIt != it->end()){
+          if (tmpIt->second.getTop() != item.second.getTop()){
+            flag = true;
+            break;
+          }
+        }
+      }
+      if (flag){
+        OperatorName dest("%"+std::to_string(record->getID()));
+        //for ()
+      }
+    }
   }
 }//namespace compiler::mid::ir for Bundle

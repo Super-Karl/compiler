@@ -69,6 +69,12 @@ namespace compiler::mid::ir {
     std::vector<IR*>::iterator position;
     Definition(std::string name,BlockLabel blockLabel):name(name),blockLabel(blockLabel){}
     Definition()=default;
+    bool operator!=(Definition &definition){
+      return this->name != definition.name;
+    }
+    bool operator==(Definition &definition){
+      return this->name == definition.name;
+    }
   };
   class Stream {
   public:
@@ -79,7 +85,7 @@ namespace compiler::mid::ir {
 
     Stream();
     void addUse(std::string,BlockLabel ,std::vector<IR*>::iterator);
-    Definition getTop();
+    Definition &getTop();
   };
   class Bundle {
   public:
@@ -87,49 +93,54 @@ namespace compiler::mid::ir {
     Bundle() = default;
     void addUse(std::string name ,BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record);
     void addVar(std::string defName,std::string name, BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record);
+    void addStream(Stream &s);
     std::map<int,Stream>::iterator find(int);
     std::map<int,Stream>::iterator end();
     std::map<int,Stream>::iterator begin();
   };
+  Bundle mergeRecordSlave(RecordTable *record,IRList &list1,Bundle &bundle1,IRList &list2,Bundle &bundle2);
+  Bundle mergeRecord(RecordTable *record,IRList &list1,Bundle &bundle1,IRList &list2,Bundle &bundle2);
+  Bundle mergeRecord(std::vector<Bundle> l);
+
   class RecordTable {
-  private:
-    std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
-    RecordTable *father;
-    static unsigned int id;
-    bool inLoop = false;
-//    bool inIf = false;
-    std::unordered_map<std::string, ElemType> funDecl;
-    static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
-  public:
-    Bundle bundle;
-    RecordTable(RecordTable *rt = nullptr) : father(rt){
-                                                 if (rt!= nullptr){
-                                                   bundle = (rt->bundle);
-                                                 }
-                                             };
-    VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
-    void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
-    static void pushLabelPair(LabelIR *, LabelIR *);
-    static void popLabelPair();
-    static std::pair<LabelIR *, LabelIR *> &getTopLabel();
-    unsigned int getID() { return this->id++; }
+    private:
+      std::unordered_map<std::string, VarInfo *> varTable;//符号表,变量的vec只有一个值,数组的vector会存储所有数组的值
+      RecordTable *father;
+      static unsigned int id;
+      bool inLoop = false;
+      //    bool inIf = false;
+      std::unordered_map<std::string, ElemType> funDecl;
+      static std::stack<std::pair<LabelIR *, LabelIR *>> labelPairs;
+    public:
+      Bundle bundle;
+      RecordTable(RecordTable *rt = nullptr) : father(rt){
+        if (rt!= nullptr){
+          bundle = (rt->bundle);
+        }
+      };
+      VarInfo *searchVar(std::string name);              //输入参数为变量名,返回在  hash表中的引用
+      void insertVar(std::string name, VarInfo *varInfo);//插入单个varInfo元素
+      static void pushLabelPair(LabelIR *, LabelIR *);
+      static void popLabelPair();
+      static std::pair<LabelIR *, LabelIR *> &getTopLabel();
+      unsigned int getID() { return this->id++; }
 
-    RecordTable *getFarther() { return father; }
+      RecordTable *getFarther() { return father; }
 
-    ElemType getFunRet(std::string funcName);
+      ElemType getFunRet(std::string funcName);
 
-    void setFunRet(std::pair<std::string, ElemType> pair);
+      void setFunRet(std::pair<std::string, ElemType> pair);
 
-    bool canExprAssign(std::string op1, std::string op2, std::vector<int> index1 = {}, std::vector<int> index2 = {});
+      bool canExprAssign(std::string op1, std::string op2, std::vector<int> index1 = {}, std::vector<int> index2 = {});
 
-    bool isInLoop() const { return this->inLoop; };
+      bool isInLoop() const { return this->inLoop; };
 
-    void setInLoop(bool loop) { inLoop = loop; };
+      void setInLoop(bool loop) { inLoop = loop; };
 
-//    bool isInIf() const { return inIf; };
+      //    bool isInIf() const { return inIf; };
 
-//    void setInIf(bool is) { inIf = is; };
-  };
-}// namespace compiler::mid::ir
+      //    void setInIf(bool is) { inIf = is; };
+    };
+  }// namespace compiler::mid::ir
 
 #endif//COMPILER_RECORDTABLE_H

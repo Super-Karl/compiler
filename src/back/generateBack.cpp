@@ -187,6 +187,10 @@ namespace compiler::back {
                 for (auto index:static_cast<ArrayIdentifier *>(array->name)->index) {
                     temp.arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                 }
+                int reg = getCanUseRegForCalExp();
+                backlist.push_back(new LDR(reg, static_cast<ArrayDeclare *>(array)->initVal->initValList.size() * 4));
+                backlist.push_back(new OP("sub", "sp", "sp", reg));
+                freeRegForCalExp(reg);
                 vartable.push_back(temp);
                 break;
             }

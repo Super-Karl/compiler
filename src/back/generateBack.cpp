@@ -163,8 +163,7 @@ namespace compiler::back {
     void generateBackArray(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Declare *array) {
         switch (array->nodetype) {
             case ArrayDeclareWithInitType:
-            case ConstArrayType:
-            case ArrayDeclareType: {
+            case ConstArrayType:{
                 string name = array->name->name;
                 tableIndex = tableIndex + static_cast<ArrayDeclare *>(array)->initVal->initValList.size();
                 VAR temp = VAR(name, 0, tableIndex - 1);
@@ -176,6 +175,17 @@ namespace compiler::back {
                     int reg = generateExp(vartable, backlist, static_cast<ArrayDeclare *>(array)->initVal->initValList[i]);
                     backlist.push_back(new STR(reg));
                     freeRegForCalExp(reg);
+                }
+                vartable.push_back(temp);
+                break;
+            }
+            case ArrayDeclareType: {
+                string name = array->name->name;
+                tableIndex = tableIndex + static_cast<ArrayDeclare *>(array)->initVal->initValList.size();
+                VAR temp = VAR(name, 0, tableIndex - 1);
+                temp.isarray = 1;
+                for (auto index:static_cast<ArrayIdentifier *>(array->name)->index) {
+                    temp.arrayIndex.push_back(static_cast<NumberExpression *>(index)->value);
                 }
                 vartable.push_back(temp);
                 break;

@@ -301,6 +301,19 @@ namespace compiler::astpassir {
                     break;
                 }
                 case AssignStmtType: {
+                    if(static_cast<AssignStmt *>(*item)->name->nodetype==ArrayIdentifierType){
+                        auto Id = static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(*item)->name);
+                        for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                            (*i) = FirstPassExpr((*i), constTbale);
+                            int result;
+                            if (caluExpersion((*i), result)) {
+                                delete (*i);
+                                (*i) = new NumberExpression(result);
+                            } else {
+//                        std::cout << "数组下标志不能计算";
+                            }
+                        }
+                    }
                     static_cast<AssignStmt *>(*item)->rightExpr = FirstPassExpr(static_cast<AssignStmt *>(*item)->rightExpr, constTbale);
                     break;
                 }
@@ -385,6 +398,19 @@ namespace compiler::astpassir {
                 }
             }
             case AssignStmtType: {
+                if(static_cast<AssignStmt *>(stmt)->name->nodetype==ArrayIdentifierType){
+                    auto Id = static_cast<ArrayIdentifier *>(static_cast<AssignStmt *>(stmt)->name);
+                    for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                        (*i) = FirstPassExpr((*i), constTbale);
+                        int result;
+                        if (caluExpersion((*i), result)) {
+                            delete (*i);
+                            (*i) = new NumberExpression(result);
+                        } else {
+//                        std::cout << "数组下标志不能计算";
+                        }
+                    }
+                }
                 static_cast<AssignStmt *>(stmt)->rightExpr = FirstPassExpr(static_cast<AssignStmt *>(stmt)->rightExpr, constTbale);
                 break;
             }

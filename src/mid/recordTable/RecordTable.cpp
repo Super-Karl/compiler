@@ -20,9 +20,7 @@ namespace compiler::mid::ir {
   }
 
   void RecordTable::insertVar(std::string name, VarInfo *v) {
-    std::vector<IR*>::iterator it;
-    RecordTable *t = this;
-    this->bundle.addVar(name,v->getUseName(),BlockLabel(),it,this);
+    this->bundle.addVar(name,v->getUseName(),BlockLabel(),std::vector<IR*>::iterator(),this);
     varTable.insert({name, v});
   }
 
@@ -52,8 +50,8 @@ namespace compiler::mid::ir {
   VarInfo::VarInfo(std::string name, int value, bool canAssign, bool isConst)
       : isConst(isConst), isArray(false), arrayName("") {
     this->varUse.resize(1);
-    this->varUse[0].push_front(VarRedefChain(std::move(name), value, canAssign));
-  }
+    this->varUse[0].emplace_front(VarRedefChain(name, value, canAssign));
+ b  }
 
   VarInfo::VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst) {
     this->arrayName = std::move(name);

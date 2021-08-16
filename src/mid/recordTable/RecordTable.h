@@ -26,7 +26,7 @@ namespace compiler::mid::ir {
     std::string defName;   //在ir中该次define的名字
     int val;               //该次define的值
     VarRedefChain() = default;
-    VarRedefChain(std::string defName, int val = INT32_MIN, bool canAssign = false) : defName(std::move(defName)), val(val), canAssign(canAssign){};
+    VarRedefChain(std::string defName, int val = INT32_MIN, bool canAssign = false) : defName((defName)), val(val), canAssign(canAssign){};
   };
 
   //  数组的处理比较麻烦,因为数组在定义的时候标识符是整个数组,而不是单个数组元素,所以给数组单独添加一个属性处理;

@@ -21,7 +21,9 @@ int main(int argc, char **argv) {
         return 0;
     }
     auto *root = compiler::controller::generator::generate(input);
-    //root->print();
+    if(argc>6){
+        root->print();
+    }
     Hash constTbale;
     compiler::astpassir::FirstPassRoot(root,constTbale);
     if(argc>6){

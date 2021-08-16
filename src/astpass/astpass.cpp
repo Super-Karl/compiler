@@ -226,6 +226,7 @@ namespace compiler::astpassir {
                     }
                 }
             } else if (node->nodetype == FunctionDefineType) {
+                FirstPassArg(static_cast<FunctionDefine *>(node)->args, constTbale);
                 FirstPassNode(static_cast<Block *>(static_cast<FunctionDefine *>(node)->body), constTbale);
             } else if (node->nodetype == VoidStatementType) {
                 root->codeBlock.remove(node);
@@ -233,10 +234,28 @@ namespace compiler::astpassir {
         }
     }
 
+    void FirstPassArg(compiler::front::ast::FunctionDefArgList *argList, Hash constTbale) {
+        for (auto expr = argList->args.begin(); expr != argList->args.end(); expr++) {
+            if ((*expr)->name->nodetype == ArrayIdentifierType) {
+                auto Id = static_cast<ArrayIdentifier *>((*expr)->name);
+                for (auto i = Id->index.begin(); i != Id->index.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    } else {
+//                        std::cout << "数组下标志不能计算";
+                    }
+                }
+            }
+        }
+    }
+
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale) {
         for (auto item = node->blockItem.begin(); item != node->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
-                case BlockType:{
+                case BlockType: {
                     FirstPassNode(static_cast<Block *>(*item), constTbale);
                     break;
                 }

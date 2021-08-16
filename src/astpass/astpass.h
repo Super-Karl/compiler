@@ -17,6 +17,8 @@ namespace compiler::astpassir {
 
     void FirstPassRoot(compiler::front::ast::AST *root, Hash constTbale);
 
+    void FirstPassArg(compiler::front::ast::FunctionDefArgList *argList, Hash constTbale);
+
     void FirstPassNode(compiler::front::ast::Block *node, Hash constTbale);
 
     void FirstPassStmt(compiler::front::ast::Stmt *stmt, Hash constTbale);

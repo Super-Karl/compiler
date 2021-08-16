@@ -301,9 +301,61 @@ namespace compiler::back {
             backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
         } else if (functionCall->name->name == "getarray") {
-            int reg1 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[0]));
+            /*int reg1 = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(functionCall->args->args[0]));
             backlist.push_back(new MOV(0, reg1, "reg2reg"));
-            freeRegForCalExp(reg1);
+            freeRegForCalExp(reg1);*/
+            int isarray = 0;
+            int index;
+            auto arg = functionCall->args->args[0];
+            if(arg->nodetype == ArrayIdentifierType){
+                int ispoint = 0;
+                index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
+                if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                    if(globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size()> static_cast<ArrayIdentifier*>(arg)->index.size()){
+                        ispoint = 1;
+                    }
+                }
+                if (index != -1 && vartable[index].isarray) {
+                    if(vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier*>(arg)->index.size()){
+                        ispoint = 1;
+                    }
+                }
+                if(ispoint){
+                    int reg = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(arg));
+                    backlist.push_back(new MOV(0, reg, "reg2reg"));
+                    freeRegForCalExp(reg);
+                    //跳转
+                    backlist.push_back(new BL(functionCall->name->name));
+                    return;
+                }
+            }
+            if (arg->nodetype == IdentifierType) {
+                index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
+                if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                    isarray = 1;
+                }
+                if (index != -1 && vartable[index].isarray) {
+                    isarray = 1;
+                }
+            }
+            if (isarray) {
+                int reg = getCanUseRegForCalExp();
+                if (index == -1) {
+                    backlist.push_back(new MOV32(reg, static_cast<Identifier *>(arg)->name));
+                    //backlist.push_back(new LDR(reg, static_cast<Identifier *>(arg)->name));
+                } else {
+                    int reg1 = getCanUseRegForCalExp();
+                    backlist.push_back(new LDR(reg1, 4 * vartable[index].index + 8));
+                    backlist.push_back(new OP("sub", reg, "fp", reg1));
+                    freeRegForCalExp(reg1);
+                }
+                backlist.push_back(new MOV(0, reg, "reg2reg"));
+                freeRegForCalExp(reg);
+            } else {
+                int reg = generateExp(vartable, backlist, arg);
+                backlist.push_back(new MOV(0, reg, "reg2reg"));
+                freeRegForCalExp(reg);
+            }
             //跳转
             backlist.push_back(new BL(functionCall->name->name));
             return;

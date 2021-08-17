@@ -974,69 +974,70 @@ namespace compiler::back {
 
     int generateBinaryExp(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::BinaryExpression *expression) {
         int reg1 = generateExp(vartable, backlist, expression->leftExpr);
+        int regt = getCanUseRegForCalExp();
         int reg2;
         if (expression->op != AND_OP && expression->op != OR_OP) {
             reg2 = generateExp(vartable, backlist, expression->rightExpr);
         }
         switch (expression->op) {
             case ADD: {
-                backlist.push_back(new OP("add", reg1, reg1, reg2));
+                backlist.push_back(new OP("add", regt, reg1, reg2));
                 break;
             }
             case SUB: {
-                backlist.push_back(new OP("sub", reg1, reg1, reg2));
+                backlist.push_back(new OP("sub", regt, reg1, reg2));
                 break;
             }
             case MUL: {
-                backlist.push_back(new OP("mul", reg1, reg1, reg2));
+                backlist.push_back(new OP("mul", regt, reg1, reg2));
                 break;
             }
             case DIV: {
-                backlist.push_back(new OP("sdiv", reg1, reg1, reg2));
+                backlist.push_back(new OP("sdiv", regt, reg1, reg2));
                 break;
             }
             case MOD: {
                 int regm = getCanUseRegForCalExp();
                 backlist.push_back(new OP("sdiv", regm, reg1, reg2));
                 backlist.push_back(new OP("mul", regm, regm, reg2));
-                backlist.push_back(new OP("sub", reg1, reg1, regm));
+                backlist.push_back(new OP("sub", regt, reg1, regm));
                 freeRegForCalExp(regm);
                 break;
             }
             case EQ: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("eq", reg1, 1));
-                backlist.push_back(new MOV("ne", reg1, 0));
+                backlist.push_back(new MOV("eq", regt, 1));
+                backlist.push_back(new MOV("ne", regt, 0));
                 break;
             }
             case NE: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("eq", reg1, 0));
-                backlist.push_back(new MOV("ne", reg1, 1));
+                backlist.push_back(new MOV("eq", regt, 0));
+                backlist.push_back(new MOV("ne", regt, 1));
                 break;
             }
             case LT: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("lt", reg1, 1));
-                backlist.push_back(new MOV("ge", reg1, 0));
+                backlist.push_back(new MOV("lt", regt, 1));
+                backlist.push_back(new MOV("ge", regt, 0));
                 break;
             }
             case LE: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("le", reg1, 1));
-                backlist.push_back(new MOV("gt", reg1, 0));
+                backlist.push_back(new MOV("le", regt, 1));
+                backlist.push_back(new MOV("gt", regt, 0));
                 break;
             }
             case GT: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("le", reg1, 0));
-                backlist.push_back(new MOV("gt", reg1, 1));
+                backlist.push_back(new MOV("le", regt, 0));
+                backlist.push_back(new MOV("gt", regt, 1));
                 break;
             }
             case GE: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("lt", reg1, 0));
-                backlist.push_back(new MOV("ge", reg1, 1));
+                backlist.push_back(new MOV("lt", regt, 0));
+                backlist.push_back(new MOV("ge", regt, 1));
                 break;
             }
             case AND_OP: {
@@ -1045,33 +1046,33 @@ namespace compiler::back {
                 backlist.push_back(new B("eq", "and_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new CMP(reg2, "#0"));
-                backlist.push_back(new MOV("eq", reg1, 0));
+                backlist.push_back(new MOV("eq", regt, 0));
                 backlist.push_back(new Lable("and_" + to_string(id)));
                 break;
             }
             case OR_OP: {
                 int id = orCount++;
                 backlist.push_back(new CMP(reg1, "#0"));
-                backlist.push_back(new MOV("ne", reg1, 1));
                 backlist.push_back(new B("ne", "orr_" + to_string(id)));
                 reg2 = generateExp(vartable, backlist, expression->rightExpr);
                 backlist.push_back(new CMP(reg2, "#0"));
-                backlist.push_back(new MOV("ne", reg1, 1));
+                backlist.push_back(new MOV("ne", regt, 1));
                 backlist.push_back(new Lable("orr_" + to_string(id)));
                 break;
             }
             case NOT_EQUAL: {
                 backlist.push_back(new CMP(reg1, reg2));
-                backlist.push_back(new MOV("eq", reg1, 0));
-                backlist.push_back(new MOV("ne", reg1, 1));
+                backlist.push_back(new MOV("eq", regt, 0));
+                backlist.push_back(new MOV("ne", regt, 1));
                 break;
             }
             default: {
                 cout << "未匹配运算符" << endl;
             }
         }
+        freeRegForCalExp(reg1);
         freeRegForCalExp(reg2);
-        return reg1;
+        return regt;
     }
 
     int generateUnaryExp(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::UnaryExpression *expression) {

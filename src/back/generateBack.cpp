@@ -111,6 +111,14 @@ namespace compiler::back {
                             break;
                         }
                         case VarDeclareWithInitType: {
+                            if (subNode->name->name == "i") {
+                                int value = 0;
+                                if (static_cast<VarDeclareWithInit *>(subNode)->value->nodetype == NumberExpressionType) {
+                                    value = static_cast<NumberExpression *>(static_cast<VarDeclareWithInit *>(subNode)->value)->value;
+                                }
+                                backlist.push_back(new LDR(12, value));
+                                break;
+                            }
                             int value = 0;
                             string name = subNode->name->name;
                             if (static_cast<VarDeclareWithInit *>(subNode)->value->nodetype == NumberExpressionType) {
@@ -119,9 +127,15 @@ namespace compiler::back {
                             int index = globalVartable.size();
                             globalVartable[name] = new VAR(name, value, index);
                             backlist.push_back(new GLOBAL(name, value));
+                            if (name == "i") {
+                                backlist.push_back(new LDR(12, value));
+                            }
                             break;
                         }
                         case VarDeclareType: {
+                            if (subNode->name->name == "i") {
+                                break;
+                            }
                             string name = subNode->name->name;
                             int index = globalVartable.size();
                             globalVartable[name] = new VAR(name, 0, index);
@@ -146,8 +160,8 @@ namespace compiler::back {
             } else if (arg->nodetype == ArrayIdentifierType) {
                 VAR temp = VAR(arg->name, 0, i - 2 - argsize);
                 temp.ispointer = 1;
-                for(int j=0; j< static_cast<ArrayIdentifier*>(arg)->index.size();j++){
-                    temp.arrayIndex.push_back(static_cast<NumberExpression*>(static_cast<ArrayIdentifier *>(arg)->index[j])->value);
+                for (int j = 0; j < static_cast<ArrayIdentifier *>(arg)->index.size(); j++) {
+                    temp.arrayIndex.push_back(static_cast<NumberExpression *>(static_cast<ArrayIdentifier *>(arg)->index[j])->value);
                 }
                 vartable.push_back(temp);//value -1表示为指针
             }
@@ -163,7 +177,7 @@ namespace compiler::back {
     void generateBackArray(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::Declare *array) {
         switch (array->nodetype) {
             case ArrayDeclareWithInitType:
-            case ConstArrayType:{
+            case ConstArrayType: {
                 string name = array->name->name;
                 tableIndex = tableIndex + static_cast<ArrayDeclare *>(array)->initVal->initValList.size();
                 VAR temp = VAR(name, 0, tableIndex - 1);
@@ -307,10 +321,9 @@ namespace compiler::back {
     //处理函数调用
     void generateFuncCall(vector<VAR> &vartable, list<INS *> &backlist, compiler::front::ast::FunctionCall *functionCall) {
         //处理参数
-        if(functionCall->name->name == "_sysy_stoptime" || functionCall->name->name == "_sysy_starttime"){
-            backlist.push_back(new MOV("",0, 0));
-        }
-        else if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
+        if (functionCall->name->name == "_sysy_stoptime" || functionCall->name->name == "_sysy_starttime") {
+            backlist.push_back(new MOV("", 0, 0));
+        } else if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
             int reg = generateExp(vartable, backlist, functionCall->args->args[0]);
             backlist.push_back(new MOV(0, reg, "reg2reg"));
             freeRegForCalExp(reg);
@@ -321,20 +334,20 @@ namespace compiler::back {
             int isarray = 0;
             int index;
             auto arg = functionCall->args->args[0];
-            if(arg->nodetype == ArrayIdentifierType){
+            if (arg->nodetype == ArrayIdentifierType) {
                 int ispoint = 0;
                 index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
                 if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
-                    if(globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size()> static_cast<ArrayIdentifier*>(arg)->index.size()){
+                    if (globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                         ispoint = 1;
                     }
                 }
                 if (index != -1 && vartable[index].isarray) {
-                    if(vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier*>(arg)->index.size()){
+                    if (vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                         ispoint = 1;
                     }
                 }
-                if(ispoint){
+                if (ispoint) {
                     int reg = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(arg));
                     backlist.push_back(new MOV(0, reg, "reg2reg"));
                     freeRegForCalExp(reg);
@@ -384,20 +397,20 @@ namespace compiler::back {
             int isarray = 0;
             int index;
             auto arg = functionCall->args->args[1];
-            if(arg->nodetype == ArrayIdentifierType){
+            if (arg->nodetype == ArrayIdentifierType) {
                 int ispoint = 0;
                 index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
                 if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
-                    if(globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size()> static_cast<ArrayIdentifier*>(arg)->index.size()){
+                    if (globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                         ispoint = 1;
                     }
                 }
                 if (index != -1 && vartable[index].isarray) {
-                    if(vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier*>(arg)->index.size()){
+                    if (vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                         ispoint = 1;
                     }
                 }
-                if(ispoint){
+                if (ispoint) {
                     int reg = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(arg));
                     backlist.push_back(new MOV(1, reg, "reg2reg"));
                     freeRegForCalExp(reg);
@@ -440,20 +453,20 @@ namespace compiler::back {
             for (auto arg: functionCall->args->args) {
                 int isarray = 0;
                 int index;
-                if(arg->nodetype == ArrayIdentifierType){
+                if (arg->nodetype == ArrayIdentifierType) {
                     int ispoint = 0;
                     index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
                     if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
-                        if(globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size()> static_cast<ArrayIdentifier*>(arg)->index.size()){
+                        if (globalVartable[static_cast<Identifier *>(arg)->name]->arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                             ispoint = 1;
                         }
                     }
                     if (index != -1 && vartable[index].isarray) {
-                        if(vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier*>(arg)->index.size()){
+                        if (vartable[index].arrayIndex.size() > static_cast<ArrayIdentifier *>(arg)->index.size()) {
                             ispoint = 1;
                         }
                     }
-                    if(ispoint){
+                    if (ispoint) {
                         int reg = getArrayArgAddress(vartable, backlist, static_cast<ArrayIdentifier *>(arg));
                         backlist.push_back(new STR(reg));
                         freeRegForCalExp(reg);
@@ -495,7 +508,7 @@ namespace compiler::back {
         if (functionCall->name->name == "putint" || functionCall->name->name == "putch") {
             return;
         }
-        if(functionCall->name->name == "_sysy_stoptime" || functionCall->name->name == "_sysy_starttime"){
+        if (functionCall->name->name == "_sysy_stoptime" || functionCall->name->name == "_sysy_starttime") {
             return;
         }
         int reg = getCanUseRegForCalExp();
@@ -510,7 +523,7 @@ namespace compiler::back {
         int localVarSpace = 0;
         for (auto item = block->blockItem.begin(); item != block->blockItem.end(); item++) {
             switch ((*item)->nodetype) {
-                case BlockType:{
+                case BlockType: {
                     generateBlock(vartable, backlist, static_cast<Block *>(*item), nowWhileId);
                     break;
                 }
@@ -600,6 +613,12 @@ namespace compiler::back {
                                 break;
                             }
                             case VarDeclareWithInitType: {
+                                if (subNode->name->name == "i") {
+                                    int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
+                                    backlist.push_back(new MOV(12, reg, "reg2reg"));
+                                    freeRegForCalExp(reg);
+                                    break;
+                                }
                                 localVarSpace++;
                                 localVarCount++;
                                 whileLocal.top()++;
@@ -613,6 +632,9 @@ namespace compiler::back {
                                 break;
                             }
                             case VarDeclareType: {
+                                if (subNode->name->name == "i") {
+                                    break;
+                                }
                                 localVarSpace++;
                                 localVarCount++;
                                 whileLocal.top()++;
@@ -636,6 +658,13 @@ namespace compiler::back {
                     } else {
                         string name = static_cast<AssignStmt *>(*item)->name->name;
                         int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
+                        if (name == "i") {
+                            if(reg!=12){
+                                backlist.push_back(new MOV(reg, 12, "reg2reg"));
+                            }
+                            freeRegForCalExp(reg);
+                            break;
+                        }
                         //判断全局变量还是局部变量
                         int index = tableFind(vartable, name);
                         if (index == -1) {
@@ -777,6 +806,12 @@ namespace compiler::back {
                             break;
                         }
                         case VarDeclareWithInitType: {
+                            if (subNode->name->name == "i") {
+                                int reg = generateExp(vartable, backlist, static_cast<VarDeclareWithInit *>(subNode)->value);
+                                backlist.push_back(new MOV(12, reg, "reg2reg"));
+                                freeRegForCalExp(reg);
+                                break;
+                            }
                             localVarSpace++;
                             localVarCount++;
                             whileLocal.top()++;
@@ -790,6 +825,9 @@ namespace compiler::back {
                             break;
                         }
                         case VarDeclareType: {
+                            if (subNode->name->name == "i") {
+                                break;
+                            }
                             localVarSpace++;
                             localVarCount++;
                             whileLocal.top();
@@ -813,6 +851,13 @@ namespace compiler::back {
                 } else {
                     string name = static_cast<AssignStmt *>(stmt)->name->name;
                     int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
+                    if (name == "i") {
+                        if(reg!=12){
+                            backlist.push_back(new MOV(reg, 12, "reg2reg"));
+                        }
+                        freeRegForCalExp(reg);
+                        break;
+                    }
                     //判断全局变量还是局部变量
                     int index = tableFind(vartable, name);
                     if (index == -1) {
@@ -883,6 +928,9 @@ namespace compiler::back {
             }
             case IdentifierType: {
                 //右值为单个字母
+                if (static_cast<Identifier *>(expression)->name == "i") {
+                    return 12;
+                }
                 int reg = getCanUseRegForCalExp();
                 string name = static_cast<Identifier *>(expression)->name;
                 int index = tableFind(vartable, name);

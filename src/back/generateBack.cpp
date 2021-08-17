@@ -156,7 +156,9 @@ namespace compiler::back {
         for (int i = 0; i < argsize; i++) {
             auto arg = func->args->args[i]->name;
             if (arg->nodetype == IdentifierType) {
-                vartable.push_back(VAR(arg->name, 0, i - 2 - argsize));//value 0表示为数字
+                if(arg->name!="i"){
+                    vartable.push_back(VAR(arg->name, 0, i - 2 - argsize));//value 0表示为数字
+                }
             } else if (arg->nodetype == ArrayIdentifierType) {
                 VAR temp = VAR(arg->name, 0, i - 2 - argsize);
                 temp.ispointer = 1;
@@ -358,7 +360,7 @@ namespace compiler::back {
             }
             if (arg->nodetype == IdentifierType) {
                 index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
-                if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                if (index == -1 && globalVartable.count(static_cast<Identifier *>(arg)->name) && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
                     isarray = 1;
                 }
                 if (index != -1 && vartable[index].isarray) {
@@ -421,7 +423,7 @@ namespace compiler::back {
             }
             if (arg->nodetype == IdentifierType) {
                 index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
-                if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                if (index == -1 && globalVartable.count(static_cast<Identifier *>(arg)->name) && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
                     isarray = 1;
                 }
                 if (index != -1 && vartable[index].isarray) {
@@ -475,7 +477,7 @@ namespace compiler::back {
                 }
                 if (arg->nodetype == IdentifierType) {
                     index = tableFind(vartable, static_cast<Identifier *>(arg)->name);
-                    if (index == -1 && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
+                    if (index == -1 && globalVartable.count(static_cast<Identifier *>(arg)->name) && globalVartable[static_cast<Identifier *>(arg)->name]->isarray) {
                         isarray = 1;
                     }
                     if (index != -1 && vartable[index].isarray) {

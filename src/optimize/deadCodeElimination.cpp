@@ -56,6 +56,7 @@ void Table::setTimeStamp(compiler::front::ast::Node *node) {}
 void Table::setVar(const compiler::front::ast::Identifier *identifier) {}
 
 void scanAST(compiler::front::ast::Node *node,Table *table){
+  if (node == NULL)return;
   int type = node->nodetype;
   switch (type) {
   case BlockType: {
@@ -174,7 +175,6 @@ void scanAST(compiler::front::ast::Node *node,Table *table){
   break;
   case VarDeclareType: {
     auto varDecl = dynamic_cast<VarDeclare *>(node);
-    scanAST(varDecl->value, table);
     table->addVar(varDecl->name->name);
   }
   break;
@@ -232,6 +232,9 @@ bool scanTwice(compiler::front::ast::Node *node,Table *table){
     for (auto item : aboutToDel) {
       declStmt->declareList.erase(item);
     }
+    if (declStmt->declareList.empty()){
+      return true;
+    }
   } break;
   case VarDeclareWithInitType: {
     auto varDeclWithInit = dynamic_cast<VarDeclareWithInit *>(node);
@@ -253,6 +256,7 @@ bool scanTwice(compiler::front::ast::Node *node,Table *table){
   default:
     return false;
   }
+  return false;
 }
 void DeadCodeElimination(compiler::front::ast::AST *root){
   Table *table = new Table();

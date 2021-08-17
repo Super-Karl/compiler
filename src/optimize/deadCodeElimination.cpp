@@ -20,7 +20,18 @@ bool Table::inRecord(std::string &s) {
   }
 }
 void Table::addUse(std::string & s) {
-  this->usedMap[s] = true;
+  try {
+    usedMap.at(s);
+    usedMap[s] = true;
+  }catch (...){
+    if (this->father != nullptr){
+      father->addUse(s);
+    }
+  }
+}
+
+void Table::addVar(std::string &s) {
+  this->usedMap[s] = false;
 }
 
 Table* Table::getTableByNodeId(int id) {

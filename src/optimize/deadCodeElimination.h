@@ -22,6 +22,8 @@ public:
 
   void addUse(std::string &);
 
+  void addVar(std::string &);
+
   void aboutToDel(list<compiler::front::ast::Expression*>::iterator it);
 
   static Table* getTableByNodeId(int id);

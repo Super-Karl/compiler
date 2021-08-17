@@ -27,6 +27,9 @@ void Table::addUse(std::string & s) {
     if (this->father != nullptr){
       father->addUse(s);
     }
+    else{
+      usedMap[s] = true;
+    }
   }
 }
 

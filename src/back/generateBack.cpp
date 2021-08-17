@@ -662,7 +662,7 @@ namespace compiler::back {
                         int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(*item)->rightExpr);
                         if (name == "i") {
                             if(reg!=12){
-                                backlist.push_back(new MOV(reg, 12, "reg2reg"));
+                                backlist.push_back(new MOV(12, reg, "reg2reg"));
                             }
                             freeRegForCalExp(reg);
                             break;
@@ -855,7 +855,7 @@ namespace compiler::back {
                     int reg = generateExp(vartable, backlist, static_cast<AssignStmt *>(stmt)->rightExpr);
                     if (name == "i") {
                         if(reg!=12){
-                            backlist.push_back(new MOV(reg, 12, "reg2reg"));
+                            backlist.push_back(new MOV(12, reg, "reg2reg"));
                         }
                         freeRegForCalExp(reg);
                         break;

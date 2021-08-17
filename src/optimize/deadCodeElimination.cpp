@@ -156,6 +156,7 @@ void scanAST(compiler::front::ast::Node *node,Table *table){
   case ConstDeclareType: {
     auto constDecl = dynamic_cast<ConstDeclare *>(node);
     scanAST(constDecl->value, table);
+    table->addVar(constDecl->name->name);
   }
   break;
   case DeclareStatementType: {
@@ -168,11 +169,13 @@ void scanAST(compiler::front::ast::Node *node,Table *table){
   case VarDeclareWithInitType: {
     auto varDeclWithInit = dynamic_cast<VarDeclareWithInit *>(node);
     scanAST(varDeclWithInit->value, table);
+    table->addVar(varDeclWithInit->name->name);
   }
   break;
   case VarDeclareType: {
     auto varDecl = dynamic_cast<VarDeclare *>(node);
     scanAST(varDecl->value, table);
+    table->addVar(varDecl->name->name);
   }
   break;
   default:

@@ -8,6 +8,7 @@
 
 using namespace compiler::front::ast;
 
+int Node::id = 0;
 /**
 *打印ast
 **/

@@ -18,8 +18,9 @@ namespace compiler {
         class Node {
         public:
             AstNodeType nodetype;
-
-            Node(AstNodeType type = NodeType) : nodetype(type) {}
+            int uid;
+            static int id;
+            Node(AstNodeType type = NodeType) : nodetype(type) {uid = id++;}
 
             virtual ~Node();
 

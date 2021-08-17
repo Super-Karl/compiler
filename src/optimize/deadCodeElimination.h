@@ -10,7 +10,23 @@
 
 class Table {
 public:
+  Table *father;
+  unordered_map<string,bool> usedMap;
+  static unordered_map<int,Table*> tableMap;
+  list<list<compiler::front::ast::Expression*>::iterator> needToDel;
   Table() = default;
+
+  Table(Table *t):father(t){}
+
+  bool inRecord(std::string&);
+
+  void addUse(std::string &);
+
+  void aboutToDel(list<compiler::front::ast::Expression*>::iterator it);
+
+  static Table* getTableByNodeId(int id);
+
+  static Table* createTableByNodeId(int id,Table* );
 
   void setVarLatestUse(compiler::front::ast::Node *node);
 
@@ -30,4 +46,8 @@ private:
   static int id;
 };
 
+
+void scanAST(compiler::front::ast::Node *node,Table *table);
+bool scanTwice(compiler::front::ast::Node *node,Table *table);
+void DeadCodeElimination(compiler::front::ast::AST *root);
 #endif // COMPILER_DEADCODEELIMINATION_H

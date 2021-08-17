@@ -7,7 +7,7 @@
 #include "astpass/astpass.h"
 #include "back/back.h"
 #include "back/generateBack.h"
-
+#include "optimize/deadCodeElimination.h"
 using namespace std;
 
 using Hash = std::unordered_map<string, int>;
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     if(argc>6){
         root->print();
     }
-
+    DeadCodeElimination(root);
     //生成后端
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);
 //    compiler::back::printASM(backlist);

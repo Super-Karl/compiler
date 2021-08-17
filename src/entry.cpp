@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
     if(argc>6){
         root->print();
     }
-    //root->print();
+    root->print();
     DeadCodeElimination(root);
-    //root->print();
+    root->print();
     //生成后端
     list<compiler::back::INS*> backlist = compiler::back::generateBack(root);
 //    compiler::back::printASM(backlist);

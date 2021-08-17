@@ -201,6 +201,10 @@ bool scanTwice(compiler::front::ast::Node *node,Table *table){
   } break;
   case AssignStmtType: {
     auto assignStmtNode = dynamic_cast<AssignStmt *>(node);
+    auto arrayIdentInAssign = dynamic_cast<ArrayIdentifier*>(assignStmtNode->name);
+    if (arrayIdentInAssign){
+      return false;
+    }
     if (!table->inRecord(assignStmtNode->name->name)) {
       return true;
     }

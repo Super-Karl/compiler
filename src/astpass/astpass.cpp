@@ -471,6 +471,16 @@ namespace compiler::astpassir {
                 }
                 //数组线性化
                 static_cast<ArrayDeclareWithInit *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ArrayDeclareWithInit *>(array)->initVal->initValList);
+                //数组初始化计算
+                auto Value = static_cast<ArrayInitVal *>(static_cast<ArrayDeclareWithInit *>(array)->initVal);
+                for (auto i = Value->initValList.begin(); i != Value->initValList.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    }
+                }
                 break;
             }
             case ConstArrayType: {
@@ -486,6 +496,16 @@ namespace compiler::astpassir {
                     }
                 }
                 static_cast<ConstArray *>(array)->initVal->initValList = FirstPassArrayLinelize(0, Id->index, static_cast<ConstArray *>(array)->initVal->initValList);
+                //数组初始化计算
+                auto Value = static_cast<ArrayInitVal *>(static_cast<ConstArray *>(array)->initVal);
+                for (auto i = Value->initValList.begin(); i != Value->initValList.end(); i++) {
+                    (*i) = FirstPassExpr((*i), constTbale);
+                    int result;
+                    if (caluExpersion((*i), result)) {
+                        delete (*i);
+                        (*i) = new NumberExpression(result);
+                    }
+                }
                 break;
             }
             case ArrayDeclareType: {

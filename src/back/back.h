@@ -211,7 +211,10 @@ namespace compiler::back {
 
         LDR(int reg, int num) : INS(ldr) {
             //fullIns = "\tldr r" + to_string(reg) + ",=" + to_string(num) + "\n";
-            fullIns = "\tmov32 r" + to_string(reg) + ", " + to_string(num) + "\n";
+            if (num >= 0 && num < 65536)
+                fullIns = "\tmov r" + to_string(reg) + ", #" + to_string(num) + "\n";
+            else
+                fullIns = "\tmov32 r" + to_string(reg) + ", " + to_string(num) + "\n";
         }
     };
 

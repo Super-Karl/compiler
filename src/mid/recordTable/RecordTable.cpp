@@ -20,6 +20,7 @@ namespace compiler::mid::ir {
   }
 
   void RecordTable::insertVar(std::string name, VarInfo *v) {
+    this->bundle.addVar(name,v->getUseName(),BlockLabel(),std::vector<IR*>::iterator(),this);
     varTable.insert({name, v});
   }
 
@@ -49,8 +50,8 @@ namespace compiler::mid::ir {
   VarInfo::VarInfo(std::string name, int value, bool canAssign, bool isConst)
       : isConst(isConst), isArray(false), arrayName("") {
     this->varUse.resize(1);
-    this->varUse[0].push_front(VarRedefChain(std::move(name), value, canAssign));
-  }
+    this->varUse[0].emplace_front(VarRedefChain(name, value, canAssign));
+ b  }
 
   VarInfo::VarInfo(std::string name, std::vector<int> &inValue, std::initializer_list<int> inShape, bool isConst) {
     this->arrayName = std::move(name);
@@ -138,3 +139,109 @@ namespace compiler::mid::ir {
     return labelPairs.top();
   }
 }// namespace compiler::mid::ir
+
+namespace compiler::mid::ir{
+  int Stream::id = 0;
+  void Stream::addUse(std::string name,BlockLabel label,std::vector<IR*>::iterator it){
+    Definition def;
+    def.blockLabel = label;
+    def.position = it;
+    def.name = name;
+  }
+  Stream::Stream() {
+    this->uid = id++;
+  }
+  Definition& Stream::getTop() {
+    return defChain.back();
+  }
+  void Bundle::addUse(std::string name ,BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record){
+    try {
+      VarInfo* varInfo = record->searchVar(name);
+      int uid = varInfo->uid;
+      Stream &stream = this->varDefs[uid];
+      stream.addUse(name,blockLabel,it);
+    }catch (...) {
+      throw std::runtime_error("Can not find var");
+    }
+  }
+  void Bundle::addVar(std::string defName,std::string name, BlockLabel blockLabel,std::vector<IR*>::iterator it,RecordTable *record){
+    Stream stream;
+    int uid = stream.uid;
+    stream.defName = defName;
+    stream.addUse(name,blockLabel,it);
+    this->varDefs.insert(std::make_pair(uid,stream));
+  }
+  void Bundle::addStream(Stream &s) {
+    this->varDefs.insert(std::make_pair(s.uid,s));
+  }
+  std::map<int,Stream>::iterator Bundle::find(int key){
+    return this->varDefs.find(key);
+  }
+  std::map<int,Stream>::iterator Bundle::end(){
+    return this->varDefs.end();
+  }
+  std::map<int,Stream>::iterator Bundle::begin(){
+    return this->varDefs.begin();
+  }
+
+  Bundle mergeRecord(RecordTable *record,IRList &list1,Bundle &bundle1,IRList &list2,Bundle &bundle2){
+    Bundle bundle;
+    for (auto &item: bundle1){
+      int uid = item.first;
+      Stream stream1 = item.second;
+      auto it = bundle2.find(uid);
+      if (it == bundle2.end()){
+        continue;
+      }
+
+      Stream &stream2 = it->second;
+      if (stream1.getTop()!=stream2.getTop()){
+        auto phi = new AssignIR(OperatorName("%"+std::to_string(record->getID())),stream1.getTop().name,OperatorCode::PhiMov);
+        list1.push_back(phi);
+        list2.push_back(phi);
+        stream1.addUse(phi->dest.name,BlockLabel(),std::vector<IR*>::iterator());
+      }
+      bundle.addStream(stream1);
+    }
+    return bundle;
+  }
+  void mergeRecordSlave(RecordTable *record,IRList &list1,Bundle bundle1,IRList &list2,Bundle bundle2){
+    for (auto &item: bundle1){
+      int uid = item.first;
+      Stream stream1 = item.second;
+      auto it = bundle2.find(uid);
+      if (it == bundle2.end()){
+        continue;
+      }
+      Stream &stream2 = it->second;
+      if (stream1.getTop()!=stream2.getTop()){
+        auto phi = new AssignIR(OperatorName("%"+std::to_string(record->getID())),stream1.getTop().name,OperatorCode::PhiMov);
+        //list1.push_back(phi);
+        list2.push_back(phi);
+      }
+    }
+  }
+  Bundle mergeRecord(std::vector<Bundle> l,RecordTable* record){
+    Bundle Merged;
+    Bundle &bundle1 = l.front();
+    auto it = l.begin();
+
+    for (auto &item:bundle1){
+      bool flag = false;
+      int uid = item.first;
+      for (++it;it!=l.end();++it){
+        auto tmpIt = it->find(uid);
+        if (tmpIt != it->end()){
+          if (tmpIt->second.getTop() != item.second.getTop()){
+            flag = true;
+            break;
+          }
+        }
+      }
+      if (flag){
+        OperatorName dest("%"+std::to_string(record->getID()));
+        //for ()
+      }
+    }
+  }
+}//namespace compiler::mid::ir for Bundle

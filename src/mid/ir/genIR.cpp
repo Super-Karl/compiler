@@ -258,6 +258,9 @@ namespace compiler::front::ast {
       }
       varUse = VarRedefChain(assign->dest.name, 0);
       var->addVarUse(varUse);
+      BlockLabel blockLabel;
+      std::vector<IR*>::iterator it;
+      record->bundle.addUse(assign->dest.name,blockLabel,it,record);
     }
   }
 
@@ -404,18 +407,29 @@ namespace compiler::front::ast {
   }
 
   void IfStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {
-    auto newTable = new RecordTable(record);
-    string id  = std::to_string(newTable->getID());
-    auto ifLabel = new LabelIR(".L_THEN_" + id);
-    auto elseLabel = new LabelIR(".L_ELSE_" + id);
-    auto endLabel = new LabelIR(".L_IF_END_" + id);
-    cond->ConditionAnalysis(ir, newTable, ifLabel, elseLabel, true);
-    ir.push_back(ifLabel);
-    BlockIR *trueIR = new BlockIR();
-    BlockIR *falseIR = new BlockIR();
-    trueBlock->genIR(trueIR->block, newTable);
-    elseBlock->genIR(falseIR->block, newTable);
-    std::unordered_map<std::string, std::string> phiRollBack;
+    auto thenTable = new RecordTable(record);
+    auto elseTable = new RecordTable(record);
+
+    int id = record->getID();
+    auto thenLabel = new LabelIR(".L" + std::to_string(id));
+    auto elseLabel = new LabelIR(".L" + std::to_string(id));
+    auto endLabel = new LabelIR(".L" + std::to_string(id));
+    cond->ConditionAnalysis(ir, record, thenLabel, elseLabel, true);
+    ir.push_back(thenLabel);
+    IRList thenIR;
+    IRList elseIR;
+    trueBlock->genIR(thenIR, thenTable);
+    elseBlock->genIR(elseIR, elseTable);
+    record->bundle = mergeRecord(record,thenIR,thenTable->bundle,thenIR,thenTable->bundle);
+    for (auto &item : thenIR){
+      ir.push_back(item);
+    }
+    ir.push_back(elseLabel);
+    for (auto &item : elseIR){
+      ir.push_back(item);
+    }
+    ir.push_back(endLabel);
+    /*std::unordered_map<std::string, std::string> phiRollBack;
     IRList phiRollBackMov;
     for (auto it = trueIR->block.begin(); it != trueIR->block.end(); it++) {
       auto pIR = dynamic_cast<AssignIR *>(*it);
@@ -443,10 +457,10 @@ namespace compiler::front::ast {
           }
           //找到在进入块前变量使用的最后一个defName
           phiRollBack[pIR->dest.defName] = name;
-          /*if (name != "")
+          *//*if (name != "")
           {
             phiRollBackMov.push_back(new AssignIR(pIR->dest.name,name));
-          }*/
+          }*//*
         }
       }
     }
@@ -500,7 +514,7 @@ namespace compiler::front::ast {
     for (auto item : falseIR->block) {
       ir.push_back(item);
     }
-    ir.push_back(endLabel);
+    ir.push_back(endLabel);*/
   }
 
   void ReturnStatement::genIR(mid::ir::IRList &ir, RecordTable *record) {

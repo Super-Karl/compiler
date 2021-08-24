@@ -7,7 +7,7 @@
 
 #include "../enum/enums.h"
 //#include "parser.hpp"
-#include <front/ast/AstNode.h>
+#include "../front/ast/AstNode.h"
 #include <unordered_map>
 #include <vector>
 

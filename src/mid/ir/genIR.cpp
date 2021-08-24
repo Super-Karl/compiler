@@ -1,8 +1,7 @@
 // Created by wnx on 2021/7/5.
 //
-#include "front/ast/AstNode.h"
-#include "mid/recordTable/RecordTable.h"
-#include "parser.hpp"
+#include "../../front/ast/AstNode.h"
+#include "../../front/parser/parser.hpp"
 #include <assert.h>
 #include <iostream>
 #include <math.h>
@@ -537,10 +536,10 @@ namespace compiler::front::ast {
     newTable->setInLoop(true);
 
     int num = newTable->getID();
-    auto loopLabel = new LabelIR(".LLoop" + std::to_string(num));
-    auto endLoopLabel = new LabelIR(".LEndLoop" + std::to_string(num));
-    auto testLabel = new LabelIR(".LTest" + std::to_string(num));
-    auto continueLabel = new LabelIR(".LContinue"+std::to_string(num));
+    auto loopLabel = new LabelIR(".L_Loop" + std::to_string(num));
+    auto endLoopLabel = new LabelIR(".L_EndLoop" + std::to_string(num));
+    auto testLabel = new LabelIR(".L_Test" + std::to_string(num));
+    auto continueLabel = new LabelIR(".L_Continue"+std::to_string(num));
     RecordTable::pushLabelPair(testLabel, endLoopLabel);
     IRList condIr, loopIR;
     cond->ConditionAnalysis(condIr, newTable, loopLabel, endLoopLabel, true);
@@ -607,6 +606,9 @@ namespace compiler::front::ast {
     //ir.emplace_back(new JmpIR(OperatorCode::Jmp,loopLabel));
 
     ir.push_back(endLoopLabel);
+    for (auto &item : phiLoopMov) {
+      ir.push_back(item);
+    }
     RecordTable::popLabelPair();
 
     newTable->setInLoop(false);

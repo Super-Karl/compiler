@@ -11,6 +11,13 @@ then
     echo "-h 查看帮助"
     echo "-d 测试本目录下的testcase.sy文件"
     echo "-b 编译项目"
+elif test $1 == "-c"
+then
+    echo '#include"sysylib.h"' > testcase.c
+    cat testcase.sy >> testcase.c
+    gcc testcase.c -o testcase
+    ./testcase < test.in
+    echo $?
 elif test "$1" == "-b"
 then
     cd ..
@@ -77,9 +84,9 @@ then
             if test $? -eq 1
             then
                 rm std.out
-                rm ../build/test.sy
+                rm ../build/testcase.sy
                 cp ${file%.sy}.out std.out
-                cp ${file%.sy}.sy ../build/test.sy
+                cp ${file%.sy}.sy ../build/testcase.sy
                 echo -e "\033[31m test $file failed \033[0m"
             else
                 echo -e "\033[32m test $file passed \033[0m"
@@ -91,11 +98,11 @@ then
             then
                 touch std.out
                 rm std.out
-                touch test.sy
-                rm ../build/test.sy
+                touch testcase.sy
+                rm ../build/testcase.sy
                 cp ${file%.sy}.out std.out
-                cp ${file%.sy}.sy ../build/test.sy
-                echo "//$file failesd" >> ../build/test.sy
+                cp ${file%.sy}.sy ../build/testcase.sy
+                echo "//$file failesd" >> ../build/testcase.sy
                 echo "test $file failed" >> test.log
             else
                 echo -e "test $file passed" >> test.log
@@ -152,9 +159,9 @@ elif test $1 == "-a"
             if test $? -eq 1
             then
                 rm std.out
-                rm ../build/test.sy
+                rm ../build/testcase.sy
                 cp ${file%.sy}.out std.out
-                cp ${file%.sy}.sy ../build/test.sy
+                cp ${file%.sy}.sy ../build/testcase.sy
                 echo -e "\033[31m test $file failed \033[0m"
             else
                 echo -e "\033[32m test $file passed \033[0m"
@@ -167,11 +174,11 @@ elif test $1 == "-a"
             then
                 touch std.out
                 rm std.out
-                touch test.sy
-                rm ../build/test.sy
+                touch testcase.sy
+                rm ../build/testcase.sy
                 cp ${file%.sy}.out std.out
-                cp ${file%.sy}.sy ../build/test.sy
-                echo "//$file failesd" >> ../build/test.sy
+                cp ${file%.sy}.sy ../build/testcase.sy
+                echo "//$file failesd" >> ../build/testcase.sy
                 echo "test $file failed" >> test.log
             else
                 echo -e "test $file passed" >> test.log
@@ -223,11 +230,11 @@ elif test $1 = "-s"
         then
             touch std.out
             rm std.out
-            touch test.sy
-            rm ../build/test.sy
+            touch testcase.sy
+            rm ../build/testcase.sy
             cp ${file%.sy}.out std.out
-            cp ${file%.sy}.sy ../build/test.sy
-            echo "//$file failesd" >> ../build/test.sy
+            cp ${file%.sy}.sy ../build/testcase.sy
+            echo "//$file failesd" >> ../build/testcase.sy
             echo "test $file failed" >> test.log
         else
             echo -e "test $file passed" >> test.log
@@ -237,16 +244,16 @@ elif test $1 = "-s"
         if test $? -eq 1
         then
             rm std.out
-            rm ../build/test.sy
+            rm ../build/testcase.sy
             cp ${file%.sy}.out std.out
-            cp ${file%.sy}.sy ../build/test.sy
-            echo "//$file failed" >> ../build/test.sy
+            cp ${file%.sy}.sy ../build/testcase.sy
+            echo "//$file failed" >> ../build/testcase.sy
             echo -e "\033[31m test $file failed\033[0m"
         else
             rm std.out
-            rm ../build/test.sy
+            rm ../build/testcase.sy
             cp ${file%.sy}.out std.out
-            cp ${file%.sy}.sy ../build/test.sy
+            cp ${file%.sy}.sy ../build/testcase.sy
             echo -e "\033[32m test $file passed\033[0m"
         fi
     fi
@@ -279,14 +286,14 @@ elif test $1 = "-d"
     diff -b -q this.out  ${file%.sy}.out
     if test $? -eq 1
     then
-        rm ../build/test.sy
-        cp ${file%.sy}.sy ../build/test.sy
-        echo "//$file failed" >> ../build/test.sy
+        rm ../build/testcase.sy
+        cp ${file%.sy}.sy ../build/testcase.sy
+        echo "//$file failed" >> ../build/testcase.sy
         echo -e "\033[31m test $file failed\033[0m"
     else
         rm std.out
-        rm ../build/test.sy
-        cp ${file%.sy}.sy ../build/test.sy
+        rm ../build/testcase.sy
+        cp ${file%.sy}.sy ../build/testcase.sy
         echo -e "\033[32m test $file passed\033[0m"
     fi
 fi

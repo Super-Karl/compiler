@@ -5,7 +5,7 @@
 #ifndef COMPILER_RECORDTABLE_H
 #define COMPILER_RECORDTABLE_H
 
-#include "mid/ir/ir.h"
+#include "../../mid/ir/ir.h"
 #include <list>
 #include <map>
 #include <stack>

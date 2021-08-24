@@ -2,13 +2,13 @@
 // Created by wnx on 2021/6/13.
 //
 
-#ifndef COMPILER_CONTROLLER_H
+#ifndef COMPILER_CONTROLLER_H"
 #define COMPILER_CONTROLLER_H
 
-#include <front/ast/AstNode.h>
+#include "../front/ast/AstNode.h"
 #include <fstream>
 #include <iostream>
-#include <mid/ir/ir.h>
+#include "../mid/ir/ir.h"
 
 namespace compiler::controller {
   class ArgParser {

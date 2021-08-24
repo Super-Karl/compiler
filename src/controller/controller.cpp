@@ -30,7 +30,8 @@ namespace compiler::controller {
         }
         if (std::string(argv[i]) == "-S") {
         }
-      } else {
+      }
+      else {
         if (writeToFile) {
           if (std::string(argv[i]) == "-") {
             output = &std::cout;

@@ -28,23 +28,25 @@ namespace compiler::controller {
         if (std::string(argv[i]) == "-debug") {
           yydebug = 1;
         }
+        if (std::string(argv[i]) == "-S") {
+        }
       } else {
         if (writeToFile) {
-          if(std::string(argv[i]) == "-"){
+          if (std::string(argv[i]) == "-") {
             output = &std::cout;
-          }else
-            output = new std::ofstream(argv[i],std::ofstream::out);
+          } else
+            output = new std::ofstream(argv[i], std::ofstream::out);
         } else {
-          if(std::string(argv[i]) == "-")
+          if (std::string(argv[i]) == "-")
             input = stdin;
           else
-            input = fopen(argv[i],"r");
+            input = fopen(argv[i], "r");
         }
         writeToFile = true;
       }
     }
   }
-}
+}// namespace compiler::controller
 
 extern int yyparse();
 
@@ -64,4 +66,18 @@ namespace compiler::controller::generator {
     yylex_destroy();
     return root;
   }
-}
+
+  compiler::mid::ir::IRList genIR(compiler::front::ast::AST *root) {
+    compiler::mid::ir::IRList ir;
+    auto *record = new compiler::mid::ir::RecordTable();
+    root->genIR(ir, record);
+    return ir;
+  }
+  void printIR(compiler::mid::ir::IRList ir) {
+    //std::cout << "------------------------------\n\nIR:\n\n";
+
+    for (auto i : ir) {
+      i->print();
+    }
+  }
+}// namespace compiler::controller::generator

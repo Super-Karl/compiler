@@ -1,3 +1,0 @@
-/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-default/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-default/CMakeFiles/edit_cache.dir
-/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-default/CMakeFiles/compiler.dir

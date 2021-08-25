@@ -8,6 +8,7 @@
 
 using namespace compiler::front::ast;
 
+int Node::id = 0;
 /**
 *打印ast
 **/
@@ -233,6 +234,7 @@ void AST::print(int depth, bool isEnd) {
   for (auto i : codeBlock)
     i->print(depth + 1, i == codeBlock.back());
 }
+
 //destructor
 Node::~Node() {
 }

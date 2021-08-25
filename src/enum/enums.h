@@ -120,4 +120,50 @@ enum INSType{
   ldr,
   option
 };
+
+enum LableType{
+    FunctionType,
+    LoopType,
+    IfType,
+    ElseType,
+    WhileType
+};
+
+enum ThreeSourceType{
+    ADD3,
+    SUB3,
+    STR3,
+    LDR
+};
+
+enum TwoSourceTyoe{
+    MOV,
+};
+
+enum SourceType{
+    VarSourceType,
+    NumSourceType
+};
+
+enum INSType{
+    macroType,
+    INSlableType,
+    global,
+    globalarray,
+    funcLable,
+    stmdb,
+    ldmia,
+    mov32,
+    mov16,
+    str,
+    ldr,
+    option,
+    mla,
+    b,
+    bl,
+    cmpbeq,
+    cmp,
+    push,
+    pop
+};
 #endif //COMPILER_ENUMS_H

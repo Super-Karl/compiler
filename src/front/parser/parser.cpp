@@ -72,6 +72,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include "../../controller/controller.h"
 //using parser::ast;
 
@@ -85,6 +86,7 @@ extern int yylex_destroy();
 #define YYDEBUG 1
 #define YYERROR_VERBOSE true
 
+int hexV[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 void yyerror(const char *s){
     printf("line %d : error: %s\n", yyget_lineno(),s);
     yylex_destroy();
@@ -94,6 +96,51 @@ void yyerror(const char *s){
 
 
 #line 97 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+int hex2int(const char* s){
+    int num = 0;
+    int i = 0;
+    while(s[i]!='\0'){
+        num = num * 16 + hexV[s[i]];
+        i++;
+    }
+    return num;
+}
+int oct2int(const char* s){
+    int num = 0;
+    int i = 0;
+    while(s[i]!='\0'){
+        num = num * 8 + s[i] - '0';
+        i++;
+    }
+    return num;
+}
+int s2i(const char* s){
+    int i = 0;
+    bool neg = 1;
+    int num =0;
+    if (s[i]=='-'){
+        neg = -1;
+    }
+    if (s[i]== '+'){
+        i++;
+    }
+    if (s[i]=='0'){
+        i++;
+        if (s[i]=='x'){
+            return hex2int(s+i+1) * neg;
+        }
+        else if (s[i]!='\0'){
+            return oct2int(s+i) * neg;
+        }
+        else return 0;
+    }
+    while(s[i]!='\0'){
+        num = num * 10 + s[i] - '0';
+        i++;
+    }
+    return num*neg;
+}
+
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -184,7 +231,8 @@ extern int yydebug;
 union YYSTYPE
 {
 #line 28 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
-
+=======
+#line 73 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
     int token;
     compiler::front::ast::Identifier* ident;
     compiler::front::ast::Expression* expr;
@@ -205,6 +253,8 @@ union YYSTYPE
     std::string *string;
 
 #line 208 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+=======
+#line 253 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -583,6 +633,7 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
+
        0,    72,    72,    73,    74,    75,    78,    79,    82,    84,
       85,    88,    89,    92,    95,    98,   101,   102,   105,   106,
      109,   110,   112,   115,   116,   119,   120,   121,   122,   125,
@@ -595,6 +646,19 @@ static const yytype_int16 yyrline[] =
      240,   243,   244,   247,   250,   251,   252,   255,   256,   259,
      260,   263,   264,   265,   268,   269,   270,   273,   274,   275,
      276,   279,   282
+
+       0,   117,   117,   118,   119,   120,   123,   124,   127,   129,
+     130,   133,   134,   137,   140,   143,   146,   147,   150,   151,
+     154,   155,   157,   160,   161,   164,   165,   166,   167,   170,
+     171,   174,   175,   176,   177,   180,   181,   182,   183,   186,
+     187,   190,   191,   194,   197,   200,   201,   204,   205,   208,
+     209,   212,   213,   214,   215,   216,   217,   218,   219,   220,
+     223,   226,   229,   230,   233,   236,   239,   242,   243,   246,
+     247,   249,   252,   255,   256,   259,   260,   263,   264,   265,
+     268,   269,   271,   272,   275,   276,   279,   280,   281,   284,
+     285,   288,   289,   292,   295,   296,   297,   300,   301,   304,
+     305,   308,   309,   310,   313,   314,   315,   318,   319,   320,
+     321,   324,   327
 };
 #endif
 
@@ -1935,6 +1999,417 @@ yyreduce:
 
 
 #line 1938 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+=======
+#line 117 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                        {(yyval.root)->codeBlock.push_back((yyvsp[0].declare)); }
+#line 1577 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 3:
+#line 118 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                       {(yyval.root)->codeBlock.push_back((yyvsp[0].funcDef));}
+#line 1583 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 4:
+#line 119 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+          {root = new front::ast::AST();(yyval.root)=root;(yyval.root)->codeBlock.push_back((yyvsp[0].declare));}
+#line 1589 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 5:
+#line 120 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+             {root = new front::ast::AST();(yyval.root)=root;(yyval.root)->codeBlock.push_back((yyvsp[0].funcDef));}
+#line 1595 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 6:
+#line 123 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                     {(yyval.declStmt) = (yyvsp[-1].declStmt);}
+#line 1601 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 7:
+#line 124 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                   {(yyval.declStmt) = (yyvsp[-1].declStmt);}
+#line 1607 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 9:
+#line 129 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                  {(yyval.declStmt)->declareList.push_back((yyvsp[0].declare));}
+#line 1613 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 10:
+#line 130 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                          { (yyval.declStmt) = new front::ast::DeclareStatement();(yyval.declStmt)->declareList.push_back((yyvsp[0].declare));}
+#line 1619 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 13:
+#line 137 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                         {(yyval.declare) = new front::ast::ConstDeclare((yyvsp[-2].ident),(yyvsp[0].expr));}
+#line 1625 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 15:
+#line 143 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                              {(yyval.declare) = new front::ast::ConstArray((yyvsp[-2].arrayident),(yyvsp[0].arrayInitList));}
+#line 1631 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 16:
+#line 146 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.declStmt) = new front::ast::DeclareStatement();(yyval.declStmt)->declareList.push_back((yyvsp[0].declare));}
+#line 1637 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 17:
+#line 147 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                          {(yyval.declStmt)->declareList.push_back((yyvsp[0].declare));}
+#line 1643 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 20:
+#line 154 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                             { (yyval.declare) = new front::ast::VarDeclareWithInit((yyvsp[-2].ident),(yyvsp[0].expr));}
+#line 1649 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 21:
+#line 155 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+            {(yyval.declare) = new front::ast::VarDeclare((yyvsp[0].ident));}
+#line 1655 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 23:
+#line 160 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                         {(yyval.declare) = new front::ast::ArrayDeclareWithInit((yyvsp[-2].arrayident),(yyvsp[0].arrayInitList));}
+#line 1661 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 24:
+#line 161 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                 {(yyval.declare) = new front::ast::ArrayDeclare((yyvsp[0].arrayident));}
+#line 1667 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 25:
+#line 164 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                         {(yyval.arrayident)->index.push_back((yyvsp[-1].expr));}
+#line 1673 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 26:
+#line 165 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                              {(yyval.arrayident)->index.push_back(new front::ast::NumberExpression());}
+#line 1679 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 27:
+#line 166 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                              {(yyval.arrayident) = new front::ast::ArrayIdentifier((yyvsp[-3].ident)->name);(yyval.arrayident)->index.push_back((yyvsp[-1].expr));}
+#line 1685 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 28:
+#line 167 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                          {(yyval.arrayident) = new front::ast::ArrayIdentifier((yyvsp[-2].ident)->name);(yyval.arrayident)->index.push_back(new front::ast::NumberExpression(1));}
+#line 1691 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 29:
+#line 170 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                    {(yyval.arrayInitList) = (yyvsp[-1].arrayInitList);}
+#line 1697 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 30:
+#line 171 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                   {(yyval.arrayInitList) = new front::ast::ArrayInitVal();}
+#line 1703 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 31:
+#line 174 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                     {(yyval.arrayInitList)->initValList.push_back((yyvsp[0].arrayInitList));}
+#line 1709 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 32:
+#line 175 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                           {(yyval.arrayInitList)->initValList.push_back((yyvsp[0].expr));}
+#line 1715 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 33:
+#line 176 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                    {(yyval.arrayInitList) = new front::ast::ArrayInitVal();(yyval.arrayInitList)->initValList.push_back((yyvsp[0].arrayInitList));}
+#line 1721 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 34:
+#line 177 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+              {(yyval.arrayInitList) = new front::ast::ArrayInitVal();(yyval.arrayInitList)->initValList.push_back((yyvsp[0].expr));}
+#line 1727 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 35:
+#line 180 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                                           {(yyval.funcDef) = new front::ast::FunctionDefine((yyvsp[-5].token),(yyvsp[-4].ident),(yyvsp[-2].funcdefParamList),(yyvsp[0].block));}
+#line 1733 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 36:
+#line 181 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                          {(yyval.funcDef) = new front::ast::FunctionDefine((yyvsp[-4].token),(yyvsp[-3].ident),(new front::ast::FunctionDefArgList()),(yyvsp[0].block));}
+#line 1739 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 37:
+#line 182 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                                      { (yyval.funcDef) = new front::ast::FunctionDefine((yyvsp[-5].token),(yyvsp[-4].ident),(yyvsp[-2].funcdefParamList),(yyvsp[0].block)); }
+#line 1745 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 38:
+#line 183 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                        { (yyval.funcDef) = new front::ast::FunctionDefine((yyvsp[-4].token),(yyvsp[-3].ident),(new front::ast::FunctionDefArgList()),(yyvsp[0].block));}
+#line 1751 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 39:
+#line 186 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                             {(yyval.funcdefParamList)->args.push_back((yyvsp[0].funcdefParam));}
+#line 1757 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 40:
+#line 187 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                {(yyval.funcdefParamList) = new front::ast::FunctionDefArgList();(yyval.funcdefParamList)->args.push_back((yyvsp[0].funcdefParam));}
+#line 1763 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 43:
+#line 194 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                        {(yyval.funcdefParam) = new front::ast::FunctionDefArg((yyvsp[-1].token),(yyvsp[0].ident));}
+#line 1769 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 44:
+#line 197 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                             {(yyval.funcdefParam) = new front::ast::FunctionDefArg((yyvsp[-1].token),(yyvsp[0].arrayident));}
+#line 1775 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 45:
+#line 200 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                    { (yyval.block) = new front::ast::Block();}
+#line 1781 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 46:
+#line 201 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                {(yyval.block) = (yyvsp[-1].block);}
+#line 1787 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 47:
+#line 204 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                {(yyval.block) = (yyvsp[-1].block);(yyval.block)->blockItem.push_back((yyvsp[0].stmt));}
+#line 1793 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 48:
+#line 205 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+               {(yyval.block) = new front::ast::Block();(yyval.block)->blockItem.push_back((yyvsp[0].stmt));}
+#line 1799 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 51:
+#line 212 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.stmt) = (yyvsp[-1].stmt);}
+#line 1805 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 55:
+#line 216 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                { (yyval.stmt) = (yyvsp[0].stmt);}
+#line 1811 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 56:
+#line 217 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                   { (yyval.stmt) = (yyvsp[0].stmt);}
+#line 1817 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 57:
+#line 218 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.stmt) = (yyvsp[-1].stmt);}
+#line 1823 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 58:
+#line 219 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                     {(yyval.stmt) = (yyvsp[-1].stmt);}
+#line 1829 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 61:
+#line 226 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                           {(yyval.stmt) = new front::ast::AssignStmt((yyvsp[-2].ident),(yyvsp[0].expr));}
+#line 1835 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 62:
+#line 229 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                                 {(yyval.stmt)= new front::ast::IfStatement((yyvsp[-4].expr),(yyvsp[-2].stmt),(yyvsp[0].stmt));}
+#line 1841 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 63:
+#line 230 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                     {(yyval.stmt) = new front::ast::IfStatement((yyvsp[-2].expr),(yyvsp[0].stmt),(new front::ast::VoidStatement()));}
+#line 1847 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 64:
+#line 233 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                             {(yyval.stmt) = new front::ast::WhileStatement((yyvsp[-2].expr),(yyvsp[0].stmt));}
+#line 1853 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 65:
+#line 236 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.stmt) =  new front::ast::BreakStatement();}
+#line 1859 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 66:
+#line 239 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                            {(yyval.stmt) = new front::ast::ContinueStatement();}
+#line 1865 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 67:
+#line 242 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                  {(yyval.stmt) = new front::ast::VoidStatement();}
+#line 1871 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 68:
+#line 243 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+          {(yyval.stmt) = new front::ast::VoidStatement();}
+#line 1877 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 69:
+#line 246 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.stmt) = new front::ast::ReturnStatement((yyvsp[0].expr));}
+#line 1883 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 70:
+#line 247 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+            {(yyval.stmt) = new front::ast::ReturnStatement();}
+#line 1889 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 73:
+#line 255 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                            {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1895 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 75:
+#line 259 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                             {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1901 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 77:
+#line 263 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                      {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1907 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 78:
+#line 264 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                     {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1913 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 80:
+#line 268 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                           {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1919 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 82:
+#line 271 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                            {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1925 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 84:
+#line 275 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                             {(yyval.expr) = new front::ast::BinaryExpression((yyvsp[-2].expr),(yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1931 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 86:
+#line 279 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                           {(yyval.expr) = new front::ast::UnaryExpression((yyvsp[-1].token),(yyvsp[0].expr));}
+#line 1937 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 89:
+#line 284 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                                       {(yyval.expr) = new front::ast::FunctionCall((yyvsp[-3].ident),(yyvsp[-1].funcCallArgList));}
+#line 1943 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 90:
+#line 285 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                              {(yyval.expr) = new front::ast::FunctionCall((yyvsp[-2].ident),(new front::ast::FunctionCallArgList()));}
+#line 1949 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 91:
+#line 288 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                                                           {(yyval.funcCallArgList)->args.push_back((yyvsp[0].expr));}
+#line 1955 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 92:
+#line 289 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                  {(yyval.funcCallArgList) = new front::ast::FunctionCallArgList(); (yyval.funcCallArgList)->args.push_back((yyvsp[0].expr));}
+#line 1961 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 96:
+#line 297 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                            {(yyval.expr) = (yyvsp[-1].expr);}
+#line 1967 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 111:
+#line 324 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+            {(yyval.expr) = new front::ast::NumberExpression(s2i((yyvsp[0].string)->c_str()));}
+#line 1973 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+  case 112:
+#line 327 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+                  {(yyval.ident) = new front::ast::Identifier(*(yyvsp[0].string));}
+#line 1979 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+    break;
+
+
+#line 1983 "/mnt/c/Users/karl/CLionProjects/compiler/cmake-build-debug/front/parser.cpp"
+
 
       default: break;
     }
@@ -2167,3 +2642,4 @@ yyreturn:
   return yyresult;
 }
 #line 284 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"
+#line 329 "/mnt/c/Users/karl/CLionProjects/compiler/src/front/parser/bison.y"

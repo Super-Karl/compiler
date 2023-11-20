@@ -6,322 +6,414 @@
 #define COMPILER_ASTNODE_H
 
 #include <iostream>
+#include <list>
 #include <vector>
+
+#include "../../enum/enums.h"
 
 using namespace std;
 
 namespace compiler {
-  namespace front::ast {
-    class Node {
-    public:
-      virtual void print(int depth = 0, bool isEnd = false);
+    namespace front::ast {
+        class Node {
+        public:
+            AstNodeType nodetype;
 
-      void printPrefix(int depth = 0, bool isEnd = false);
-    };
+            Node(AstNodeType type = NodeType) : nodetype(type) {}
 
-    class Expression : public Node {
-    public:
-    };
+            virtual ~Node();
 
-    class ArrayInitVal : public Expression {
-    public:
-      vector<Expression *> initValList;
+            virtual void print(int depth = 0, bool isEnd = false);
 
-      ArrayInitVal() {};
+            void printPrefix(int depth = 0, bool isEnd = false);
+        };
 
-      void print(int depth , bool isEnd = false) override;
-    };
+        class Expression : public Node {
+        public:
+            Expression(AstNodeType type = ExpressionType) : Node(type) {}
+        };
 
-    class Identifier : public Node {
-    public:
-      Identifier(string name) : name(name) {};
+        class ArrayInitVal : public Expression {
+        public:
+            ArrayInitVal(AstNodeType type = ArrayInitValType) : Expression(type) {}
 
-      void print(int depth = 0, bool isEnd = false) override;
+            ~ArrayInitVal();
 
-      string name;
-    };
+            vector<Expression *> initValList;
 
-    class ArrayIdentifier : public Identifier {
-    public:
-      string name;
-      vector<Expression *> index;
+            void print(int depth, bool isEnd = false) override;
+        };
 
-//      vector<Expression *> shape;
-      ArrayIdentifier(string name) : Identifier(name) {};
+        class Identifier : public Expression {
+        public:
+            string name;
 
-      void print(int depth, bool isEnd) override;
-    };
+            Identifier(string name, AstNodeType type = IdentifierType) : name(name), Expression(type) {};
 
-    class Stmt : public Expression {
-    public:
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class Block : public Stmt {//语句块
-    public:
-      vector<Expression *> blockItem;
+        class ArrayIdentifier : public Identifier {
+        public:
+            vector<Expression *> index;
 
-      Block() {};
+            ArrayIdentifier(string name, AstNodeType type = ArrayIdentifierType) : Identifier(name, type) {};
 
-      void print(int depth = 0, bool isEnd = false);
-    };
+            ~ArrayIdentifier();
 
-    /**
-     * 变量声明语句
-     */
-    class Declare : public Node {
-    public:
-      Identifier *name;
+            void print(int depth, bool isEnd) override;
+        };
 
-      Declare() {};
+        class Stmt : public Expression {
+        public:
+            Stmt(AstNodeType type = StmtType) : Expression(type) {};
+        };
 
-      Declare(Identifier *name) {
-        this->name = name;
-      };
+        class Block : public Stmt {//语句块
+        public:
+            list<Expression *> blockItem;
 
-    };
+            Block(AstNodeType type = BlockType) : Stmt(type) {};
 
-    class VarDeclare : public Declare {
-    public:
+            ~Block();
 
-      VarDeclare(Identifier *name) : Declare(name) {};
+            void print(int depth = 0, bool isEnd = false);
+        };
 
-      void print(int depth = 0, bool isEnd = false) override;
+        /**
+         * 变量声明语句
+         */
+        class Declare : public Node {
+        public:
+            Identifier *name;
 
-    };
+            Declare(AstNodeType type = DeclareType) : Node(type) {};
 
-    class VarDeclareWithInit : public Declare {
-    public:
-      Expression *value;
+            Declare(Identifier *name, AstNodeType type = DeclareType) : Node(type) {
+                this->name = name;
+            };
 
-      VarDeclareWithInit(Identifier *name, Expression *value) : Declare(name), value(value) {};
+            ~Declare();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+        };
 
-    class ConstDeclare : public Declare {
-    public:
-      Expression *value;
+        class VarDeclare : public Declare {
+        public:
+            Expression *value;
 
-      ConstDeclare(Identifier *name, Expression *value) : Declare(name), value(value) {};
+            VarDeclare(Identifier *name, AstNodeType type = VarDeclareType) : Declare(name, type) {};
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            ~VarDeclare();
 
-    class ArrayDeclare : public Declare {
-    public:
+            void print(int depth = 0, bool isEnd = false) override;
 
-      ArrayDeclare(Identifier *name) : Declare(name) {};
+        };
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+        class VarDeclareWithInit : public Declare {
+        public:
+            Expression *value;
 
-    class ConstArray : public Declare {
-    public:
-      ArrayInitVal *initVal;
+            VarDeclareWithInit(Identifier *name, Expression *value, AstNodeType type = VarDeclareWithInitType)
+                    : Declare(name, type), value(value) {};
 
-      ConstArray(Identifier *name, ArrayInitVal *initVal1) : Declare(name), initVal(initVal) {};
+            ~VarDeclareWithInit();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class ArrayDeclareWithInit : public Declare {
-    public:
-      ArrayInitVal *initVal;
+        class ConstDeclare : public Declare {
+        public:
+            Expression *value;
 
-      ArrayDeclareWithInit() {};
+            ConstDeclare(Identifier *name, Expression *value, AstNodeType type = ConstDeclareType) : Declare(name,
+                                                                                                             type),
+                                                                                                     value(value) {};
 
-      ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal) : Declare(name), initVal(initVal) {};
+            ~ConstDeclare();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    /**
-     * 函数声明
-     */
-    class FunctionDefArg : public Expression {
-    public:
-      Identifier *name;
-      int type;
+        class ArrayDeclare : public Declare {
+        public:
 
-      FunctionDefArg() {};
+            ArrayInitVal *initVal;
 
-      FunctionDefArg(int type, Identifier *name) : type(type), name(name) {};
+            ArrayDeclare(Identifier *name, AstNodeType type = ArrayDeclareType) : Declare(name, type) { initVal = new ArrayInitVal();};
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            ~ArrayDeclare();
 
-    class FunctionDefArgList : public Expression {
-    public:
-      vector<FunctionDefArg *> args;
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      FunctionDefArgList() {};
+        class ConstArray : public Declare {
+        public:
+            ArrayInitVal *initVal;
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            ConstArray(ArrayIdentifier *name, ArrayInitVal *initVal, AstNodeType type = ConstArrayType) : Declare(name,
+                                                                                                                  type),
+                                                                                                          initVal(initVal) {};
 
-    class FunctionDefine : public Expression {
-    public:
-      int retType;
-      Identifier *name;
-      FunctionDefArgList *args;
-      Block *body;
+            ~ConstArray();
 
-      FunctionDefine() {};
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *block) : retType(retType),
-                                                                                               name(name),
-                                                                                               args(args),
-                                                                                               body(block) {};
+        class ArrayDeclareWithInit : public Declare {
+        public:
+            ArrayInitVal *initVal;
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            //ArrayDeclareWithInit(AstNodeType type = ArrayDeclareWithInitType) : Declare(type) {};
 
+            ArrayDeclareWithInit(ArrayIdentifier *name, ArrayInitVal *initVal,
+                                 AstNodeType type = ArrayDeclareWithInitType) : Declare(name, type),
+                                                                                initVal(initVal) {};
 
-    /**
-     * 函数调用
-     */
-    class FunctionCallArgList : public Expression {
-    public:
-      vector<Expression *> args;
+            ~ArrayDeclareWithInit();
 
-      FunctionCallArgList() {};
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+        /**
+         * 函数声明
+         */
+        class FunctionDefArg : public Expression {
+        public:
+            Identifier *name;
+            int retType;
 
-    class FunctionCall : public Expression {
-    public:
-      Identifier *name;
-      FunctionCallArgList *args;
+            FunctionDefArg(AstNodeType type = FunctionDefArgType) : Expression(type) {};
 
-      FunctionCall() {};
+            FunctionDefArg(int retType, Identifier *name, AstNodeType type = FunctionDefArgType) : retType(retType),
+                                                                                                   name(name),
+                                                                                                   Expression(type) {};
 
-      FunctionCall(Identifier *name, FunctionCallArgList *args) : name(name), args(args) {};
+            ~FunctionDefArg();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    /**
-     * 表达式
-     */
-    class CommaExpression : public Expression {//逗号表达式
-    public:
-      vector<Expression *> expr;
+        class FunctionDefArgList : public Expression {
+        public:
+            vector<FunctionDefArg *> args;
 
-      CommaExpression() {};
+            FunctionDefArgList(AstNodeType type = FunctionDefArgListType) : Expression(type) {};
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            ~FunctionDefArgList();
 
-    class NumberExpression : public Expression {
-    public:
-      int value;
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      NumberExpression(int value = 0) : value(value) {};
+        class FunctionDefine : public Expression {
+        public:
+            int retType;
+            Identifier *name;
+            FunctionDefArgList *args;
+            Block *body;
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            FunctionDefine(AstNodeType type = FunctionDefineType) : Expression(type) {};
 
-    class BinaryExpression : public Expression {//逻辑表达式
-    public:
-      int op;
-      Expression *leftExpr;
-      Expression *rightExpr;
+            FunctionDefine(int &retType, Identifier *name, FunctionDefArgList *args, Block *block,
+                           AstNodeType type = FunctionDefineType) : retType(retType),
+                                                                    name(name),
+                                                                    args(args),
+                                                                    body(block), Expression(type) {};
 
-      BinaryExpression(Expression *left, int op, Expression *right) : leftExpr(left), op(op), rightExpr(right) {};
+            ~FunctionDefine();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class UnaryExpression : public Expression {
-    public:
-      int op;
-      Expression *right;
 
-      UnaryExpression(int op, Expression *right) : op(op), right(right) {};
+        /**
+         * 函数调用
+         */
+        class FunctionCallArgList : public Expression {
+        public:
+            vector<Expression *> args;
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            FunctionCallArgList(AstNodeType type = FunctionCallArgListType) : Expression(type) {};
 
-    class AssignStmt : public Stmt {//赋值表达式
-    public:
-      Identifier *name;
-      Expression *rightExpr;
+            ~FunctionCallArgList();
 
-      AssignStmt(Identifier *inName, Expression *right) : name(inName), rightExpr(right) {};
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+        class FunctionCall : public Expression {
+        public:
+            Identifier *name;
+            FunctionCallArgList *args;
 
-    /**
-     * 语句
-     */
-    class DeclareStatement : public Stmt {
-    public:
-      vector<Declare *> declareList;
+            FunctionCall(AstNodeType type = FunctionCallType) : Expression(type) {};
 
-      DeclareStatement() {};
+            FunctionCall(Identifier *name, FunctionCallArgList *args, AstNodeType type = FunctionCallType) : name(name),
+                                                                                                             args(args),
+                                                                                                             Expression(
+                                                                                                                     type) {};
 
-      DeclareStatement(vector<Declare *> declareList) : declareList(declareList) {};
+            ~FunctionCall();
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class IfStatement : public Stmt {
-    public:
-      Expression *cond;//
-      Stmt *trueBlock;
-      Stmt *elseBlock;
+        /**
+         * 表达式
+         */
+        class CommaExpression : public Expression {//逗号表达式
+        public:
+            list<Expression *> expr;
 
-      IfStatement(Expression *cond, Stmt *trueBlock, Stmt *elseBlock) : cond(cond), trueBlock(trueBlock),
-                                                                        elseBlock(elseBlock) {};
+            CommaExpression(AstNodeType type = CommaExpressionType) : Expression(type) {};
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class WhileStatement : public Stmt {
-    public:
-      Expression *cond;
-      Stmt *loopBlock;
+        class NumberExpression : public Expression {
+        public:
+            int value;
 
-      WhileStatement(Expression *cond, Stmt *loopBlock) : cond(cond), loopBlock(loopBlock) {};
+            NumberExpression(int value = 0, AstNodeType type = NumberExpressionType) : value(value),
+                                                                                       Expression(type) {};
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-    class BreakStatement : public Stmt {
-    public:
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+        class BinaryExpression : public Expression {//逻辑表达式
+        public:
+            int op;
+            Expression *leftExpr;
+            Expression *rightExpr;
 
-    class ContinueStatement : public Stmt {
-    public:
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            BinaryExpression(Expression *left, int op, Expression *right, AstNodeType type = BinaryExpressionType)
+                    : leftExpr(left), op(op), rightExpr(right), Expression(type) {};
 
-    class VoidStatement : public Stmt {//空语句
-    public:
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            ~BinaryExpression();
 
-    class ReturnStatement : public Stmt {
-    public:
-      Expression *returnExp;
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      ReturnStatement(Expression *exp = NULL) : returnExp(exp) {};
+        class UnaryExpression : public Expression {
+        public:
+            int op;
+            Expression *right;
 
-      void print(int depth = 0, bool isEnd = false) override;
-    };
+            UnaryExpression(int op, Expression *right, AstNodeType type = UnaryExpressionType) : op(op), right(right),
+                                                                                                 Expression(type) {};
 
+            ~UnaryExpression();
 
-    class AST {
-    public:
-      vector<Node *> codeBlock;
+            void print(int depth = 0, bool isEnd = false) override;
+        };
 
-      AST() {};
+/*
+ * 语句
+ */
+        class AssignStmt : public Stmt {//赋值表达式
+        public:
+            Identifier *name;
+            Expression *rightExpr;
 
-      void print(int depth = 0, bool isEnd = false);
-    };
-  }
+            AssignStmt(Identifier *inName, Expression *right, AstNodeType type = AssignStmtType) : name(inName),
+                                                                                                   rightExpr(right),
+                                                                                                   Stmt(type) {};
+
+            ~AssignStmt();
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+
+        class DeclareStatement : public Stmt {
+        public:
+            list<Declare *> declareList;
+
+            DeclareStatement(AstNodeType type = DeclareStatementType) : Stmt(type) {};
+
+            DeclareStatement(list<Declare *> declareList, AstNodeType type = DeclareStatementType) : declareList(
+                    declareList),
+                                                                                                     Stmt(type) {};
+
+            ~DeclareStatement();
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class IfStatement : public Stmt {
+        public:
+            Expression *cond;//
+            Stmt *trueBlock;
+            Stmt *elseBlock;
+
+            IfStatement(Expression *cond, Stmt *trueBlock, Stmt *elseBlock, AstNodeType type = IfStatementType) : cond(
+                    cond), trueBlock(trueBlock),
+                                                                                                                  elseBlock(
+                                                                                                                          elseBlock),
+                                                                                                                  Stmt(type) {};
+
+            ~IfStatement();
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class WhileStatement : public Stmt {
+        public:
+            Expression *cond;
+            Stmt *loopBlock;
+
+            WhileStatement(Expression *cond, Stmt *loopBlock, AstNodeType type = WhileStatementType) : cond(cond),
+                                                                                                       loopBlock(
+                                                                                                               loopBlock),
+                                                                                                       Stmt(type) {};
+
+            ~WhileStatement();
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class BreakStatement : public Stmt {
+        public:
+            BreakStatement(AstNodeType type = BreakStatemetType) : Stmt(type) {}
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class ContinueStatement : public Stmt {
+        public:
+            ContinueStatement(AstNodeType type = ContinueStatementType) : Stmt(type) {}
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class VoidStatement : public Stmt {//空语句
+        public:
+            VoidStatement(AstNodeType type = VoidStatementType) : Stmt(type) {}
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+        class ReturnStatement : public Stmt {
+        public:
+            Expression *returnExp;
+
+            ReturnStatement(Expression *exp = NULL, AstNodeType type = ReturnStatementType) : returnExp(exp),
+                                                                                              Stmt(type) {};
+
+            ~ReturnStatement();
+
+            void print(int depth = 0, bool isEnd = false) override;
+        };
+
+
+        class AST {
+        public:
+            list<Node *> codeBlock;
+
+            AST() {};
+
+            ~AST();
+
+            void print(int depth = 0, bool isEnd = false);
+        };
+    }
 }
 #endif //COMPILER_ASTNODE_H

@@ -3,8 +3,15 @@
 ################################################################################
 
 /.vscode
-/build
+/build/*
 /.idea
 /cmake-build-debug
 /.cache/
 /cmake*
+/clang-format.txt
+/testTools/*
+/testTool/testcase.s
+/testTool/testcase.sy
+/testTool/testcase.log
+/testTool/testcase.in
+/testTool/testcase.out

@@ -5,8 +5,8 @@
 #ifndef COMPILER_CONTROLLER_H
 #define COMPILER_CONTROLLER_H
 
-#include <front/ast/AstNode.h>
-#include <mid/ir/ir.h>
+#include "../front/ast/AstNode.h"
+#include "../mid/ir/ir.h"
 #include <iostream>
 #include <fstream>
 
